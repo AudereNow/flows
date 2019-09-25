@@ -45,7 +45,7 @@ class MainView extends React.Component<Props, State> {
   render() {
     return (
       <MainChrome>
-        <div id="mainview">{this._renderBody()}</div>
+        <div className="mainview_container">{this._renderBody()}</div>
       </MainChrome>
     );
   }

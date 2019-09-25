@@ -7,7 +7,7 @@ class MainChrome extends React.PureComponent {
     return (
       <div>
         <TopBar />
-        <div className="mainContent">{this.props.children}</div>
+        <div className="mainchrome_content">{this.props.children}</div>
       </div>
     );
   }

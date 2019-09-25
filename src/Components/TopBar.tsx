@@ -7,9 +7,11 @@ import logo from "../assets/maishalogo.png";
 class TopBar extends React.PureComponent {
   render() {
     return (
-      <div id="topbar">
-        <img className="logo" src={logo} />
-        <div className="user">{firebase.auth().currentUser!.displayName}</div>
+      <div className="topbar_main">
+        <img className="topbar_logo" src={logo} />
+        <div className="topbar_user">
+          {firebase.auth().currentUser!.displayName}
+        </div>
       </div>
     );
   }
