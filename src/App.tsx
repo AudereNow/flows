@@ -3,6 +3,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import LoginScreen from "./Screens/LoginScreen";
 import { initializeStore } from "./store/corestore";
+import MainView from "./Screens/MainView";
 
 type Props = {};
 type State = {
@@ -11,7 +12,7 @@ type State = {
 
 class App extends React.Component<Props, State> {
   state = {
-    authenticated: false,
+    authenticated: false
   };
 
   constructor(props: Props) {
@@ -27,7 +28,7 @@ class App extends React.Component<Props, State> {
 
   render() {
     if (this.state.authenticated) {
-      return "Welcome! Actual auth'd experience coming soon.";
+      return <MainView />;
     } else {
       return <LoginScreen />;
     }
