@@ -8,7 +8,7 @@ class TopBar extends React.PureComponent {
   render() {
     return (
       <div className="topbar_main">
-        <img className="topbar_logo" src={logo} />
+        <img className="topbar_logo" src={logo} alt="logo" />
         <div className="topbar_user">
           {firebase.auth().currentUser!.displayName}
         </div>

@@ -1,3 +1,24 @@
 .mainview_container {
   margin: 16px;
 }
+
+.mainview_tasklist {
+  width: 250px;
+}
+
+.mainview_task_preview {
+  border: 1px solid #888888;
+  border-top: 0;
+  padding: 4px;
+}
+
+.mainview_task_preview.selected {
+  background-color: #cccccc;
+}
+
+.mainview_preview_header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
