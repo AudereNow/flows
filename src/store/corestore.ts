@@ -81,6 +81,11 @@ export async function tasksForRole(role: UserRole): Promise<Task[]> {
           notes:
             "Called on 24 Sept, and they asked us to hold payment until later",
           changes: []
+        },
+        {
+          site: auditorSampleTasks[2].site,
+          claims: approveClaims(auditorSampleTasks.slice(2)),
+          changes: []
         }
       ];
   }

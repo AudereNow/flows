@@ -33,7 +33,7 @@ class TaskList extends React.Component<Props, State> {
     return (
       <div className={this.props.className}>
         <div className="tasklist_header">Items to Review</div>
-        <div className="tasklist_items">
+        <div>
           {this.props.tasks.map((task, index) => {
             return (
               <div key={index} data-name={index} onClick={this._onItemPressed}>
