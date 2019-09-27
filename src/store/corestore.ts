@@ -6,7 +6,7 @@ const FIREBASE_CONFIG = {
   authDomain: "flows-app-staging.firebaseapp.com",
   databaseURL: "https://flows-app-staging.firebaseio.com",
   projectId: "flows-app-staging",
-  storageBucket: "",
+  storageBucket: "flows-app-staging.appspot.com",
   messagingSenderId: "785605389839",
   appId: "1:785605389839:web:dedec19abb81b7df8a3d7a"
 };

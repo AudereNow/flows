@@ -12,6 +12,12 @@
   height: 32px;
 }
 
+.topbar_upload_icon {
+  height: 32px;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
 .topbar_user {
   color: #ffffff;
   font-weight: bold;
