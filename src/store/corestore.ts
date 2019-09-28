@@ -38,10 +38,14 @@ export type Site = {
 export type ClaimTask = {
   patientFirstName: string;
   patientLastName: string;
+  patientID?: string;
   item: string;
   totalCost: number;
   claimedCost: number;
   site: Site;
+  photoIDUri?: string;
+  photoMedUri?: string;
+  photoMedBatchUri?: string;
   timestamp: number;
   notes?: string;
 };
@@ -110,6 +114,10 @@ async function loadAuditorTasks(): Promise<Task[]> {
     return {
       patientFirstName: d["g2:A10 First Name"],
       patientLastName: d["g2:A11 Last Name"],
+      patientID: d["g4:B02.1 ID number on voucher"],
+      photoIDUri: d["g4:B03.1 Photo of ID card"],
+      photoMedUri: d["g5:B04 (Medication)"],
+      photoMedBatchUri: d["g5:B05 (Medication batch)"],
       item: d["Type received"],
       totalCost: d["Total med price covered by SPIDER"],
       claimedCost: d["Total reimbursement"],
