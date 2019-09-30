@@ -39,6 +39,7 @@ export type ClaimTask = {
   patientFirstName: string;
   patientLastName: string;
   patientID?: string;
+  phone?: string;
   item: string;
   totalCost: number;
   claimedCost: number;
@@ -115,6 +116,7 @@ async function loadAuditorTasks(): Promise<Task[]> {
       patientFirstName: d["g2:A10 First Name"],
       patientLastName: d["g2:A11 Last Name"],
       patientID: d["g4:B02.1 ID number on voucher"],
+      phone: d["g2:A14 Phone Number"],
       photoIDUri: d["g4:B03.1 Photo of ID card"],
       photoMedUri: d["g5:B04 (Medication)"],
       photoMedBatchUri: d["g5:B05 (Medication batch)"],
