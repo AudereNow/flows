@@ -1,5 +1,6 @@
 import firebase from "firebase/app";
 import "firebase/auth";
+import "firebase/firestore";
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCspibVcd3GcAk01xHndZEJX8zuxwPIt-Y",
@@ -9,6 +10,12 @@ const FIREBASE_CONFIG = {
   storageBucket: "flows-app-staging.appspot.com",
   messagingSenderId: "785605389839",
   appId: "1:785605389839:web:dedec19abb81b7df8a3d7a"
+};
+const AUDITOR_TODO_COLLECTION = "auditor_todo";
+type AuditorTodo = {
+  batchID: string;
+  pharmacyID: string;
+  data: any;
 };
 
 export enum UserRole {
@@ -31,10 +38,15 @@ export type Site = {
 export type ClaimTask = {
   patientFirstName: string;
   patientLastName: string;
+  patientID?: string;
+  phone?: string;
   item: string;
   totalCost: number;
   claimedCost: number;
   site: Site;
+  photoIDUri?: string;
+  photoMedUri?: string;
+  photoMedBatchUri?: string;
   timestamp: number;
   notes?: string;
 };
@@ -70,9 +82,7 @@ export async function userRoles(): Promise<UserRole[]> {
 export async function tasksForRole(role: UserRole): Promise<Task[]> {
   switch (role) {
     case UserRole.AUDITOR:
-      return auditorSampleTasks.map(c => {
-        return { ...c, changes: [] };
-      });
+      return loadAuditorTasks();
     case UserRole.PAYOR:
       return [
         {
@@ -89,6 +99,38 @@ export async function tasksForRole(role: UserRole): Promise<Task[]> {
         }
       ];
   }
+}
+
+async function loadAuditorTasks(): Promise<Task[]> {
+  const todoSnapshot = await firebase
+    .firestore()
+    .collection(AUDITOR_TODO_COLLECTION)
+    .get();
+  const todos = todoSnapshot.docs.map(
+    doc => (doc.data() as unknown) as AuditorTodo
+  );
+
+  return todos.map(t => {
+    const d = t.data;
+    return {
+      patientFirstName: d["g2:A10 First Name"],
+      patientLastName: d["g2:A11 Last Name"],
+      patientID: d["g4:B02.1 ID number on voucher"],
+      phone: d["g2:A14 Phone Number"],
+      photoIDUri: d["g4:B03.1 Photo of ID card"],
+      photoMedUri: d["g5:B04 (Medication)"],
+      photoMedBatchUri: d["g5:B05 (Medication batch)"],
+      item: d["Type received"],
+      totalCost: d["Total med price covered by SPIDER"],
+      claimedCost: d["Total reimbursement"],
+      timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime(),
+      site: {
+        name: d["g3:B01 Pharmacy name"],
+        phone: "+254 867 5309"
+      },
+      changes: []
+    };
+  });
 }
 
 const auditorSampleTasks: ClaimTask[] = [
