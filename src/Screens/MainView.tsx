@@ -84,6 +84,8 @@ class MainView extends React.Component<Props, State> {
 
   _renderClaimDetails = (task: Task) => {
     const claim = task as ClaimTask;
+    const age = !!claim.patientAge ? claim.patientAge : "";
+    const sex = !!claim.patientSex ? claim.patientSex : "";
 
     return (
       <LabelWrapper label="DETAILS VIEW">
@@ -93,7 +95,7 @@ class MainView extends React.Component<Props, State> {
         />
         <TextItem
           data={{
-            Patient: `${claim.patientFirstName} ${claim.patientLastName}`
+            Patient: `${claim.patientFirstName} ${claim.patientLastName} (${age}, ${sex})`
           }}
         />
         <TextItem data={{ Item: claim.item }} />
