@@ -2,11 +2,15 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: space-evenly;
   margin: 5px;
 }
 
 .imagerow_image {
   max-width: 100%;
   height: auto;
+}
+
+.imagerow_image:hover {
+  transform: scale(2.5);
 }
