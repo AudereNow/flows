@@ -6,6 +6,9 @@ interface Props {
 }
 
 const DataTable = (props: Props) => {
+  if (props.data.length === 0) {
+    return null;
+  }
   const columns = Object.keys(props.data[0]);
 
   return (

@@ -100,8 +100,8 @@ class MainView extends React.Component<Props, State> {
         <ImageRow imageURLs={this._extractImageURLs(claim)} />
         <LabelTextInput onTextChange={this._onNotesChanged} label={"Notes"} />
         <div className="mainview_button_row">
-          <Button label="Decline" onClick={() => this._onDecline()} />
-          <Button label="Approve" onClick={() => this._onApprove()} />
+          <Button label="Decline" onClick={this._onDecline} />
+          <Button label="Approve" onClick={this._onApprove} />
         </div>
       </LabelWrapper>
     );
