@@ -36,8 +36,10 @@ export type Site = {
 };
 
 export type ClaimTask = {
+  patientAge?: number;
   patientFirstName: string;
   patientLastName: string;
+  patientSex?: string;
   patientID?: string;
   phone?: string;
   item: string;
@@ -113,9 +115,12 @@ async function loadAuditorTasks(): Promise<Task[]> {
   return todos.map(t => {
     const d = t.data;
     return {
+      patientAge: d["g2:A12 Age"],
       patientFirstName: d["g2:A10 First Name"],
       patientLastName: d["g2:A11 Last Name"],
-      patientID: d["g4:B02.1 ID number on voucher"],
+      patientSex:
+        d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
+      patientID: d["g4:B02"]["1 ID number on voucher"],
       phone: d["g2:A14 Phone Number"],
       photoIDUri: d["g4:B03.1 Photo of ID card"],
       photoMedUri: d["g5:B04 (Medication)"],
@@ -135,8 +140,10 @@ async function loadAuditorTasks(): Promise<Task[]> {
 
 const auditorSampleTasks: ClaimTask[] = [
   {
+    patientAge: 20,
     patientFirstName: "Zawadi",
     patientLastName: "Mwangi",
+    patientSex: "F",
     item: "E-Pill",
     totalCost: 81.72,
     claimedCost: 57.95,
@@ -147,8 +154,10 @@ const auditorSampleTasks: ClaimTask[] = [
     }
   },
   {
+    patientAge: 37,
     patientFirstName: "Makena",
     patientLastName: "Maina",
+    patientSex: "F",
     item: "Pregnancy Test",
     totalCost: 57.78,
     claimedCost: 51.95,
@@ -162,8 +171,10 @@ const auditorSampleTasks: ClaimTask[] = [
       "ID card photo in the future"
   },
   {
+    patientAge: 42,
     patientFirstName: "Jimiyu",
     patientLastName: "Mwangi",
+    patientSex: "M",
     item: "Condom",
     totalCost: 119.41,
     claimedCost: 67.4,
@@ -174,8 +185,10 @@ const auditorSampleTasks: ClaimTask[] = [
     }
   },
   {
+    patientAge: 11,
     patientFirstName: "Okeyo",
     patientLastName: "Otieno",
+    patientSex: "M",
     item: "Condom",
     totalCost: 188.82,
     claimedCost: 84.79,
