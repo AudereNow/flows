@@ -62,18 +62,15 @@ class MainView extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _onApprove() {
-    // Get the notes and send the approval call
-  }
+  _onApprove() {}
 
   _onDecline() {
     this.setState({ notes: "" });
-    // TODO: Send some sort of call to remove it
   }
 
   _renderClaimDetails = (task: Task) => {
     const claim = task as ClaimTask;
-    // TODO: Remove temp image URLs
+
     const claimImageURLs = [
       "https://vetstreet-brightspot.s3.amazonaws.com/7d/8b/98ea05c4403e8d4163dc8c8991c0/kitten-in-bed-thinkstockphotos-466265898.jpg",
       "https://vetstreet-brightspot.s3.amazonaws.com/7d/8b/98ea05c4403e8d4163dc8c8991c0/kitten-in-bed-thinkstockphotos-466265898.jpg",
