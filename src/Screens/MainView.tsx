@@ -87,6 +87,10 @@ class MainView extends React.Component<Props, State> {
 
     return (
       <LabelWrapper label="DETAILS VIEW">
+        <TextItem data={{ Pharmacy: claim.site.name }} />
+        <TextItem
+          data={{ Date: new Date(claim.timestamp).toLocaleDateString() }}
+        />
         <TextItem
           data={{
             Patient: `${claim.patientFirstName} ${claim.patientLastName}`
