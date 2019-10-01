@@ -8,9 +8,10 @@ interface Props {
 const ImageRow = (props: Props) => {
   return (
     <div className="imagerow_container">
-      {props.imageURLs.map((url, index) => {
-        return <img className="imagerow_image" key={url + index} src={url} />;
-      })}
+      {props.imageURLs.length > 0 &&
+        props.imageURLs.map((url, index) => {
+          return <img className="imagerow_image" key={url + index} src={url} />;
+        })}
     </div>
   );
 };

@@ -68,14 +68,22 @@ class MainView extends React.Component<Props, State> {
     this.setState({ notes: "" });
   }
 
+  _extractImageURLs = (claim: ClaimTask) => {
+    const claimImageURLs: string[] = [];
+    if (!!claim.photoIDUri) {
+      claimImageURLs.push(claim.photoIDUri);
+    }
+    if (!!claim.photoMedBatchUri) {
+      claimImageURLs.push(claim.photoMedBatchUri);
+    }
+    if (!!claim.photoMedUri) {
+      claimImageURLs.push(claim.photoMedUri);
+    }
+    return claimImageURLs;
+  };
+
   _renderClaimDetails = (task: Task) => {
     const claim = task as ClaimTask;
-
-    const claimImageURLs = [
-      "https://vetstreet-brightspot.s3.amazonaws.com/7d/8b/98ea05c4403e8d4163dc8c8991c0/kitten-in-bed-thinkstockphotos-466265898.jpg",
-      "https://vetstreet-brightspot.s3.amazonaws.com/7d/8b/98ea05c4403e8d4163dc8c8991c0/kitten-in-bed-thinkstockphotos-466265898.jpg",
-      "https://vetstreet-brightspot.s3.amazonaws.com/7d/8b/98ea05c4403e8d4163dc8c8991c0/kitten-in-bed-thinkstockphotos-466265898.jpg"
-    ];
 
     return (
       <LabelWrapper label="DETAILS VIEW">
@@ -85,11 +93,11 @@ class MainView extends React.Component<Props, State> {
           }}
         />
         <TextItem data={{ Item: claim.item }} />
-        <ImageRow imageURLs={claimImageURLs} />
+        <ImageRow imageURLs={this._extractImageURLs(claim)} />
         <LabelTextInput onTextChange={this._onNotesChanged} label={"Notes"} />
         <div className="mainview_button_row">
-          <Button label="Decline" onClick={() => console.log("CLICKED")} />
-          <Button label="Approve" onClick={() => console.log("CLICKED")} />
+          <Button label="Decline" onClick={() => this._onDecline()} />
+          <Button label="Approve" onClick={() => this._onApprove()} />
         </div>
       </LabelWrapper>
     );
@@ -159,7 +167,7 @@ class MainView extends React.Component<Props, State> {
     );
   };
 
-  _renderRolePanel(index: number) {
+  _renderRolePane(index: number) {
     const renderer =
       this.state.roles[index] === UserRole.AUDITOR
         ? this._renderTaskListClaim
@@ -175,7 +183,7 @@ class MainView extends React.Component<Props, State> {
     );
   }
 
-  _renderDetailsPanel(index: number) {
+  _renderDetailsPane(index: number) {
     const renderer =
       this.state.roles[index] === UserRole.AUDITOR
         ? this._renderClaimDetails
@@ -215,8 +223,8 @@ class MainView extends React.Component<Props, State> {
                 flexDirection: "row"
               }}
             >
-              {this._renderRolePanel(index)}
-              {this._renderDetailsPanel(index)}
+              {this._renderRolePane(index)}
+              {this._renderDetailsPane(index)}
             </TabPanel>
           );
         })}
