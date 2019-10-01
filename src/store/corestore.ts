@@ -36,8 +36,10 @@ export type Site = {
 };
 
 export type ClaimEntry = {
+  patientAge?: number;
   patientFirstName: string;
   patientLastName: string;
+  patientSex?: string;
   patientID?: string;
   phone?: string;
   item: string;
@@ -116,9 +118,12 @@ async function loadAuditorTasks(): Promise<Task[]> {
   return todos.filter(t => t && t.data && t.data.length > 0).map(t => {
     const d = t.data;
     const patients = t.data.map((d:any) =>( {
+      patientAge: d["g2:A12 Age"],
       patientFirstName: d["g2:A10 First Name"],
       patientLastName: d["g2:A11 Last Name"],
-      patientID: d["g4:B02.1 ID number on voucher"],
+      patientSex:
+        d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
+      patientID: d["g4:B02"]["1 ID number on voucher"],
       phone: d["g2:A14 Phone Number"],
       photoIDUri: d["g4:B03.1 Photo of ID card"],
       photoMedUri: d["g5:B04 (Medication)"],
@@ -143,16 +148,20 @@ const auditorSampleTasks: ClaimTask[] = [
   {
     entries: [
       {
+        patientAge: 20,
         patientFirstName: "Zawadi",
         patientLastName: "Mwangi",
+        patientSex: "F",
         item: "E-Pill",
         totalCost: 81.72,
         claimedCost: 57.95,
         timestamp: new Date(2019, 9, 14).getTime(),
       },
       {
+        patientAge: 37,
         patientFirstName: "Makena",
         patientLastName: "Maina",
+        patientSex: "F",
         item: "Pregnancy Test",
         totalCost: 57.78,
         claimedCost: 51.95,
@@ -170,16 +179,20 @@ const auditorSampleTasks: ClaimTask[] = [
   {
     entries: [
       {
+        patientAge: 42,
         patientFirstName: "Jimiyu",
         patientLastName: "Mwangi",
+        patientSex: "M",
         item: "Condom",
         totalCost: 119.41,
         claimedCost: 67.4,
         timestamp: new Date(2019, 9, 17).getTime(),
       },
       {
+        patientAge: 11,
         patientFirstName: "Okeyo",
         patientLastName: "Otieno",
+        patientSex: "M",
         item: "Condom",
         totalCost: 188.82,
         claimedCost: 84.79,

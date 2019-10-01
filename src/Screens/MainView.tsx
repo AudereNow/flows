@@ -82,6 +82,13 @@ class MainView extends React.Component<Props, State> {
   };
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
+    let patientProps = [];
+    if (!!entry.patientAge) patientProps.push(entry.patientAge);
+    if (!!entry.patientSex && entry.patientSex!.length > 0)
+      patientProps.push(entry.patientSex);
+    const patientInfo =
+      patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
+
     return (
       <LabelWrapper>
         <TextItem
@@ -89,7 +96,7 @@ class MainView extends React.Component<Props, State> {
         />
         <TextItem
           data={{
-            Patient: `${entry.patientFirstName} ${entry.patientLastName}`
+            Patient: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
           }}
         />
         <TextItem data={{ Item: entry.item }} />
