@@ -1,0 +1,19 @@
+.button_container {
+  align-items: center;
+  border: 1px solid black;
+  display: flex;
+  height: 25px;
+  width: 150px;
+  padding: 10px;
+  justify-content: center;
+  margin: 5px;
+}
+
+.button_container:hover {
+  cursor: pointer;
+}
+
+.button_container:active {
+  background-color: grey;
+  color: white;
+}

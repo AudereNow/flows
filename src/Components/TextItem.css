@@ -1,0 +1,8 @@
+.textitem_container {
+  flex-direction: "row";
+  margin: 5px;
+}
+
+.textitem_key {
+  font-weight: bold;
+}

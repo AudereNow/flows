@@ -1,11 +1,13 @@
 import React from "react";
 import { Task } from "../store/corestore";
+import LabelWrapper from "./LabelWrapper";
 import "./TaskList.css";
 
 type Props = {
   tasks: Task[];
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
+  onSelect?: (index: number) => void;
 };
 
 type State = {
@@ -26,13 +28,16 @@ class TaskList extends React.Component<Props, State> {
     if (isNaN(index)) {
       return;
     }
+    if (!!this.props.onSelect) {
+      this.props.onSelect(index);
+    }
+
     this.setState({ selectedIndex: index });
   };
 
   render() {
     return (
-      <div className={this.props.className}>
-        <div className="tasklist_header">Items to Review</div>
+      <LabelWrapper className={this.props.className} label={"Items to Review"}>
         <div>
           {this.props.tasks.map((task, index) => {
             return (
@@ -45,7 +50,7 @@ class TaskList extends React.Component<Props, State> {
             );
           })}
         </div>
-      </div>
+      </LabelWrapper>
     );
   }
 }

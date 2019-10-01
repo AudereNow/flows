@@ -1,0 +1,16 @@
+.imagerow_container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  margin: 5px;
+}
+
+.imagerow_image {
+  max-width: 20%;
+  height: auto;
+}
+
+.imagerow_image:hover {
+  transform: scale(2);
+}
