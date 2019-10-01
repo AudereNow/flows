@@ -35,7 +35,7 @@ export type Site = {
   phone?: string;
 };
 
-export type ClaimTask = {
+export type ClaimEntry = {
   patientFirstName: string;
   patientLastName: string;
   patientID?: string;
@@ -43,17 +43,20 @@ export type ClaimTask = {
   item: string;
   totalCost: number;
   claimedCost: number;
-  site: Site;
   photoIDUri?: string;
   photoMedUri?: string;
   photoMedBatchUri?: string;
   timestamp: number;
+}
+
+export type ClaimTask = {
+  entries: ClaimEntry[]
+  site: Site;
   notes?: string;
 };
 
 export type ReimbursementTask = {
-  site: Site;
-  claims: Task[];
+  claim: Task;
   notes?: string;
 };
 
@@ -87,14 +90,14 @@ export async function tasksForRole(role: UserRole): Promise<Task[]> {
       return [
         {
           site: auditorSampleTasks[0].site,
-          claims: approveClaims(auditorSampleTasks.slice(0, 2)),
+          claim: approveClaims(auditorSampleTasks[0]),
           notes:
             "Called on 24 Sept, and they asked us to hold payment until later",
           changes: []
         },
         {
-          site: auditorSampleTasks[2].site,
-          claims: approveClaims(auditorSampleTasks.slice(2)),
+          site: auditorSampleTasks[1].site,
+          claim: approveClaims(auditorSampleTasks[1]),
           changes: []
         }
       ];
@@ -110,9 +113,9 @@ async function loadAuditorTasks(): Promise<Task[]> {
     doc => (doc.data() as unknown) as AuditorTodo
   );
 
-  return todos.map(t => {
+  return todos.filter(t => t && t.data && t.data.length > 0).map(t => {
     const d = t.data;
-    return {
+    const patients = t.data.map((d:any) =>( {
       patientFirstName: d["g2:A10 First Name"],
       patientLastName: d["g2:A11 Last Name"],
       patientID: d["g4:B02.1 ID number on voucher"],
@@ -124,8 +127,11 @@ async function loadAuditorTasks(): Promise<Task[]> {
       totalCost: d["Total med price covered by SPIDER"],
       claimedCost: d["Total reimbursement"],
       timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime(),
+    }));
+    return {
+      entries: patients,
       site: {
-        name: d["g3:B01 Pharmacy name"],
+        name: d[0]["g3:B01 Pharmacy name"],
         phone: "+254 867 5309"
       },
       changes: []
@@ -135,24 +141,24 @@ async function loadAuditorTasks(): Promise<Task[]> {
 
 const auditorSampleTasks: ClaimTask[] = [
   {
-    patientFirstName: "Zawadi",
-    patientLastName: "Mwangi",
-    item: "E-Pill",
-    totalCost: 81.72,
-    claimedCost: 57.95,
-    timestamp: new Date(2019, 9, 14).getTime(),
-    site: {
-      name: "Haltons Store #34",
-      phone: "+254 739 994489"
-    }
-  },
-  {
-    patientFirstName: "Makena",
-    patientLastName: "Maina",
-    item: "Pregnancy Test",
-    totalCost: 57.78,
-    claimedCost: 51.95,
-    timestamp: new Date(2019, 9, 12).getTime(),
+    entries: [
+      {
+        patientFirstName: "Zawadi",
+        patientLastName: "Mwangi",
+        item: "E-Pill",
+        totalCost: 81.72,
+        claimedCost: 57.95,
+        timestamp: new Date(2019, 9, 14).getTime(),
+      },
+      {
+        patientFirstName: "Makena",
+        patientLastName: "Maina",
+        item: "Pregnancy Test",
+        totalCost: 57.78,
+        claimedCost: 51.95,
+        timestamp: new Date(2019, 9, 12).getTime(),
+      },
+    ],
     site: {
       name: "Haltons Store #34",
       phone: "+254 739 994489"
@@ -162,24 +168,24 @@ const auditorSampleTasks: ClaimTask[] = [
       "ID card photo in the future"
   },
   {
-    patientFirstName: "Jimiyu",
-    patientLastName: "Mwangi",
-    item: "Condom",
-    totalCost: 119.41,
-    claimedCost: 67.4,
-    timestamp: new Date(2019, 9, 17).getTime(),
-    site: {
-      name: "Mimosa #5",
-      phone: "+254 739 994400"
-    }
-  },
-  {
-    patientFirstName: "Okeyo",
-    patientLastName: "Otieno",
-    item: "Condom",
-    totalCost: 188.82,
-    claimedCost: 84.79,
-    timestamp: new Date(2019, 9, 15).getTime(),
+    entries: [
+      {
+        patientFirstName: "Jimiyu",
+        patientLastName: "Mwangi",
+        item: "Condom",
+        totalCost: 119.41,
+        claimedCost: 67.4,
+        timestamp: new Date(2019, 9, 17).getTime(),
+      },
+      {
+        patientFirstName: "Okeyo",
+        patientLastName: "Otieno",
+        item: "Condom",
+        totalCost: 188.82,
+        claimedCost: 84.79,
+        timestamp: new Date(2019, 9, 15).getTime(),
+      }
+    ],
     site: {
       name: "Mimosa #5",
       phone: "+254 739 994400"
@@ -190,18 +196,16 @@ const auditorSampleTasks: ClaimTask[] = [
 const MSEC_IN_DAY = 1000 * 60 * 60 * 24;
 
 // Only for faking data -- essentially mark claims as having been approved.
-function approveClaims(tasks: ClaimTask[]): Task[] {
-  return tasks.map(t => {
-    return {
-      ...t,
-      flow: TaskDecision.GO,
-      changes: [
-        {
-          timestamp: Date.now() - 3 * MSEC_IN_DAY,
-          by: firebase.auth().currentUser!.displayName || "Peekaboo Street",
-          desc: "Approved claim"
-        }
-      ]
-    };
-  });
+function approveClaims(task: ClaimTask): Task {
+  return {
+    ...task,
+    flow: TaskDecision.GO,
+    changes: [
+      {
+        timestamp: Date.now() - 3 * MSEC_IN_DAY,
+        by: firebase.auth().currentUser!.displayName || "Peekaboo Street",
+        desc: "Approved claim"
+      }
+    ]
+  };
 }

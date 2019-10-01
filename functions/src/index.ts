@@ -86,19 +86,17 @@ async function completeCSVProcessing(cache: any[]) {
 
   // Now generate Auditor work items representing each sampled row.  No need to
   // await this stuff either -- we just let each one happen whenever they do.
-  sampledRowsByPharmacy.forEach(pharm => {
+  sampledRowsByPharmacy.forEach(async pharm => {
     console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
-    pharm.values.forEach(row =>
-      admin
-        .firestore()
-        .collection(AUDITOR_TODO_COLLECTION)
-        .doc()
-        .set({
-          batchID,
-          pharmacyID: pharm.key,
-          data: row
-        })
-    );
+    await admin
+      .firestore()
+      .collection(AUDITOR_TODO_COLLECTION)
+      .doc()
+      .set({
+        batchID,
+        pharmacyID: pharm.key,
+        data: pharm.values
+      })
   });
   console.log(
     `Seem to have processed ${sampledRowsByPharmacy.length} pharmacies`
