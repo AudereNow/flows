@@ -1,0 +1,17 @@
+.labeltextinput_container {
+  flex-direction: column;
+  margin: 10px;
+}
+
+.labeltextinput_label {
+  align-self: flex-start;
+  display: block;
+  font-weight: bold;
+  margin: 10px 0 10px 0;
+}
+
+.labeltextinput_input {
+  min-height: 50px;
+  width: 100%;
+  display: block;
+}
