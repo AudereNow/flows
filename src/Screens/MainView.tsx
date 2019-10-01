@@ -1,12 +1,10 @@
 import React from "react";
-import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
-import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimTask,
@@ -16,9 +14,13 @@ import {
   UserRole,
   userRoles
 } from "../store/corestore";
-import { roleName } from "../util/UIUtils";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import "react-tabs/style/react-tabs.css";
+import "./MainView.css";
+import TaskList from "../Components/TaskList";
+import AdminPanel from "../Components/AdminPanel";
 
 type Props = {};
 type State = {
@@ -178,6 +180,17 @@ class MainView extends React.Component<Props, State> {
   };
 
   _renderRolePane(index: number) {
+    const adminIndex = this.state.roles.findIndex(r => r === UserRole.ADMIN);
+
+    if (adminIndex === index) {
+      console.log("Rendering admin panel");
+      return (
+        <TabPanel key="adminpanel">
+          <AdminPanel />
+        </TabPanel>
+      );
+    }
+
     const renderer =
       this.state.roles[index] === UserRole.AUDITOR
         ? this._renderTaskListClaim
@@ -221,7 +234,7 @@ class MainView extends React.Component<Props, State> {
       <Tabs>
         <TabList>
           {this.state.roles.map(r => (
-            <Tab key={r}>{roleName(r)}</Tab>
+            <Tab key={r}>{r}</Tab>
           ))}
         </TabList>
         {this.state.roles.map((_, index) => {

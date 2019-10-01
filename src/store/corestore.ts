@@ -1,6 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
+import "firebase/functions";
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCspibVcd3GcAk01xHndZEJX8zuxwPIt-Y",
@@ -19,8 +20,9 @@ type AuditorTodo = {
 };
 
 export enum UserRole {
-  AUDITOR,
-  PAYOR
+  AUDITOR = "Auditor",
+  PAYOR = "Payor",
+  ADMIN = "Admin"
 }
 
 // Whether a task should move forward (GO == "move to the next workflow step")
@@ -74,11 +76,14 @@ export function initializeStore() {
   firebase.initializeApp(FIREBASE_CONFIG);
 }
 
-// At some point, when we're ready, we might want to store a user's allowed
-// roles into Firebase Auth's "Custom Claims":
-// https://www.youtube.com/watch?v=3hj_r_N0qMs.  For now, we hardcode.
 export async function userRoles(): Promise<UserRole[]> {
-  return [UserRole.AUDITOR, UserRole.PAYOR];
+  const token = await firebase.auth().currentUser!.getIdTokenResult();
+
+  if (!token.claims.roles) {
+    console.log("User has no roles assigned");
+    return [];
+  }
+  return token.claims.roles;
 }
 
 export async function tasksForRole(role: UserRole): Promise<Task[]> {
@@ -100,6 +105,8 @@ export async function tasksForRole(role: UserRole): Promise<Task[]> {
           changes: []
         }
       ];
+    case UserRole.ADMIN:
+      return [];
   }
 }
 
@@ -136,6 +143,21 @@ async function loadAuditorTasks(): Promise<Task[]> {
       changes: []
     };
   });
+}
+
+export async function setRoles(email: string, roles: UserRole[]) {
+  const serverSetRoles = firebase.functions().httpsCallable("setRoles");
+  const result = await serverSetRoles({ email, roles });
+
+  if (!result.data) {
+    console.log("Unexpected empty result from setRoles on server");
+  }
+  if (result.data.error) {
+    console.log(`Error from server setRole: ${result.data.error}`);
+  }
+  if (result.data.result) {
+    console.log(`Server setRole successful: ${result.data.result}`);
+  }
 }
 
 const auditorSampleTasks: ClaimTask[] = [
