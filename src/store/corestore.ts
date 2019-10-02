@@ -77,6 +77,9 @@ export function initializeStore() {
 }
 
 export async function userRoles(): Promise<UserRole[]> {
+  // Uncomment next line to force a refresh of custom claims
+  // await firebase.auth().currentUser!.getIdToken(true);
+
   const token = await firebase.auth().currentUser!.getIdTokenResult();
 
   if (!token.claims.roles) {

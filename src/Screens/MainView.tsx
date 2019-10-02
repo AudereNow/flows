@@ -180,16 +180,6 @@ class MainView extends React.Component<Props, State> {
   };
 
   _renderRolePane(index: number) {
-    const adminIndex = this.state.roles.findIndex(r => r === UserRole.ADMIN);
-
-    if (adminIndex === index) {
-      return (
-        <TabPanel key="adminpanel">
-          <AdminPanel />
-        </TabPanel>
-      );
-    }
-
     const renderer =
       this.state.roles[index] === UserRole.AUDITOR
         ? this._renderTaskListClaim
@@ -237,6 +227,19 @@ class MainView extends React.Component<Props, State> {
           ))}
         </TabList>
         {this.state.roles.map((_, index) => {
+          const adminIndex = this.state.roles.findIndex(
+            r => r === UserRole.ADMIN
+          );
+          const panelContent =
+            adminIndex === index ? (
+              <AdminPanel />
+            ) : (
+              <div>
+                {this._renderRolePane(index)}
+                {this._renderDetailsPane(index)}
+              </div>
+            );
+
           return (
             <TabPanel
               key={"tab_" + index}
@@ -245,8 +248,7 @@ class MainView extends React.Component<Props, State> {
                 flexDirection: "row"
               }}
             >
-              {this._renderRolePane(index)}
-              {this._renderDetailsPane(index)}
+              {panelContent}
             </TabPanel>
           );
         })}
