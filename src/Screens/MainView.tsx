@@ -124,7 +124,9 @@ class MainView extends React.Component<Props, State> {
   _renderReimbursementDetails = (task: Task) => {
     const reimbursement = task as ReimbursementTask;
     const claim = reimbursement.claim as ClaimTask;
-    if (!reimbursement || !claim || !claim.entries) return null;
+    if (!reimbursement || !claim || !claim.entries) {
+      return null;
+    }
     const claimAmounts = claim.entries.map(entry => {
       return entry.claimedCost;
     });
