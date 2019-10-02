@@ -129,8 +129,6 @@ async function addToCSVUploads(cache: any[], batchID: string) {
     .doc(batchID)
     .collection(CSV_UPLOAD_RECORDS_COLLECTION);
 
-  // Ok to let these complete without awaiting while we proceed to select a
-  // subset to sample for audit.
   await Promise.all(cache.map(r => records.doc(r["meta:instanceID"]).set(r)));
   console.log(
     `Set ${cache.length} records into ${CSV_UPLOAD_COLLECTION}/${batchID}`
