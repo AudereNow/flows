@@ -6,11 +6,11 @@ import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  ClaimTask,
   Task,
-  tasksForRole,
-  UserRole,
-  ReimbursementTask
+  loadPayorTasks,
+  declinePayment,
+  getLatestTaskNote,
+  savePaymentCompletedTask
 } from "../store/corestore";
 import "./MainView.css";
 import "react-tabs/style/react-tabs.css";
@@ -32,16 +32,14 @@ class PayorPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    const tasks = await tasksForRole(UserRole.PAYOR);
+    const tasks = await loadPayorTasks();
     this.setState({ tasks });
   }
 
   _renderTaskListReimbursement = (task: Task, isSelected: boolean) => {
-    const reimbursement = task as ReimbursementTask;
-    const claim = reimbursement.claim as ClaimTask;
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = claim.entries.map(entry => {
+    const claimAmounts = task.entries.map(entry => {
       return entry.claimedCost;
     });
     const claimsTotal = claimAmounts.reduce(
@@ -50,7 +48,7 @@ class PayorPanel extends React.Component<Props, State> {
     return (
       <div className={previewName}>
         <div className="mainview_preview_header">
-          <span>{claim.site.name}</span>
+          <span>{task.site.name}</span>
         </div>
         <div>{"Total Reimbursement: " + claimsTotal + " KSh"}</div>
       </div>
@@ -61,19 +59,33 @@ class PayorPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _onApprove() {}
+  _onPaymentComplete = async () => {
+    await savePaymentCompletedTask(
+      this.state.tasks[this.state.selectedTaskIndex],
+      this.state.notes
+    );
+    this._removeSelectedTask();
+  };
 
-  _onDecline() {
-    this.setState({ notes: "" });
+  _onDecline = async () => {
+    const task = this.state.tasks[this.state.selectedTaskIndex];
+    await declinePayment(task, this.state.notes);
+    this._removeSelectedTask();
+  };
+
+  _removeSelectedTask() {
+    const tasksCopy = this.state.tasks.slice(0);
+
+    tasksCopy.splice(this.state.selectedTaskIndex, 1);
+    const newIndex =
+      this.state.selectedTaskIndex >= tasksCopy.length
+        ? tasksCopy.length - 1
+        : this.state.selectedTaskIndex;
+    this.setState({ tasks: tasksCopy, selectedTaskIndex: newIndex });
   }
 
   _renderReimbursementDetails = (task: Task) => {
-    const reimbursement = task as ReimbursementTask;
-    const claim = reimbursement.claim as ClaimTask;
-    if (!reimbursement || !claim || !claim.entries) {
-      return null;
-    }
-    const claimAmounts = claim.entries.map(entry => {
+    const claimAmounts = task.entries.map(entry => {
       return entry.claimedCost;
     });
     const claimsTotal = claimAmounts.reduce(
@@ -81,7 +93,7 @@ class PayorPanel extends React.Component<Props, State> {
     );
 
     let cleanedData: any[] = [];
-    claim.entries.forEach((entry: ClaimEntry) => {
+    task.entries.forEach((entry: ClaimEntry) => {
       let row: any = {};
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
@@ -91,18 +103,19 @@ class PayorPanel extends React.Component<Props, State> {
 
     return (
       <LabelWrapper label="DETAILS VIEW">
-        <TextItem data={{ Pharmacy: claim.site.name }} />
-        {!!claim.site.phone && <TextItem data={{ Phone: claim.site.phone }} />}
+        <TextItem data={{ Pharmacy: task.site.name }} />
+        {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem
           data={{ "Total Reimbursement": claimsTotal.toString() + "KSh" }}
         />
         <DataTable data={cleanedData} />
-        <LabelTextInput onTextChange={this._onNotesChanged} label="Notes" />
+        <LabelTextInput
+          onTextChange={this._onNotesChanged}
+          label="Notes"
+          defaultValue={getLatestTaskNote(task)}
+        />
         <div className="mainview_button_row">
-          <Button
-            label="Payment Complete"
-            onClick={() => console.log("Payment complete")}
-          />
+          <Button label="Payment Complete" onClick={this._onPaymentComplete} />
         </div>
       </LabelWrapper>
     );

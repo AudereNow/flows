@@ -8,10 +8,9 @@ import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   Task,
-  declineAudit,
-  loadAuditorTasks,
   getLatestTaskNote,
-  saveAuditorApprovedTask
+  loadOperatorTasks,
+  saveOperatorCompletedTask
 } from "../store/corestore";
 import "./MainView.css";
 import "react-tabs/style/react-tabs.css";
@@ -24,7 +23,7 @@ type State = {
   notes: string;
 };
 
-class AuditorPanel extends React.Component<Props, State> {
+class OperatorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
     selectedTaskIndex: -1,
@@ -32,11 +31,11 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    const tasks = await loadAuditorTasks();
+    const tasks = await loadOperatorTasks();
     this.setState({ tasks });
   }
 
-  _renderTaskListClaim = (task: Task, isSelected: boolean) => {
+  _renderTaskList = (task: Task, isSelected: boolean) => {
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
     const claimAmounts = task.entries.map(entry => {
@@ -61,17 +60,11 @@ class AuditorPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _onApprove = async () => {
-    await saveAuditorApprovedTask(
+  _onCompleted = async () => {
+    await saveOperatorCompletedTask(
       this.state.tasks[this.state.selectedTaskIndex],
       this.state.notes
     );
-    this._removeSelectedTask();
-  };
-
-  _onDecline = async () => {
-    const task = this.state.tasks[this.state.selectedTaskIndex];
-    await declineAudit(task, this.state.notes);
     this._removeSelectedTask();
   };
 
@@ -109,7 +102,7 @@ class AuditorPanel extends React.Component<Props, State> {
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper key={entry.patientID}>
+      <LabelWrapper>
         <TextItem
           data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
         />
@@ -135,8 +128,7 @@ class AuditorPanel extends React.Component<Props, State> {
           defaultValue={getLatestTaskNote(task)}
         />
         <div className="mainview_button_row">
-          <Button label="Decline" onClick={this._onDecline} />
-          <Button label="Approve" onClick={this._onApprove} />
+          <Button label="Mark Completed" onClick={this._onCompleted} />
         </div>
       </LabelWrapper>
     );
@@ -152,7 +144,7 @@ class AuditorPanel extends React.Component<Props, State> {
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}
-          renderItem={this._renderTaskListClaim}
+          renderItem={this._renderTaskList}
           className="mainview_tasklist"
         />
         <div style={{ width: "100%" }}>
@@ -166,4 +158,4 @@ class AuditorPanel extends React.Component<Props, State> {
   }
 }
 
-export default AuditorPanel;
+export default OperatorPanel;

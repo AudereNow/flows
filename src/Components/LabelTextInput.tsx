@@ -3,6 +3,7 @@ import "./LabelTextInput.css";
 
 interface Props {
   label?: string;
+  defaultValue?: string;
   onTextChange: (text: string) => void;
 }
 
@@ -21,6 +22,7 @@ class LabelTextInput extends Component<Props> {
         )}
         <textarea
           className="labeltextinput_input"
+          defaultValue={this.props.defaultValue}
           onChange={this._onTextChange}
         />
       </div>
