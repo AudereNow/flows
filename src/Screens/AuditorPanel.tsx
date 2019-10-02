@@ -31,7 +31,6 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    console.log("Mounted!");
     const tasks = await tasksForRole(UserRole.AUDITOR);
     this.setState({ tasks });
   }
