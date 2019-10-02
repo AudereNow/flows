@@ -10,7 +10,14 @@ const ImageRow = (props: Props) => {
     <div className="imagerow_container">
       {props.imageURLs.length > 0 &&
         props.imageURLs.map((url, index) => {
-          return <img className="imagerow_image" key={url + index} src={url} />;
+          return (
+            <img
+              className="imagerow_image"
+              key={url + index}
+              src={url}
+              alt={url}
+            />
+          );
         })}
     </div>
   );
