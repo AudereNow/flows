@@ -16,7 +16,7 @@ import "./MainView.css";
 import "react-tabs/style/react-tabs.css";
 import TaskList from "../Components/TaskList";
 
-const MIN_SAMPLE_FRACTION = 0.5;
+const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 
 type Props = {};
