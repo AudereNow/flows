@@ -11,7 +11,6 @@ const CSV_UPLOAD_RECORDS_COLLECTION = "records";
 const AUDITOR_TODO_COLLECTION = "auditor_todo";
 
 const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
-const MIN_PHARMACY_SAMPLE_FRACTION = 0.2; // What % of pharm rows to sample
 
 // Needed for access to Storage.  If there's a way to actually pull files from
 // there without credentials (but securely, given we're in the same Firebase
@@ -134,21 +133,9 @@ async function completeCSVProcessing(cache: any[]) {
   );
 
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
-  const sampledRowsByPharmacy = rowsByPharmacy.map(pharm => {
-    const shuffled = shuffleArray(pharm.values);
-    const numToSample = Math.max(
-      1,
-      Math.ceil(pharm.values.length * MIN_PHARMACY_SAMPLE_FRACTION)
-    );
-
-    return {
-      key: pharm.key,
-      values: shuffled.slice(0, numToSample)
-    };
-  });
 
   // Now generate Auditor work items representing each sampled row.
-  await Promise.all(sampledRowsByPharmacy.map(async pharm => {
+  await Promise.all(rowsByPharmacy.map(async pharm => {
     console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
     await admin
       .firestore()
@@ -161,7 +148,7 @@ async function completeCSVProcessing(cache: any[]) {
       })
   }));
   console.log(
-    `Seem to have processed ${sampledRowsByPharmacy.length} pharmacies`
+    `Seem to have processed ${rowsByPharmacy.length} pharmacies`
   );
 }
 
@@ -182,12 +169,4 @@ function groupBy(
     }
     return rv;
   }, []);
-}
-
-// Taken from https://stackoverflow.com/a/46545530/12071652
-function shuffleArray(arr: any[]): any[] {
-  return arr
-    .map(a => ({ sort: Math.random(), value: a }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(a => a.value);
 }
