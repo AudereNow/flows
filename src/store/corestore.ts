@@ -137,7 +137,6 @@ async function loadAuditorTasks(): Promise<Task[]> {
       entries: patients,
       site: {
         name: d[0]["g3:B01 Pharmacy name"],
-        phone: "+254 867 5309"
       },
       changes: []
     };
