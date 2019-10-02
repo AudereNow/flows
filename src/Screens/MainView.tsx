@@ -9,6 +9,7 @@ import LabelWrapper from "../Components/LabelWrapper";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
+  ClaimEntry,
   ClaimTask,
   ReimbursementTask,
   Task,
@@ -46,14 +47,20 @@ class MainView extends React.Component<Props, State> {
     const claim = task as ClaimTask;
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
+    const claimAmounts = claim.entries.map(entry => {
+      return entry.claimedCost;
+    });
+    const claimsTotal = claimAmounts.reduce(
+      (sum, claimedCost) => sum + claimedCost
+    );
     return (
       <div className={previewName}>
         <div className="mainview_preview_header">
           <span>{claim.site.name}</span>
-          <span>{new Date(claim.timestamp).toLocaleDateString()}</span>
+          <span>{claim.entries.length} Entries</span>
         </div>
-        <div>{claim.patientFirstName + " " + claim.patientLastName}</div>
-        <div>{`${claim.item}: ${claim.totalCost} KSh (${claim.claimedCost})`}</div>
+        <div>{"Claims to Review: " + claim.entries.length}</div>
+        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
   };
@@ -68,7 +75,7 @@ class MainView extends React.Component<Props, State> {
     this.setState({ notes: "" });
   }
 
-  _extractImageURLs = (claim: ClaimTask) => {
+  _extractImageURLs = (claim: ClaimEntry) => {
     const claimImageURLs: string[] = [];
     if (!!claim.photoIDUri) {
       claimImageURLs.push(claim.photoIDUri);
@@ -82,28 +89,37 @@ class MainView extends React.Component<Props, State> {
     return claimImageURLs;
   };
 
-  _renderClaimDetails = (task: Task) => {
-    const claim = task as ClaimTask;
+  _renderClaimEntryDetails = (entry: ClaimEntry) => {
     let patientProps = [];
-    if (!!claim.patientAge) patientProps.push(claim.patientAge);
-    if (!!claim.patientSex && claim.patientSex!.length > 0)
-      patientProps.push(claim.patientSex);
+    if (!!entry.patientAge) patientProps.push(entry.patientAge);
+    if (!!entry.patientSex && entry.patientSex!.length > 0)
+      patientProps.push(entry.patientSex);
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper label="DETAILS VIEW">
-        <TextItem data={{ Pharmacy: claim.site.name }} />
+      <LabelWrapper>
         <TextItem
-          data={{ Date: new Date(claim.timestamp).toLocaleDateString() }}
+          data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
         />
         <TextItem
           data={{
-            Patient: `${claim.patientFirstName} ${claim.patientLastName} ${patientInfo}`
+            Patient: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
           }}
         />
-        <TextItem data={{ Item: claim.item }} />
-        <ImageRow imageURLs={this._extractImageURLs(claim)} />
+        <TextItem data={{ Item: entry.item }} />
+        <ImageRow imageURLs={this._extractImageURLs(entry)} />
+      </LabelWrapper>
+    );
+  }
+
+  _renderClaimDetails = (task: Task) => {
+    const claim = task as ClaimTask;
+
+    return (
+      <LabelWrapper label="DETAILS VIEW">
+        <TextItem data={{ Pharmacy: claim.site.name }} />
+        {claim.entries.map(this._renderClaimEntryDetails)}
         <LabelTextInput onTextChange={this._onNotesChanged} label={"Notes"} />
         <div className="mainview_button_row">
           <Button label="Decline" onClick={this._onDecline} />
@@ -115,31 +131,31 @@ class MainView extends React.Component<Props, State> {
 
   _renderReimbursementDetails = (task: Task) => {
     const reimbursement = task as ReimbursementTask;
-    if (!reimbursement || !reimbursement.claims) return null;
-    const claimAmounts = reimbursement.claims.map(task => {
-      const claim = task as ClaimTask;
-      return claim.claimedCost;
+    const claim = reimbursement.claim as ClaimTask;
+    if (!reimbursement || !claim || !claim.entries) {
+      return null;
+    }
+    const claimAmounts = claim.entries.map(entry => {
+      return entry.claimedCost;
     });
     const claimsTotal = claimAmounts.reduce(
       (sum, claimedCost) => sum + claimedCost
     );
 
     let cleanedData: any[] = [];
-    reimbursement.claims.forEach((value: Task) => {
-      const item = value as ClaimTask;
+    claim.entries.forEach((entry: ClaimEntry) => {
       let row: any = {};
-      row["Patient"] = `${item.patientFirstName} ${item.patientLastName}`;
-      row["Item"] = item.item;
-      row["Reimbursement"] = item.claimedCost;
-      row["Notes"] = item.notes;
+      row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
+      row["Item"] = entry.item;
+      row["Reimbursement"] = entry.claimedCost;
       cleanedData.push(row);
     });
 
     return (
       <LabelWrapper label="DETAILS VIEW">
-        <TextItem data={{ Pharmacy: reimbursement.site.name }} />
-        {!!reimbursement.site.phone && (
-          <TextItem data={{ Phone: reimbursement.site.phone }} />
+        <TextItem data={{ Pharmacy: claim.site.name }} />
+        {!!claim.site.phone && (
+          <TextItem data={{ Phone: claim.site.phone }} />
         )}
         <TextItem
           data={{ "Total Reimbursement": claimsTotal.toString() + "KSh" }}
@@ -158,11 +174,11 @@ class MainView extends React.Component<Props, State> {
 
   _renderTaskListReimbursement = (task: Task, isSelected: boolean) => {
     const reimbursement = task as ReimbursementTask;
+    const claim = reimbursement.claim as ClaimTask;
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = reimbursement.claims.map(task => {
-      const claim = task as ClaimTask;
-      return claim.claimedCost;
+    const claimAmounts = claim.entries.map(entry => {
+      return entry.claimedCost;
     });
     const claimsTotal = claimAmounts.reduce(
       (sum, claimedCost) => sum + claimedCost
@@ -170,7 +186,7 @@ class MainView extends React.Component<Props, State> {
     return (
       <div className={previewName}>
         <div className="mainview_preview_header">
-          <span>{reimbursement.site.name}</span>
+          <span>{claim.site.name}</span>
         </div>
         <div>{"Total Reimbursement: " + claimsTotal + " KSh"}</div>
       </div>
