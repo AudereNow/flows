@@ -183,7 +183,6 @@ class MainView extends React.Component<Props, State> {
     const adminIndex = this.state.roles.findIndex(r => r === UserRole.ADMIN);
 
     if (adminIndex === index) {
-      console.log("Rendering admin panel");
       return (
         <TabPanel key="adminpanel">
           <AdminPanel />
