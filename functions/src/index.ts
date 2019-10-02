@@ -20,6 +20,69 @@ const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG!);
 adminConfig.credential = admin.credential.cert(serviceAccount);
 admin.initializeApp(adminConfig);
 
+type CallResult =
+  | {
+      error: string;
+    }
+  | {
+      result: string;
+    };
+
+exports.setRoles = functions.https.onCall(
+  (data, context): Promise<CallResult> => {
+    if (
+      !context.auth ||
+      !context.auth.token ||
+      !context.auth.token.roles ||
+      !context.auth.token.roles.includes(UserRole.ADMIN as string)
+    ) {
+      return new Promise(resolve =>
+        resolve({
+          error: "Request not authorized"
+        })
+      );
+    }
+
+    if (!data || !data.email || !data.roles || !data.roles.length) {
+      return new Promise(resolve =>
+        resolve({
+          error:
+            "Request did not include valid email and/or roles: " +
+            JSON.stringify(data)
+        })
+      );
+    }
+
+    // Deliberately not awaiting here, because onCall is defined to require a
+    // Promise back, which it'll resolove itself.
+    return setRoles(data.email, data.roles);
+  }
+);
+
+// Copied from corestore.ts in the main app for now.  Once we factor real
+// backend APIs out, shared types like this should be consumed directly and
+// correctly (via npms, shared libs, or some such).
+enum UserRole {
+  AUDITOR = "Auditor",
+  PAYOR = "Payor",
+  ADMIN = "Admin"
+}
+
+async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
+  const user = await admin.auth().getUserByEmail(email);
+
+  if (!user || !user.uid) {
+    return {
+      error: "Unable to find user " + email
+    };
+  }
+
+  await admin.auth().setCustomUserClaims(user.uid, { roles });
+  return {
+    result: "Roles successfully set for " + email + ": " + JSON.stringify(roles)
+  };
+}
+
 exports.parseCSV = functions.storage.object().onFinalize(async object => {
   const filePath = object.name; // File path in the bucket.
   const contentType = object.contentType; // File content type.
