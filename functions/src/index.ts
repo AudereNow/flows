@@ -115,7 +115,12 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
           rej(err);
         },
         async () => {
-          await completeCSVProcessing(cache);
+          try {
+            await completeCSVProcessing(cache);
+          } catch(e) {
+            rej(e);
+            return;
+          }
           res();
         }
       )
