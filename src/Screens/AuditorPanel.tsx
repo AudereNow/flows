@@ -16,6 +16,9 @@ import "./MainView.css";
 import "react-tabs/style/react-tabs.css";
 import TaskList from "../Components/TaskList";
 
+const MIN_SAMPLE_FRACTION = 0.5;
+const MIN_SAMPLES = 1;
+
 type Props = {};
 type State = {
   tasks: Task[];
@@ -51,7 +54,7 @@ class AuditorPanel extends React.Component<Props, State> {
           <span>{claim.site.name}</span>
           <span>{claim.entries.length} Entries</span>
         </div>
-        <div>{"Claims to Review: " + claim.entries.length}</div>
+        <div>{"Number of Claims: " + claim.entries.length}</div>
         <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
@@ -111,7 +114,7 @@ class AuditorPanel extends React.Component<Props, State> {
     return (
       <LabelWrapper label="DETAILS VIEW">
         <TextItem data={{ Pharmacy: claim.site.name }} />
-        {claim.entries.map(this._renderClaimEntryDetails)}
+        {sample(claim.entries, MIN_SAMPLE_FRACTION, MIN_SAMPLES).map(this._renderClaimEntryDetails)}
         <LabelTextInput onTextChange={this._onNotesChanged} label={"Notes"} />
         <div className="mainview_button_row">
           <Button label="Decline" onClick={this._onDecline} />
@@ -146,3 +149,14 @@ class AuditorPanel extends React.Component<Props, State> {
 }
 
 export default AuditorPanel;
+
+
+function sample(arr: any[], minRate: number, minSamples: number): any[] {
+  // Taken from https://stackoverflow.com/a/46545530/12071652
+  const shuffledArr = arr
+    .map(a => ({ sort: Math.random(), value: a}))
+    .sort((a, b) => a.sort - b.sort)
+    .map(a => a.value);
+  const samplesToReturn = Math.max(Math.ceil(arr.length * minRate), minSamples);
+  return shuffledArr.slice(0, samplesToReturn);
+}
