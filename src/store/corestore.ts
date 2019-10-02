@@ -129,8 +129,8 @@ async function loadAuditorTasks(): Promise<Task[]> {
       photoMedUri: d["g5:B04 (Medication)"],
       photoMedBatchUri: d["g5:B05 (Medication batch)"],
       item: d["Type received"],
-      totalCost: d["Total med price covered by SPIDER"],
-      claimedCost: d["Total reimbursement"],
+      totalCost: parseFloat(d["Total med price covered by SPIDER"]),
+      claimedCost: parseFloat(d["Total reimbursement"]),
       timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime(),
     }));
     return {

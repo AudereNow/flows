@@ -47,12 +47,20 @@ class MainView extends React.Component<Props, State> {
     const claim = task as ClaimTask;
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
+    const claimAmounts = claim.entries.map(entry => {
+      return entry.claimedCost;
+    });
+    const claimsTotal = claimAmounts.reduce(
+      (sum, claimedCost) => sum + claimedCost
+    );
     return (
       <div className={previewName}>
         <div className="mainview_preview_header">
           <span>{claim.site.name}</span>
           <span>{claim.entries.length} Entries</span>
         </div>
+        <div>{"Claims to Review: " + claim.entries.length}</div>
+        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
   };
