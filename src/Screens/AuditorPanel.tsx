@@ -25,13 +25,15 @@ type State = {
   tasks: Task[];
   selectedTaskIndex: number;
   notes: string;
+  numSamples: number;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
     selectedTaskIndex: -1,
-    notes: ""
+    notes: "",
+    numSamples: 0
   };
 
   async componentDidMount() {
@@ -67,7 +69,8 @@ class AuditorPanel extends React.Component<Props, State> {
   _onApprove = async () => {
     await saveAuditorApprovedTask(
       this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes
+      this.state.notes,
+      this.state.numSamples,
     );
     this._removeSelectedTask();
   };
@@ -128,8 +131,7 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimDetails = (task: Task) => {
-    const numSamples = Math.max(Math.ceil(task.entries.length * MIN_SAMPLE_FRACTION), MIN_SAMPLES);
-    const samples = task.entries.slice(0, numSamples);
+    const samples = task.entries.slice(0, this.state.numSamples);
 
     return (
       <LabelWrapper label="DETAILS VIEW">
@@ -149,7 +151,11 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _onTaskSelect = (index: number) => {
-    this.setState({ selectedTaskIndex: index });
+    const numSamples = Math.max(Math.ceil(this.state.tasks[index].entries.length * MIN_SAMPLE_FRACTION), MIN_SAMPLES);
+    this.setState({
+      selectedTaskIndex: index,
+      numSamples
+    });
   };
 
   render() {

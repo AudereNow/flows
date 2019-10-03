@@ -55,6 +55,7 @@ export type ClaimEntry = {
   photoMedUri?: string;
   photoMedBatchUri?: string;
   timestamp: number;
+  reviewed?: boolean;
 };
 
 export type ClaimTask = {
@@ -128,13 +129,22 @@ async function saveDeclinedTask(
   ]);
 }
 
-export async function saveAuditorApprovedTask(task: Task, notes?: string) {
+export async function saveAuditorApprovedTask(task: Task, notes: string, samplesReviewed: number) {
   task.flow = TaskDecision.APPROVE_AUDIT;
   task.changes.push({
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: TaskDecision.APPROVE_AUDIT,
     notes
+  });
+  task.entries = task.entries.map((entry, index) => {
+    if (index < samplesReviewed) {
+      return {
+        ...entry,
+        reviewed: true
+      }
+    }
+    return entry;
   });
   removeEmptyFieldsInPlace(task);
 
