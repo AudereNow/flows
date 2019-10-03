@@ -50,7 +50,7 @@ class PayorPanel extends React.Component<Props, State> {
         <div className="mainview_preview_header">
           <span>{task.site.name}</span>
         </div>
-        <div>{"Total Reimbursement: " + claimsTotal + " KSh"}</div>
+        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
   };
@@ -106,7 +106,7 @@ class PayorPanel extends React.Component<Props, State> {
         <TextItem data={{ Pharmacy: task.site.name }} />
         {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem
-          data={{ "Total Reimbursement": claimsTotal.toString() + "KSh" }}
+          data={{ "Total Reimbursement": claimsTotal.toFixed(2) + " KSh" }}
         />
         <DataTable data={cleanedData} />
         <LabelTextInput
@@ -127,7 +127,7 @@ class PayorPanel extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
+      <div className="mainview_content">
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}

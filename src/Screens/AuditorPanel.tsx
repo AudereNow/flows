@@ -148,14 +148,14 @@ class AuditorPanel extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
+      <div className="mainview_content">
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}
           renderItem={this._renderTaskListClaim}
           className="mainview_tasklist"
         />
-        <div style={{ width: "100%" }}>
+        <div>
           {this.state.selectedTaskIndex >= 0 &&
             this._renderClaimDetails(
               this.state.tasks[this.state.selectedTaskIndex]
