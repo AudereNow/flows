@@ -17,18 +17,23 @@ import "./MainView.css";
 import "react-tabs/style/react-tabs.css";
 import TaskList from "../Components/TaskList";
 
+const MIN_SAMPLE_FRACTION = 0.2;
+const MIN_SAMPLES = 1;
+
 type Props = {};
 type State = {
   tasks: Task[];
   selectedTaskIndex: number;
   notes: string;
+  numSamples: number;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
     selectedTaskIndex: -1,
-    notes: ""
+    notes: "",
+    numSamples: 0
   };
 
   async componentDidMount() {
@@ -51,7 +56,7 @@ class AuditorPanel extends React.Component<Props, State> {
           <span>{task.site.name}</span>
           <span>{task.entries.length} Entries</span>
         </div>
-        <div>{"Claims to Review: " + task.entries.length}</div>
+        <div>{"Number of Claims: " + task.entries.length}</div>
         <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
@@ -64,7 +69,8 @@ class AuditorPanel extends React.Component<Props, State> {
   _onApprove = async () => {
     await saveAuditorApprovedTask(
       this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes
+      this.state.notes,
+      this.state.numSamples,
     );
     this._removeSelectedTask();
   };
@@ -125,10 +131,12 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimDetails = (task: Task) => {
+    const samples = task.entries.slice(0, this.state.numSamples);
+
     return (
       <LabelWrapper label="DETAILS VIEW">
         <TextItem data={{ Pharmacy: task.site.name }} />
-        {task.entries.map(this._renderClaimEntryDetails)}
+        {samples.map(this._renderClaimEntryDetails)}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
@@ -143,7 +151,11 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _onTaskSelect = (index: number) => {
-    this.setState({ selectedTaskIndex: index });
+    const numSamples = Math.max(Math.ceil(this.state.tasks[index].entries.length * MIN_SAMPLE_FRACTION), MIN_SAMPLES);
+    this.setState({
+      selectedTaskIndex: index,
+      numSamples
+    });
   };
 
   render() {
