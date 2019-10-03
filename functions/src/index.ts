@@ -64,6 +64,7 @@ exports.setRoles = functions.https.onCall(
 enum UserRole {
   AUDITOR = "Auditor",
   PAYOR = "Payor",
+  OPERATOR = "Operator",
   ADMIN = "Admin"
 }
 
@@ -148,18 +149,20 @@ async function createAuditorTodos(cache: any[], batchID: string) {
   }));
 
   // Now generate Auditor work items representing each sampled row.
-  await Promise.all(shuffledRowsByPharmacy.map(async pharm => {
-    console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
-    await admin
-      .firestore()
-      .collection(AUDITOR_TODO_COLLECTION)
-      .doc()
-      .set({
-        batchID,
-        pharmacyID: pharm.key,
-        data: pharm.values
-      })
-  }));
+  await Promise.all(
+    shuffledRowsByPharmacy.map(async pharm => {
+      console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
+      await admin
+        .firestore()
+        .collection(AUDITOR_TODO_COLLECTION)
+        .doc()
+        .set({
+          batchID,
+          pharmacyID: pharm.key,
+          data: pharm.values
+        });
+    })
+  );
   console.log(
     `Seem to have processed ${shuffledRowsByPharmacy.length} pharmacies`
   );

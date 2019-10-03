@@ -8,6 +8,7 @@ type RoleMap = {
 const NO_ROLES_MAP: RoleMap = {
   Auditor: false,
   Payor: false,
+  Operator: false,
   Admin: false
 };
 

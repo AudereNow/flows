@@ -2,8 +2,13 @@
   margin: 16px;
 }
 
+.mainview_content {
+  display: flex;
+  width: 100%;
+}
+
 .mainview_tasklist {
-  width: 250px;
+  min-width: 300px;
 }
 
 .mainview_task_preview {

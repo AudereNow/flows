@@ -9,6 +9,7 @@ import "./MainView.css";
 import AuditorPanel from "./AuditorPanel";
 import PayorPanel from "./PayorPanel";
 import AdminPanel from "./AdminPanel";
+import OperatorPanel from "./OperatorPanel";
 
 type Props = {};
 type State = {
@@ -18,6 +19,7 @@ type State = {
 const RoleToPanelMap = {
   Auditor: AuditorPanel,
   Payor: PayorPanel,
+  Operator: OperatorPanel,
   Admin: AdminPanel
 };
 
@@ -25,7 +27,6 @@ class MainView extends React.Component<Props, State> {
   state: State = {
     roles: []
   };
-
   async componentDidMount() {
     const roles = await userRoles();
     this.setState({ roles });
