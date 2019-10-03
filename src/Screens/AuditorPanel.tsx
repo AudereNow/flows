@@ -110,11 +110,13 @@ class AuditorPanel extends React.Component<Props, State> {
 
   _renderClaimDetails = (task: Task) => {
     const claim = task as ClaimTask;
+    const numSamples = Math.max(Math.ceil(claim.entries.length * MIN_SAMPLE_FRACTION), MIN_SAMPLES);
+    const samples = claim.entries.slice(0, numSamples);
 
     return (
       <LabelWrapper label="DETAILS VIEW">
         <TextItem data={{ Pharmacy: claim.site.name }} />
-        {sample(claim.entries, MIN_SAMPLE_FRACTION, MIN_SAMPLES).map(this._renderClaimEntryDetails)}
+        {samples.map(this._renderClaimEntryDetails)}
         <LabelTextInput onTextChange={this._onNotesChanged} label={"Notes"} />
         <div className="mainview_button_row">
           <Button label="Decline" onClick={this._onDecline} />
@@ -149,14 +151,3 @@ class AuditorPanel extends React.Component<Props, State> {
 }
 
 export default AuditorPanel;
-
-
-function sample(arr: any[], minRate: number, minSamples: number): any[] {
-  // Taken from https://stackoverflow.com/a/46545530/12071652
-  const shuffledArr = arr
-    .map(a => ({ sort: Math.random(), value: a}))
-    .sort((a, b) => a.sort - b.sort)
-    .map(a => a.value);
-  const samplesToReturn = Math.max(Math.ceil(arr.length * minRate), minSamples);
-  return shuffledArr.slice(0, samplesToReturn);
-}

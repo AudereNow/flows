@@ -142,9 +142,13 @@ async function addToCSVUploads(cache: any[], batchID: string) {
 
 async function createAuditorTodos(cache: any[], batchID: string) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
+  const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
+    key: pharm.key,
+    values: shuffleArray(pharm.values),
+  }));
 
   // Now generate Auditor work items representing each sampled row.
-  await Promise.all(rowsByPharmacy.map(async pharm => {
+  await Promise.all(shuffledRowsByPharmacy.map(async pharm => {
     console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
     await admin
       .firestore()
@@ -157,7 +161,7 @@ async function createAuditorTodos(cache: any[], batchID: string) {
       })
   }));
   console.log(
-    `Seem to have processed ${rowsByPharmacy.length} pharmacies`
+    `Seem to have processed ${shuffledRowsByPharmacy.length} pharmacies`
   );
 }
 
@@ -188,4 +192,12 @@ function groupBy(
     }
     return rv;
   }, []);
+}
+
+// Taken from https://stackoverflow.com/a/46545530/12071652
+function shuffleArray(arr: any[]): any[] {
+  return arr
+    .map(a => ({ sort: Math.random(), value: a }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(a => a.value);
 }
