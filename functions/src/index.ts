@@ -103,35 +103,44 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
     .createReadStream();
   const cache: any[] = [];
 
-  csvtojson({ needEmitAll: true })
-    .fromStream(stream)
-    .subscribe(
-      row => {
-        cache.push(row);
-      },
-      err => console.log("CSV parsing error", err),
-      completeCSVProcessing.bind(null, cache)
-    );
+  await new Promise((res, rej) =>
+    csvtojson({ needEmitAll: true })
+      .fromStream(stream)
+      .subscribe(
+        row => {
+          cache.push(row);
+        },
+        err => {
+          console.log("CSV parsing error", err);
+          rej(err);
+        },
+        async () => {
+          try {
+            await completeCSVProcessing(cache);
+          } catch(e) {
+            rej(e);
+            return;
+          }
+          res();
+        }
+      )
+  );
 });
 
-async function completeCSVProcessing(cache: any[]) {
-  const batchID = new Date().toISOString();
-
-  console.log(`Full CSV parsed with ${cache.length} lines`);
-
+async function addToCSVUploads(cache: any[], batchID: string) {
   const records = admin
     .firestore()
     .collection(CSV_UPLOAD_COLLECTION)
     .doc(batchID)
     .collection(CSV_UPLOAD_RECORDS_COLLECTION);
 
-  // Ok to let these complete without awaiting while we proceed to select a
-  // subset to sample for audit.
-  cache.forEach(r => records.doc(r["meta:instanceID"]).set(r));
+  await Promise.all(cache.map(r => records.doc(r["meta:instanceID"]).set(r)));
   console.log(
     `Set ${cache.length} records into ${CSV_UPLOAD_COLLECTION}/${batchID}`
   );
+}
 
+async function createAuditorTodos(cache: any[], batchID: string) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
 
   // Now generate Auditor work items representing each sampled row.
@@ -150,6 +159,16 @@ async function completeCSVProcessing(cache: any[]) {
   console.log(
     `Seem to have processed ${rowsByPharmacy.length} pharmacies`
   );
+}
+
+async function completeCSVProcessing(cache: any[]) {
+  console.log(`Full CSV parsed with ${cache.length} lines`);
+
+  const batchID = new Date().toISOString();
+  await Promise.all([
+    addToCSVUploads(cache, batchID),
+    createAuditorTodos(cache, batchID),
+  ]);
 }
 
 // Groups an array of things by a string key in each element, or by a
