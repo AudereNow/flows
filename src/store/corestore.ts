@@ -18,18 +18,22 @@ type AuditorTodo = {
   pharmacyID: string;
   data: any;
 };
+const OPERATOR_TASK_COLLECTION = "operator_task";
+const PAYOR_TASK_COLLECTION = "payor_task";
+const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
 
 export enum UserRole {
   AUDITOR = "Auditor",
   PAYOR = "Payor",
+  OPERATOR = "Operator",
   ADMIN = "Admin"
 }
 
-// Whether a task should move forward (GO == "move to the next workflow step")
-// or be halted (STOP = "declined or decided this task should halt")
 export enum TaskDecision {
-  GO,
-  STOP
+  DECLINE_AUDIT = "Decline Audit",
+  APPROVE_AUDIT = "Approve Audit",
+  DECLINE_PAYMENT = "Decline Payment",
+  PAYMENT_COMPLETE = "Payment Complete"
 }
 
 export type Site = {
@@ -51,26 +55,22 @@ export type ClaimEntry = {
   photoMedUri?: string;
   photoMedBatchUri?: string;
   timestamp: number;
-}
-
-export type ClaimTask = {
-  entries: ClaimEntry[]
-  site: Site;
-  notes?: string;
 };
 
-export type ReimbursementTask = {
-  claim: Task;
-  notes?: string;
+export type ClaimTask = {
+  entries: ClaimEntry[];
+  site: Site;
 };
 
 export type TaskChangeMetadata = {
   timestamp: number;
   by: string;
   desc?: string;
+  notes?: string;
 };
 
-export type Task = (ClaimTask | ReimbursementTask) & {
+export type Task = ClaimTask & {
+  id: string;
   flow?: TaskDecision;
   changes: TaskChangeMetadata[];
 };
@@ -92,65 +92,180 @@ export async function userRoles(): Promise<UserRole[]> {
   return token.claims.roles;
 }
 
-export async function tasksForRole(role: UserRole): Promise<Task[]> {
-  switch (role) {
-    case UserRole.AUDITOR:
-      return loadAuditorTasks();
-    case UserRole.PAYOR:
-      return [
-        {
-          site: auditorSampleTasks[0].site,
-          claim: approveClaims(auditorSampleTasks[0]),
-          notes:
-            "Called on 24 Sept, and they asked us to hold payment until later",
-          changes: []
-        },
-        {
-          site: auditorSampleTasks[1].site,
-          claim: approveClaims(auditorSampleTasks[1]),
-          changes: []
-        }
-      ];
-    case UserRole.ADMIN:
-      return [];
-  }
+export async function declineAudit(task: Task, notes?: string) {
+  await saveDeclinedTask(task, TaskDecision.DECLINE_AUDIT, notes);
 }
 
-async function loadAuditorTasks(): Promise<Task[]> {
+export async function declinePayment(task: Task, notes?: string) {
+  await saveDeclinedTask(task, TaskDecision.DECLINE_PAYMENT, notes);
+}
+
+async function saveDeclinedTask(
+  task: Task,
+  decision: TaskDecision,
+  notes?: string
+) {
+  task.flow = decision;
+  task.changes.push({
+    timestamp: Date.now(),
+    by: getBestUserName(),
+    desc: decision as string,
+    notes
+  });
+  removeEmptyFieldsInPlace(task);
+
+  return Promise.all([
+    firebase
+      .firestore()
+      .collection(OPERATOR_TASK_COLLECTION)
+      .doc(task.id)
+      .set(task),
+    firebase
+      .firestore()
+      .collection(AUDITOR_TODO_COLLECTION)
+      .doc(task.id)
+      .delete()
+  ]);
+}
+
+export async function saveAuditorApprovedTask(task: Task, notes?: string) {
+  task.flow = TaskDecision.APPROVE_AUDIT;
+  task.changes.push({
+    timestamp: Date.now(),
+    by: getBestUserName(),
+    desc: TaskDecision.APPROVE_AUDIT,
+    notes
+  });
+  removeEmptyFieldsInPlace(task);
+
+  return Promise.all([
+    firebase
+      .firestore()
+      .collection(PAYOR_TASK_COLLECTION)
+      .doc(task.id)
+      .set(task),
+    firebase
+      .firestore()
+      .collection(AUDITOR_TODO_COLLECTION)
+      .doc(task.id)
+      .delete()
+  ]);
+}
+
+export async function saveOperatorCompletedTask(task: Task, notes?: string) {
+  task.flow = TaskDecision.APPROVE_AUDIT;
+  task.changes.push({
+    timestamp: Date.now(),
+    by: getBestUserName(),
+    desc: TaskDecision.APPROVE_AUDIT,
+    notes
+  });
+  removeEmptyFieldsInPlace(task);
+
+  return Promise.all([
+    firebase
+      .firestore()
+      .collection(PAYOR_TASK_COLLECTION)
+      .doc(task.id)
+      .set(task),
+    firebase
+      .firestore()
+      .collection(OPERATOR_TASK_COLLECTION)
+      .doc(task.id)
+      .delete()
+  ]);
+}
+
+export async function savePaymentCompletedTask(task: Task, notes?: string) {
+  task.flow = TaskDecision.PAYMENT_COMPLETE;
+  task.changes.push({
+    timestamp: Date.now(),
+    by: getBestUserName(),
+    desc: TaskDecision.PAYMENT_COMPLETE,
+    notes
+  });
+  removeEmptyFieldsInPlace(task);
+
+  return Promise.all([
+    firebase
+      .firestore()
+      .collection(PAYMENT_COMPLETE_TASK_COLLECTION)
+      .doc(task.id)
+      .set(task),
+    firebase
+      .firestore()
+      .collection(PAYOR_TASK_COLLECTION)
+      .doc(task.id)
+      .delete()
+  ]);
+}
+
+function getBestUserName(): string {
+  return (
+    firebase.auth().currentUser!.displayName ||
+    firebase.auth().currentUser!.email ||
+    firebase.auth().currentUser!.uid
+  );
+}
+
+export async function loadPayorTasks(): Promise<Task[]> {
+  const taskSnapshot = await firebase
+    .firestore()
+    .collection(PAYOR_TASK_COLLECTION)
+    .get();
+  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+}
+
+export async function loadOperatorTasks(): Promise<Task[]> {
+  const taskSnapshot = await firebase
+    .firestore()
+    .collection(OPERATOR_TASK_COLLECTION)
+    .get();
+  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+}
+
+export async function loadAuditorTasks(): Promise<Task[]> {
   const todoSnapshot = await firebase
     .firestore()
     .collection(AUDITOR_TODO_COLLECTION)
     .get();
-  const todos = todoSnapshot.docs.map(
-    doc => (doc.data() as unknown) as AuditorTodo
-  );
-
-  return todos.filter(t => t && t.data && t.data.length > 0).map(t => {
-    const d = t.data;
-    const patients = t.data.map((d:any) =>( {
-      patientAge: d["g2:A12 Age"],
-      patientFirstName: d["g2:A10 First Name"],
-      patientLastName: d["g2:A11 Last Name"],
-      patientSex:
-        d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
-      patientID: d["g4:B02"]["1 ID number on voucher"],
-      phone: d["g2:A14 Phone Number"],
-      photoIDUri: d["g4:B03.1 Photo of ID card"],
-      photoMedUri: d["g5:B04 (Medication)"],
-      photoMedBatchUri: d["g5:B05 (Medication batch)"],
-      item: d["Type received"],
-      totalCost: parseFloat(d["Total med price covered by SPIDER"]),
-      claimedCost: parseFloat(d["Total reimbursement"]),
-      timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime(),
-    }));
+  const todos = todoSnapshot.docs.map(doc => {
+    const todo = (doc.data() as unknown) as AuditorTodo;
     return {
-      entries: patients,
-      site: {
-        name: d[0]["g3:B01 Pharmacy name"],
-      },
-      changes: []
+      ...todo,
+      id: doc.id
     };
   });
+
+  return todos
+    .filter(t => t && t.data && t.data.length > 0)
+    .map(t => {
+      const d = t.data;
+      const patients = t.data.map((d: any) => ({
+        patientAge: d["g2:A12 Age"],
+        patientFirstName: d["g2:A10 First Name"],
+        patientLastName: d["g2:A11 Last Name"],
+        patientSex:
+          d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
+        patientID: d["g4:B02"]["1 ID number on voucher"],
+        phone: d["g2:A14 Phone Number"],
+        photoIDUri: d["g4:B03.1 Photo of ID card"],
+        photoMedUri: d["g5:B04 (Medication)"],
+        photoMedBatchUri: d["g5:B05 (Medication batch)"],
+        item: d["Type received"],
+        totalCost: parseFloat(d["Total med price covered by SPIDER"]),
+        claimedCost: parseFloat(d["Total reimbursement"]),
+        timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime()
+      }));
+      return {
+        id: t.id,
+        entries: patients,
+        site: {
+          name: d[0]["g3:B01 Pharmacy name"]
+        },
+        changes: []
+      };
+    });
 }
 
 export async function setRoles(email: string, roles: UserRole[]) {
@@ -168,81 +283,24 @@ export async function setRoles(email: string, roles: UserRole[]) {
   }
 }
 
-const auditorSampleTasks: ClaimTask[] = [
-  {
-    entries: [
-      {
-        patientAge: 20,
-        patientFirstName: "Zawadi",
-        patientLastName: "Mwangi",
-        patientSex: "F",
-        item: "E-Pill",
-        totalCost: 81.72,
-        claimedCost: 57.95,
-        timestamp: new Date(2019, 9, 14).getTime(),
-      },
-      {
-        patientAge: 37,
-        patientFirstName: "Makena",
-        patientLastName: "Maina",
-        patientSex: "F",
-        item: "Pregnancy Test",
-        totalCost: 57.78,
-        claimedCost: 51.95,
-        timestamp: new Date(2019, 9, 12).getTime(),
-      },
-    ],
-    site: {
-      name: "Haltons Store #34",
-      phone: "+254 739 994489"
-    },
-    notes:
-      "This looks reasonable, but I'd ask them to make sure to focus the " +
-      "ID card photo in the future"
-  },
-  {
-    entries: [
-      {
-        patientAge: 42,
-        patientFirstName: "Jimiyu",
-        patientLastName: "Mwangi",
-        patientSex: "M",
-        item: "Condom",
-        totalCost: 119.41,
-        claimedCost: 67.4,
-        timestamp: new Date(2019, 9, 17).getTime(),
-      },
-      {
-        patientAge: 11,
-        patientFirstName: "Okeyo",
-        patientLastName: "Otieno",
-        patientSex: "M",
-        item: "Condom",
-        totalCost: 188.82,
-        claimedCost: 84.79,
-        timestamp: new Date(2019, 9, 15).getTime(),
-      }
-    ],
-    site: {
-      name: "Mimosa #5",
-      phone: "+254 739 994400"
+export function getLatestTaskNote(task: Task): string {
+  let notes = "";
+  task.changes.forEach(c => {
+    if (c.notes) {
+      notes = c.notes;
     }
-  }
-];
+  });
+  return notes;
+}
 
-const MSEC_IN_DAY = 1000 * 60 * 60 * 24;
-
-// Only for faking data -- essentially mark claims as having been approved.
-function approveClaims(task: ClaimTask): Task {
-  return {
-    ...task,
-    flow: TaskDecision.GO,
-    changes: [
-      {
-        timestamp: Date.now() - 3 * MSEC_IN_DAY,
-        by: firebase.auth().currentUser!.displayName || "Peekaboo Street",
-        desc: "Approved claim"
-      }
-    ]
-  };
+// https://stackoverflow.com/questions/286141/remove-blank-attributes-from-an-object-in-javascript
+function removeEmptyFieldsInPlace(obj: { [key: string]: any }) {
+  Object.keys(obj).forEach(key => {
+    if (obj[key] && typeof obj[key] === "object") {
+      removeEmptyFieldsInPlace(obj[key]);
+    } else if (obj[key] == null) {
+      // Note this captures undefined as well!
+      delete obj[key];
+    }
+  });
 }

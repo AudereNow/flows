@@ -65,6 +65,7 @@ exports.setRoles = functions.https.onCall(
 enum UserRole {
   AUDITOR = "Auditor",
   PAYOR = "Payor",
+  OPERATOR = "Operator",
   ADMIN = "Admin"
 }
 
@@ -148,18 +149,20 @@ async function completeCSVProcessing(cache: any[]) {
   });
 
   // Now generate Auditor work items representing each sampled row.
-  await Promise.all(sampledRowsByPharmacy.map(async pharm => {
-    console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
-    await admin
-      .firestore()
-      .collection(AUDITOR_TODO_COLLECTION)
-      .doc()
-      .set({
-        batchID,
-        pharmacyID: pharm.key,
-        data: pharm.values
-      })
-  }));
+  await Promise.all(
+    sampledRowsByPharmacy.map(async pharm => {
+      console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
+      await admin
+        .firestore()
+        .collection(AUDITOR_TODO_COLLECTION)
+        .doc()
+        .set({
+          batchID,
+          pharmacyID: pharm.key,
+          data: pharm.values
+        });
+    })
+  );
   console.log(
     `Seem to have processed ${sampledRowsByPharmacy.length} pharmacies`
   );
