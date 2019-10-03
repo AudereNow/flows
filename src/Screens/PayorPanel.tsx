@@ -1,21 +1,20 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import DataTable from "../Components/DataTable";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  Task,
-  loadPayorTasks,
   declinePayment,
   getLatestTaskNote,
-  savePaymentCompletedTask
+  loadPayorTasks,
+  savePaymentCompletedTask,
+  Task
 } from "../store/corestore";
 import "./MainView.css";
-import "react-tabs/style/react-tabs.css";
-import TaskList from "../Components/TaskList";
-import DataTable from "../Components/DataTable";
 
 type Props = {};
 type State = {

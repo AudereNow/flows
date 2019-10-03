@@ -4,18 +4,19 @@ import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  Task,
   declineAudit,
-  loadAuditorTasks,
   getLatestTaskNote,
-  saveAuditorApprovedTask
+  loadAuditorTasks,
+  saveAuditorApprovedTask,
+  Task
 } from "../store/corestore";
+import debounce from "../util/debounce";
+import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
-import "react-tabs/style/react-tabs.css";
-import TaskList from "../Components/TaskList";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -26,11 +27,13 @@ type State = {
   selectedTaskIndex: number;
   notes: string;
   numSamples: number;
+  searchPhrase: string;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
+    searchPhrase: "",
     selectedTaskIndex: -1,
     notes: "",
     numSamples: 0
@@ -70,7 +73,7 @@ class AuditorPanel extends React.Component<Props, State> {
     await saveAuditorApprovedTask(
       this.state.tasks[this.state.selectedTaskIndex],
       this.state.notes,
-      this.state.numSamples,
+      this.state.numSamples
     );
     this._removeSelectedTask();
   };
@@ -107,6 +110,7 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
+    const { searchPhrase } = this.state;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -114,14 +118,23 @@ class AuditorPanel extends React.Component<Props, State> {
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
+    const date = new Date(entry.timestamp).toLocaleDateString();
+    const patient = `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`;
+    const random = Math.random() * 1000;
+    let checkEntry = { ...entry } as any;
+    checkEntry.date = date;
+    checkEntry.patient = patient;
+
+    if (!!searchPhrase && !containsSearchTerm(searchPhrase, checkEntry)) {
+      return null;
+    }
+
     return (
-      <LabelWrapper key={entry.patientID}>
-        <TextItem
-          data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
-        />
+      <LabelWrapper key={entry.patientID + random.toString()}>
+        <TextItem data={{ Date: date }} />
         <TextItem
           data={{
-            Patient: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
+            Patient: patient
           }}
         />
         <TextItem data={{ Item: entry.item }} />
@@ -130,13 +143,29 @@ class AuditorPanel extends React.Component<Props, State> {
     );
   };
 
+  _setSearchPhrase = debounce((input: string) => {
+    this.setState({ searchPhrase: input });
+  }, 500);
+
+  _handlePhraseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let input = event.target.value;
+    this._setSearchPhrase(input);
+  };
+
   _renderClaimDetails = (task: Task) => {
     const samples = task.entries.slice(0, this.state.numSamples);
 
     return (
       <LabelWrapper label="DETAILS VIEW">
-        <TextItem data={{ Pharmacy: task.site.name }} />
-        {samples.map(this._renderClaimEntryDetails)}
+        <div className="mainview_spaced_row">
+          <TextItem data={{ Pharmacy: task.site.name }} />
+          <input
+            type="text"
+            onChange={this._handlePhraseChange}
+            placeholder="Filter Details"
+          />
+        </div>
+        {task.entries.map(this._renderClaimEntryDetails)}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
@@ -151,7 +180,10 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _onTaskSelect = (index: number) => {
-    const numSamples = Math.max(Math.ceil(this.state.tasks[index].entries.length * MIN_SAMPLE_FRACTION), MIN_SAMPLES);
+    const numSamples = Math.max(
+      Math.ceil(this.state.tasks[index].entries.length * MIN_SAMPLE_FRACTION),
+      MIN_SAMPLES
+    );
     this.setState({
       selectedTaskIndex: index,
       numSamples
@@ -167,7 +199,7 @@ class AuditorPanel extends React.Component<Props, State> {
           renderItem={this._renderTaskListClaim}
           className="mainview_tasklist"
         />
-        <div>
+        <div style={{ width: "100%" }}>
           {this.state.selectedTaskIndex >= 0 &&
             this._renderClaimDetails(
               this.state.tasks[this.state.selectedTaskIndex]

@@ -4,19 +4,20 @@ import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  Task,
   getLatestTaskNote,
   loadOperatorTasks,
-  saveOperatorCompletedTask
+  saveOperatorCompletedTask,
+  Task
 } from "../store/corestore";
 import "./MainView.css";
-import "react-tabs/style/react-tabs.css";
-import TaskList from "../Components/TaskList";
 
-type Props = {};
+type Props = {
+  searchPhrase?: string;
+};
 type State = {
   tasks: Task[];
   selectedTaskIndex: number;

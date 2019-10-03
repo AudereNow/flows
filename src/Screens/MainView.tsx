@@ -1,15 +1,13 @@
 import React from "react";
+import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { UserRole, userRoles } from "../store/corestore";
+import AdminPanel from "./AdminPanel";
+import AuditorPanel from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
-import "react-tabs/style/react-tabs.css";
-import "./MainView.css";
-import AuditorPanel from "./AuditorPanel";
-import PayorPanel from "./PayorPanel";
-import AdminPanel from "./AdminPanel";
 import OperatorPanel from "./OperatorPanel";
+import PayorPanel from "./PayorPanel";
 
 type Props = {};
 type State = {
