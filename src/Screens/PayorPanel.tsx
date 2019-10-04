@@ -9,7 +9,9 @@ import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declinePayment,
+  getBestUserName,
   getLatestTaskNote,
+  issuePayments,
   loadPayorTasks,
   savePaymentCompletedTask,
   Task
@@ -21,13 +23,15 @@ type State = {
   tasks: Task[];
   selectedTaskIndex: number;
   notes: string;
+  paying: boolean;
 };
 
 class PayorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
     selectedTaskIndex: -1,
-    notes: ""
+    notes: "",
+    paying: false
   };
 
   async componentDidMount() {
@@ -58,12 +62,55 @@ class PayorPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _onPaymentComplete = async () => {
-    await savePaymentCompletedTask(
-      this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes
-    );
-    this._removeSelectedTask();
+  async _issuePayment(): Promise<boolean> {
+    const task = this.state.tasks[this.state.selectedTaskIndex];
+    const reimburseAmount = _getReimbursementTotal(task);
+
+    if (reimburseAmount <= 0) {
+      alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
+      return false;
+    }
+
+    const result = await issuePayments([
+      {
+        name: task.site.name,
+        phoneNumber: task.site.phone || "+254739994489",
+        currencyCode: "KES",
+        amount: reimburseAmount,
+        reason: "PromotionPayment",
+        metadata: {
+          taskID: task.id,
+          payorName: getBestUserName(),
+          payeeName: task.site.name
+        }
+      }
+    ]);
+    console.log("Response gotten:", result);
+
+    // numQueued should be exactly 1 if the payment was successful
+    if (result.data.numQueued === 0) {
+      alert(result.data.entries[0].errorMessage);
+      return false;
+    }
+
+    return true;
+  }
+
+  _onIssuePayment = async () => {
+    try {
+      this.setState({ paying: true });
+
+      const paid = await this._issuePayment();
+      if (paid) {
+        await savePaymentCompletedTask(
+          this.state.tasks[this.state.selectedTaskIndex],
+          this.state.notes
+        );
+        this._removeSelectedTask();
+      }
+    } finally {
+      this.setState({ paying: false });
+    }
   };
 
   _onDecline = async () => {
@@ -84,12 +131,8 @@ class PayorPanel extends React.Component<Props, State> {
   }
 
   _renderReimbursementDetails = (task: Task) => {
-    const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
+    const { paying } = this.state;
+    const claimsTotal = _getReimbursementTotal(task);
 
     let cleanedData: any[] = [];
     task.entries.forEach((entry: ClaimEntry) => {
@@ -114,7 +157,12 @@ class PayorPanel extends React.Component<Props, State> {
           defaultValue={getLatestTaskNote(task)}
         />
         <div className="mainview_button_row">
-          <Button label="Payment Complete" onClick={this._onPaymentComplete} />
+          <Button
+            disabled={paying}
+            disabledClassName="mainview_button_disabled"
+            label={paying ? "Issuing Payment..." : "Issue Payment"}
+            onClick={this._onIssuePayment}
+          />
         </div>
       </LabelWrapper>
     );
@@ -142,6 +190,13 @@ class PayorPanel extends React.Component<Props, State> {
       </div>
     );
   }
+}
+
+function _getReimbursementTotal(task: Task): number {
+  const claimAmounts = task.entries.map(entry => {
+    return entry.claimedCost;
+  });
+  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
 }
 
 export default PayorPanel;

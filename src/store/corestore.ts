@@ -76,6 +76,17 @@ export type Task = ClaimTask & {
   changes: TaskChangeMetadata[];
 };
 
+export type PaymentRecipient = {
+  name?: string;
+  phoneNumber: string;
+  currencyCode: string;
+  amount: number;
+  reason?: string;
+  metadata: {
+    [key: string]: any;
+  };
+};
+
 export function initializeStore() {
   firebase.initializeApp(FIREBASE_CONFIG);
 }
@@ -210,7 +221,7 @@ export async function savePaymentCompletedTask(task: Task, notes?: string) {
   ]);
 }
 
-function getBestUserName(): string {
+export function getBestUserName(): string {
   return (
     firebase.auth().currentUser!.displayName ||
     firebase.auth().currentUser!.email ||
@@ -293,6 +304,17 @@ export async function setRoles(email: string, roles: UserRole[]) {
   }
 }
 
+export async function issuePayments(recipients: PaymentRecipient[]) {
+  const serverIssuePayments = firebase
+    .functions()
+    .httpsCallable("issuePayments", { timeout: 300000 });
+
+  return await serverIssuePayments({
+    recipients,
+    isProduction: isProduction()
+  });
+}
+
 export function getLatestTaskNote(task: Task): string {
   let notes = "";
   task.changes.forEach(c => {
@@ -301,6 +323,10 @@ export function getLatestTaskNote(task: Task): string {
     }
   });
   return notes;
+}
+
+export function isProduction() {
+  return process.env.NODE_ENV && process.env.NODE_ENV === "production";
 }
 
 // https://stackoverflow.com/questions/286141/remove-blank-attributes-from-an-object-in-javascript

@@ -9,11 +9,15 @@
   margin: 5px;
 }
 
-.button_container:hover {
+.button_container.enabled:hover {
   cursor: pointer;
 }
 
-.button_container:active {
+.button_container.enabled:active {
   background-color: grey;
   color: white;
+}
+
+.button_container.disabled:hover {
+  cursor: wait;
 }
