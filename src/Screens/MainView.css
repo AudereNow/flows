@@ -33,3 +33,9 @@
   flex-direction: row;
   justify-content: flex-end;
 }
+
+.mainview_spaced_row {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
+}
