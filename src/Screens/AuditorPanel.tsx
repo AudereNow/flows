@@ -120,17 +120,15 @@ class AuditorPanel extends React.Component<Props, State> {
 
     const date = new Date(entry.timestamp).toLocaleDateString();
     const patient = `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`;
-    const random = Math.random() * 1000;
-    let checkEntry = { ...entry } as any;
-    checkEntry.date = date;
-    checkEntry.patient = patient;
+
+    let checkEntry = Object.assign({}, entry, date, patient);
 
     if (!!searchPhrase && !containsSearchTerm(searchPhrase, checkEntry)) {
       return null;
     }
 
     return (
-      <LabelWrapper key={entry.patientID + random.toString()}>
+      <LabelWrapper key={entry.patientID + patient}>
         <TextItem data={{ Date: date }} />
         <TextItem
           data={{
@@ -165,7 +163,7 @@ class AuditorPanel extends React.Component<Props, State> {
             placeholder="Filter Details"
           />
         </div>
-        {task.entries.map(this._renderClaimEntryDetails)}
+        {samples.map(this._renderClaimEntryDetails)}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}

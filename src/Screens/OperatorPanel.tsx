@@ -15,9 +15,7 @@ import {
 } from "../store/corestore";
 import "./MainView.css";
 
-type Props = {
-  searchPhrase?: string;
-};
+type Props = {};
 type State = {
   tasks: Task[];
   selectedTaskIndex: number;
