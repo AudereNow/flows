@@ -1,11 +1,12 @@
-import React from "react";
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
-import "./TopBar.css";
-import logo from "../assets/maishalogo.png";
+import React from "react";
 import uploadIcon from "../assets/cloud_upload.svg";
+import logo from "../assets/maishalogo.png";
+import Dropdown from "../Components/Dropdown";
 import { UserRole, userRoles } from "../store/corestore";
+import "./TopBar.css";
 
 type State = {
   roles: UserRole[];
@@ -22,6 +23,14 @@ class TopBar extends React.Component {
     const roles = await userRoles();
     this.setState({ roles });
   }
+
+  _handleLogout = async () => {
+    try {
+      await firebase.auth().signOut();
+    } catch (e) {
+      console.log(`Error logging out: ${e}`);
+    }
+  };
 
   _onUploadIconClick = () => {
     this.setState({ showFileSelector: true });
@@ -63,14 +72,30 @@ class TopBar extends React.Component {
     const uploader = showFileSelector ? (
       <input type="file" name="file" onChange={this._onFileSelected} />
     ) : null;
+
+    let dropdownConfig = [
+      {
+        label: "Logout",
+        onSelect: this._handleLogout
+      }
+    ];
+
     return (
       <div className="topbar_main">
         <img className="topbar_logo" src={logo} alt="logo" />
         <div className="topbar_user">
           {firebase.auth().currentUser!.displayName}
         </div>
-        {uploadButton}
-        {uploader}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row"
+          }}
+        >
+          {uploadButton}
+          {uploader}
+          <Dropdown config={dropdownConfig} />
+        </div>
       </div>
     );
   }

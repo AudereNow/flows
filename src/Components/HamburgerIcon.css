@@ -1,0 +1,14 @@
+.hamburger_container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 32px;
+  width: 32px;
+}
+
+.hamburger_bar {
+  width: 100%;
+  background-color: black;
+  border-radius: 25%;
+  height: 25%;
+}

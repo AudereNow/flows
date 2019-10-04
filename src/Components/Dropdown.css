@@ -1,0 +1,26 @@
+.dropdown_container {
+  position: relative;
+  padding: 5px;
+}
+
+.dropdown_content {
+  position: absolute;
+  right: 0;
+  top: 33px;
+  width: 150px;
+}
+
+.dropdown_item {
+  text-align: left;
+  padding: 10px;
+  min-width: 70px;
+  min-height: 20px;
+  cursor: pointer;
+  background-color: white;
+  border: 1px solid black;
+}
+
+.dropdown_item:hover {
+  color: white;
+  background-color: #888888;
+}
