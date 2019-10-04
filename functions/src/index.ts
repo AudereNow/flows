@@ -38,11 +38,8 @@ exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
       throw Error("No recipients specified");
     }
 
-    const endpoint = isProductionProject()
-      ? "https://payments.africastalking.com/mobile/b2c/request"
-      : "https://payments.sandbox.africastalking.com/mobile/b2c/request";
     const response = await axios.post(
-      endpoint,
+      africasTalkingOptions.endpoint,
       {
         username: africasTalkingOptions.username,
         productName: africasTalkingOptions.productName,
@@ -155,7 +152,7 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
         async () => {
           try {
             await completeCSVProcessing(cache);
-          } catch(e) {
+          } catch (e) {
             rej(e);
             return;
           }
@@ -182,7 +179,7 @@ async function createAuditorTodos(cache: any[], batchID: string) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
   const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
     key: pharm.key,
-    values: shuffleArray(pharm.values),
+    values: shuffleArray(pharm.values)
   }));
 
   // Now generate Auditor work items representing each sampled row.
@@ -211,7 +208,7 @@ async function completeCSVProcessing(cache: any[]) {
   const batchID = new Date().toISOString();
   await Promise.all([
     addToCSVUploads(cache, batchID),
-    createAuditorTodos(cache, batchID),
+    createAuditorTodos(cache, batchID)
   ]);
 }
 
@@ -240,11 +237,4 @@ function shuffleArray(arr: any[]): any[] {
     .map(a => ({ sort: Math.random(), value: a }))
     .sort((a, b) => a.sort - b.sort)
     .map(a => a.value);
-}
-
-function isProductionProject() {
-  const gcpProject = admin.instanceId().app.options.projectId;
-
-  // You'd expect "flows-app-staging" or "flows-app-production" here.
-  return gcpProject && gcpProject.includes("production");
 }

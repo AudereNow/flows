@@ -1,23 +1,25 @@
 .button_container {
-  align-items: center;
   border: 1px solid black;
-  display: flex;
   height: 25px;
+  line-height: 0px;
   width: 150px;
-  padding: 10px;
-  justify-content: center;
   margin: 5px;
+  padding: 10px;
 }
 
-.button_container.enabled:hover {
+.button_container:enabled:hover {
   cursor: pointer;
 }
 
-.button_container.enabled:active {
+.button_container:enabled:active {
   background-color: grey;
   color: white;
 }
 
-.button_container.disabled:hover {
+.button_container:disabled {
+  background-color: grey;
+}
+
+.button_container:disabled:hover {
   cursor: wait;
 }

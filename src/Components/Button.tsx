@@ -2,10 +2,10 @@ import React from "react";
 import "./Button.css";
 
 interface Props {
-  className?: string;
-  disabledClassName?: string;
   label: string;
+  className?: string;
   disabled?: boolean;
+  name?: string;
   onClick?: () => void;
 }
 
@@ -17,18 +17,19 @@ class Button extends React.PureComponent<Props> {
   };
 
   render() {
-    const { disabled } = this.props;
-    const className = disabled
-      ? this.props.disabledClassName
-      : this.props.className;
+    const { className, disabled, label, name } = this.props;
     const enabledClassName = disabled ? "disabled" : "enabled";
+
     return (
-      <div
+      <button
         className={`button_container ${enabledClassName} ${className || ""}`}
+        disabled={disabled}
+        name={name}
+        type="button"
         onClick={this._onClick}
       >
-        <span className="button_label">{this.props.label}</span>
-      </div>
+        {label}
+      </button>
     );
   }
 }
