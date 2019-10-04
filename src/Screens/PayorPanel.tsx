@@ -108,6 +108,8 @@ class PayorPanel extends React.Component<Props, State> {
         );
         this._removeSelectedTask();
       }
+    } catch (e) {
+      alert(`Error: ${(e && e.message) || e}`);
     } finally {
       this.setState({ paying: false });
     }
