@@ -76,6 +76,17 @@ export type Task = ClaimTask & {
   changes: TaskChangeMetadata[];
 };
 
+export type PaymentRecipient = {
+  name?: string;
+  phoneNumber: string;
+  currencyCode: string;
+  amount: number;
+  reason?: string;
+  metadata: {
+    [key: string]: any;
+  };
+};
+
 export function initializeStore() {
   firebase.initializeApp(FIREBASE_CONFIG);
 }
@@ -129,7 +140,11 @@ async function saveDeclinedTask(
   ]);
 }
 
-export async function saveAuditorApprovedTask(task: Task, notes: string, samplesReviewed: number) {
+export async function saveAuditorApprovedTask(
+  task: Task,
+  notes: string,
+  samplesReviewed: number
+) {
   task.flow = TaskDecision.APPROVE_AUDIT;
   task.changes.push({
     timestamp: Date.now(),
@@ -142,7 +157,7 @@ export async function saveAuditorApprovedTask(task: Task, notes: string, samples
       return {
         ...entry,
         reviewed: true
-      }
+      };
     }
     return entry;
   });
@@ -210,7 +225,7 @@ export async function savePaymentCompletedTask(task: Task, notes?: string) {
   ]);
 }
 
-function getBestUserName(): string {
+export function getBestUserName(): string {
   return (
     firebase.auth().currentUser!.displayName ||
     firebase.auth().currentUser!.email ||
@@ -291,6 +306,18 @@ export async function setRoles(email: string, roles: UserRole[]) {
   if (result.data.result) {
     console.log(`Server setRole successful: ${result.data.result}`);
   }
+}
+
+export async function issuePayments(recipients: PaymentRecipient[]) {
+  // You need a big timeout on this (e.g. 300,000 msec), because Africa's
+  // Talking can sometimes go 1-2 minutes before responding back with a result.
+  const serverIssuePayments = firebase
+    .functions()
+    .httpsCallable("issuePayments", { timeout: 300000 });
+
+  return await serverIssuePayments({
+    recipients
+  });
 }
 
 export function getLatestTaskNote(task: Task): string {

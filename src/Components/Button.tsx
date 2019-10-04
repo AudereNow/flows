@@ -2,20 +2,36 @@ import React from "react";
 import "./Button.css";
 
 interface Props {
-  className?: string;
   label: string;
+  className?: string;
+  disabled?: boolean;
+  name?: string;
   onClick?: () => void;
 }
 
-const Button = (props: Props) => {
-  return (
-    <div
-      className={`button_container ${props.className}`}
-      onClick={props.onClick}
-    >
-      <span className="button_label">{props.label}</span>
-    </div>
-  );
-};
+class Button extends React.PureComponent<Props> {
+  _onClick = () => {
+    if (!this.props.disabled && this.props.onClick) {
+      this.props.onClick();
+    }
+  };
+
+  render() {
+    const { className, disabled, label, name } = this.props;
+    const enabledClassName = disabled ? "disabled" : "enabled";
+
+    return (
+      <button
+        className={`button_container ${enabledClassName} ${className || ""}`}
+        disabled={disabled}
+        name={name}
+        type="button"
+        onClick={this._onClick}
+      >
+        {label}
+      </button>
+    );
+  }
+}
 
 export default Button;

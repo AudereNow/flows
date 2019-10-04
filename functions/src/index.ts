@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as csvtojson from "csvtojson";
+import csvtojson from "csvtojson";
+import axios, { AxiosResponse } from "axios";
+import africasTalkingOptions from "./africas-talking-options.json";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
@@ -27,36 +29,68 @@ type CallResult =
       result: string;
     };
 
+exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
+  async (data, context): Promise<AxiosResponse> => {
+    if (!hasRole(context, UserRole.PAYOR)) {
+      throw Error(`User ${context.auth && context.auth.uid} isn't a Payor`);
+    }
+    if (!data || !data.recipients) {
+      throw Error("No recipients specified");
+    }
+
+    const response = await axios.post(
+      africasTalkingOptions.endpoint,
+      {
+        username: africasTalkingOptions.username,
+        productName: africasTalkingOptions.productName,
+        recipients: data.recipients
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          apikey: africasTalkingOptions.apiKey,
+          Accept: "application/json"
+        }
+      }
+    );
+    if (response.status < 200 || response.status > 299) {
+      throw Error(`Status ${response.status}, ${response.statusText}`);
+    }
+    return response.data;
+  }
+);
+
 exports.setRoles = functions.https.onCall(
-  (data, context): Promise<CallResult> => {
-    if (
-      !context.auth ||
-      !context.auth.token ||
-      !context.auth.token.roles ||
-      !context.auth.token.roles.includes(UserRole.ADMIN as string)
-    ) {
-      return new Promise(resolve =>
-        resolve({
-          error: "Request not authorized"
-        })
-      );
+  async (data, context): Promise<CallResult> => {
+    if (!hasRole(context, UserRole.ADMIN)) {
+      return {
+        error: "Request not authorized"
+      };
     }
 
     if (!data || !data.email || !data.roles || !data.roles.length) {
-      return new Promise(resolve =>
-        resolve({
-          error:
-            "Request did not include valid email and/or roles: " +
-            JSON.stringify(data)
-        })
-      );
+      return {
+        error:
+          "Request did not include valid email and/or roles: " +
+          JSON.stringify(data)
+      };
     }
 
-    // Deliberately not awaiting here, because onCall is defined to require a
-    // Promise back, which it'll resolove itself.
-    return setRoles(data.email, data.roles);
+    return await setRoles(data.email, data.roles);
   }
 );
+
+function hasRole(
+  context: functions.https.CallableContext,
+  role: UserRole
+): boolean {
+  return (
+    context.auth &&
+    context.auth.token &&
+    context.auth.token.roles &&
+    context.auth.token.roles.includes(role as string)
+  );
+}
 
 // Copied from corestore.ts in the main app for now.  Once we factor real
 // backend APIs out, shared types like this should be consumed directly and
@@ -118,7 +152,7 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
         async () => {
           try {
             await completeCSVProcessing(cache);
-          } catch(e) {
+          } catch (e) {
             rej(e);
             return;
           }
@@ -145,7 +179,7 @@ async function createAuditorTodos(cache: any[], batchID: string) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
   const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
     key: pharm.key,
-    values: shuffleArray(pharm.values),
+    values: shuffleArray(pharm.values)
   }));
 
   // Now generate Auditor work items representing each sampled row.
@@ -174,7 +208,7 @@ async function completeCSVProcessing(cache: any[]) {
   const batchID = new Date().toISOString();
   await Promise.all([
     addToCSVUploads(cache, batchID),
-    createAuditorTodos(cache, batchID),
+    createAuditorTodos(cache, batchID)
   ]);
 }
 
