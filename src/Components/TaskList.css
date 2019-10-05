@@ -7,3 +7,9 @@
   height: 24px;
   line-height: 24px;
 }
+
+.tasklist_active {
+  outline-color: orange;
+  outline-style: solid;
+  outline-width: 4px;
+}
