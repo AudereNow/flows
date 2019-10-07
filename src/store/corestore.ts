@@ -13,14 +13,16 @@ const FIREBASE_CONFIG = {
   appId: "1:785605389839:web:dedec19abb81b7df8a3d7a"
 };
 const AUDITOR_TODO_COLLECTION = "auditor_todo";
+const OPERATOR_TASK_COLLECTION = "operator_task";
+const PAYOR_TASK_COLLECTION = "payor_task";
+const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
+const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
+
 type AuditorTodo = {
   batchID: string;
   pharmacyID: string;
   data: any;
 };
-const OPERATOR_TASK_COLLECTION = "operator_task";
-const PAYOR_TASK_COLLECTION = "payor_task";
-const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
 
 export enum UserRole {
   AUDITOR = "Auditor",
@@ -85,6 +87,12 @@ export type PaymentRecipient = {
   metadata: {
     [key: string]: any;
   };
+};
+
+export type ActiveTask = {
+  id: string;
+  name: string;
+  since: firebase.firestore.Timestamp;
 };
 
 export function initializeStore() {
@@ -318,6 +326,43 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
   return await serverIssuePayments({
     recipients
   });
+}
+
+export function toServerTimestamp(date: Date): firebase.firestore.Timestamp {
+  return firebase.firestore.Timestamp.fromDate(date);
+}
+
+export function dateFromServerTimestamp(
+  timestamp: firebase.firestore.Timestamp
+): Date {
+  return timestamp.toDate();
+}
+
+export async function logActiveTaskView(taskID: string) {
+  const userID = firebase.auth().currentUser!.uid;
+  const activeTask: ActiveTask = {
+    id: taskID,
+    name: getBestUserName(),
+    since: toServerTimestamp(new Date())
+  };
+  await firebase
+    .firestore()
+    .collection(ACTIVE_TASK_COLLECTION)
+    .doc(userID)
+    .set(activeTask);
+}
+
+export function subscribeActiveTasks(
+  onActiveTasksChanged: (tasks: ActiveTask[]) => void
+) {
+  const unsubscriber = firebase
+    .firestore()
+    .collection(ACTIVE_TASK_COLLECTION)
+    .onSnapshot(snap => {
+      const actives = snap.docs.map(d => d.data() as ActiveTask);
+      onActiveTasksChanged(actives);
+    });
+  return unsubscriber;
 }
 
 export function getLatestTaskNote(task: Task): string {
