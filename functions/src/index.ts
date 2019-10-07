@@ -112,6 +112,7 @@ async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
   }
 
   await admin.auth().setCustomUserClaims(user.uid, { roles });
+  await admin.auth().revokeRefreshTokens(user.uid);
   return {
     result: "Roles successfully set for " + email + ": " + JSON.stringify(roles)
   };
