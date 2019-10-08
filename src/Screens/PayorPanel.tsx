@@ -37,6 +37,9 @@ class PayorPanel extends React.Component<Props, State> {
   async componentDidMount() {
     const tasks = await loadPayorTasks();
     this.setState({ tasks });
+    if (tasks.length > 0) {
+      this._onTaskSelect(0);
+    }
   }
 
   _renderTaskListReimbursement = (task: Task, isSelected: boolean) => {
@@ -174,18 +177,20 @@ class PayorPanel extends React.Component<Props, State> {
   };
 
   render() {
+    const { selectedTaskIndex } = this.state;
     return (
       <div className="mainview_content">
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}
           renderItem={this._renderTaskListReimbursement}
+          selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
         />
         <div style={{ width: "100%" }}>
-          {this.state.selectedTaskIndex >= 0 &&
+          {selectedTaskIndex >= 0 &&
             this._renderReimbursementDetails(
-              this.state.tasks[this.state.selectedTaskIndex]
+              this.state.tasks[selectedTaskIndex]
             )}
         </div>
       </div>

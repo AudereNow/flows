@@ -18,6 +18,7 @@ type Props = {
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
   onSelect?: (index: number) => void;
+  selectedItem?: number;
 };
 
 type State = {
@@ -36,6 +37,18 @@ class TaskList extends React.Component<Props, State> {
     this._unsubscribeActives = subscribeActiveTasks(tasks =>
       this.setState({ activeTasks: tasks })
     );
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State) {
+    if (
+      props.selectedItem !== undefined &&
+      state.selectedIndex !== props.selectedItem
+    ) {
+      return {
+        selectedIndex: props.selectedItem
+      };
+    }
+    return null;
   }
 
   componentWillUnmount() {

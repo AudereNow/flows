@@ -28,6 +28,7 @@ type State = {
   notes: string;
   numSamples: number;
   searchPhrase: string;
+  showAllTasks: boolean;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
@@ -36,12 +37,16 @@ class AuditorPanel extends React.Component<Props, State> {
     searchPhrase: "",
     selectedTaskIndex: -1,
     notes: "",
-    numSamples: 0
+    numSamples: 0,
+    showAllTasks: false
   };
 
   async componentDidMount() {
     const tasks = await loadAuditorTasks();
     this.setState({ tasks });
+    if (tasks.length > 0) {
+      this._onTaskSelect(0);
+    }
   }
 
   _renderTaskListClaim = (task: Task, isSelected: boolean) => {
@@ -63,6 +68,10 @@ class AuditorPanel extends React.Component<Props, State> {
         <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
       </div>
     );
+  };
+
+  _onShowAll = () => {
+    this.setState({ showAllTasks: !this.state.showAllTasks });
   };
 
   _onNotesChanged = (notes: string) => {
@@ -151,8 +160,9 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimDetails = (task: Task) => {
+    const { showAllTasks } = this.state;
     const samples = task.entries.slice(0, this.state.numSamples);
-
+    const remaining = task.entries.length - this.state.numSamples;
     return (
       <LabelWrapper label="DETAILS VIEW">
         <div className="mainview_spaced_row">
@@ -164,6 +174,21 @@ class AuditorPanel extends React.Component<Props, State> {
           />
         </div>
         {samples.map(this._renderClaimEntryDetails)}
+        {remaining > 0 && (
+          <div className="mainview_button_row">
+            <Button
+              label={
+                showAllTasks ? "Hide \u25b2" : `Show ${remaining} More \u25bc`
+              }
+              onClick={this._onShowAll}
+            />
+          </div>
+        )}
+        {remaining > 0 &&
+          showAllTasks &&
+          task.entries
+            .slice(this.state.numSamples, task.entries.length)
+            .map(this._renderClaimEntryDetails)}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
@@ -184,24 +209,25 @@ class AuditorPanel extends React.Component<Props, State> {
     );
     this.setState({
       selectedTaskIndex: index,
-      numSamples
+      numSamples,
+      showAllTasks: false
     });
   };
 
   render() {
+    const { selectedTaskIndex } = this.state;
     return (
       <div className="mainview_content">
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}
           renderItem={this._renderTaskListClaim}
+          selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
         />
         <div style={{ width: "100%" }}>
-          {this.state.selectedTaskIndex >= 0 &&
-            this._renderClaimDetails(
-              this.state.tasks[this.state.selectedTaskIndex]
-            )}
+          {selectedTaskIndex >= 0 &&
+            this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
         </div>
       </div>
     );

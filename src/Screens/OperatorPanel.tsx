@@ -32,6 +32,9 @@ class OperatorPanel extends React.Component<Props, State> {
   async componentDidMount() {
     const tasks = await loadOperatorTasks();
     this.setState({ tasks });
+    if (tasks.length > 0) {
+      this._onTaskSelect(0);
+    }
   }
 
   _renderTaskList = (task: Task, isSelected: boolean) => {
@@ -138,19 +141,19 @@ class OperatorPanel extends React.Component<Props, State> {
   };
 
   render() {
+    const { selectedTaskIndex } = this.state;
     return (
       <div className="mainview_content">
         <TaskList
           onSelect={this._onTaskSelect}
           tasks={this.state.tasks}
           renderItem={this._renderTaskList}
+          selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
         />
         <div>
-          {this.state.selectedTaskIndex >= 0 &&
-            this._renderClaimDetails(
-              this.state.tasks[this.state.selectedTaskIndex]
-            )}
+          {selectedTaskIndex >= 0 &&
+            this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
         </div>
       </div>
     );
