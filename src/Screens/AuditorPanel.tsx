@@ -28,7 +28,7 @@ type State = {
   notes: string;
   numSamples: number;
   searchPhrase: string;
-  showAllTasks: boolean;
+  showAllEntries: boolean;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
@@ -38,7 +38,7 @@ class AuditorPanel extends React.Component<Props, State> {
     selectedTaskIndex: -1,
     notes: "",
     numSamples: 0,
-    showAllTasks: false
+    showAllEntries: false
   };
 
   async componentDidMount() {
@@ -71,7 +71,7 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _onShowAll = () => {
-    this.setState({ showAllTasks: !this.state.showAllTasks });
+    this.setState({ showAllEntries: !this.state.showAllEntries });
   };
 
   _onNotesChanged = (notes: string) => {
@@ -160,7 +160,7 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimDetails = (task: Task) => {
-    const { showAllTasks } = this.state;
+    const { showAllEntries } = this.state;
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
     return (
@@ -178,14 +178,14 @@ class AuditorPanel extends React.Component<Props, State> {
           <div className="mainview_button_row">
             <Button
               label={
-                showAllTasks ? "Hide \u25b2" : `Show ${remaining} More \u25bc`
+                showAllEntries ? "Hide \u25b2" : `Show ${remaining} More \u25bc`
               }
               onClick={this._onShowAll}
             />
           </div>
         )}
         {remaining > 0 &&
-          showAllTasks &&
+          showAllEntries &&
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
@@ -210,7 +210,7 @@ class AuditorPanel extends React.Component<Props, State> {
     this.setState({
       selectedTaskIndex: index,
       numSamples,
-      showAllTasks: false
+      showAllEntries: false
     });
   };
 
