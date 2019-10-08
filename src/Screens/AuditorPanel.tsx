@@ -164,7 +164,7 @@ class AuditorPanel extends React.Component<Props, State> {
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
     return (
-      <LabelWrapper label="DETAILS VIEW">
+      <LabelWrapper label="DETAILS">
         <div className="mainview_spaced_row">
           <TextItem data={{ Pharmacy: task.site.name }} />
           <input

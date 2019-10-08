@@ -17,6 +17,7 @@ type Props = {
   tasks: Task[];
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
+  label?: string;
   onSelect?: (index: number) => void;
   selectedItem?: number;
 };
@@ -91,7 +92,10 @@ class TaskList extends React.Component<Props, State> {
 
   render() {
     return (
-      <LabelWrapper className={this.props.className} label={"Items to Review"}>
+      <LabelWrapper
+        className={this.props.className}
+        label={this.props.label || "ITEMS TO REVIEW"}
+      >
         <div>
           {this.props.tasks.map((task, index) => {
             const activeTask = this._isActiveTask(task);

@@ -1,4 +1,5 @@
 import React from "react";
+import ZoomableImage from "./ZoomableImage";
 import "./ImageRow.css";
 
 interface Props {
@@ -11,8 +12,9 @@ const ImageRow = (props: Props) => {
       {props.imageURLs.length > 0 &&
         props.imageURLs.map((url, index) => {
           return (
-            <img
-              className="imagerow_image"
+            <ZoomableImage
+              width="20%"
+              height="20%"
               key={url + index}
               src={url}
               alt={url}

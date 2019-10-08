@@ -121,7 +121,7 @@ class OperatorPanel extends React.Component<Props, State> {
 
   _renderClaimDetails = (task: Task) => {
     return (
-      <LabelWrapper label="DETAILS VIEW">
+      <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {task.entries.map(this._renderClaimEntryDetails)}
         <LabelTextInput
@@ -149,6 +149,7 @@ class OperatorPanel extends React.Component<Props, State> {
           tasks={this.state.tasks}
           renderItem={this._renderTaskList}
           selectedItem={selectedTaskIndex}
+          label="CLAIMS FOR FOLLOW-UP"
           className="mainview_tasklist"
         />
         <div>

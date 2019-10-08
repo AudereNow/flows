@@ -149,7 +149,7 @@ class PayorPanel extends React.Component<Props, State> {
     });
 
     return (
-      <LabelWrapper label="DETAILS VIEW">
+      <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem
