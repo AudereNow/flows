@@ -1,7 +1,7 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
-import React from "react";
+import React, { Fragment } from "react";
 import uploadIcon from "../assets/cloud_upload.svg";
 import logo from "../assets/maishalogo.png";
 import Dropdown from "../Components/Dropdown";
@@ -62,15 +62,18 @@ class TopBar extends React.Component {
     const { roles, showFileSelector } = this.state;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
-        <img
-          className="topbar_upload_icon"
-          src={uploadIcon}
-          alt="upload"
-          onClick={this._onUploadIconClick}
-        />
+        <div className="topbar_row" onClick={this._onUploadIconClick}>
+          <img className="topbar_upload_icon" src={uploadIcon} alt="upload" />
+          <div>Upload CSV</div>
+        </div>
       ) : null;
     const uploader = showFileSelector ? (
-      <input type="file" name="file" onChange={this._onFileSelected} />
+      <input
+        style={{ width: "100px" }}
+        type="file"
+        name="file"
+        onChange={this._onFileSelected}
+      />
     ) : null;
 
     return (
@@ -81,9 +84,11 @@ class TopBar extends React.Component {
         </div>
 
         <div className="topbar_row">
-          {uploadButton}
-          {uploader}
           <Dropdown>
+            <Fragment>
+              {uploadButton}
+              {uploader}
+            </Fragment>
             <div onClick={this._handleLogout}>Logout</div>
           </Dropdown>
         </div>
