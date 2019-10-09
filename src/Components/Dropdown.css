@@ -1,6 +1,6 @@
 .dropdown_container {
   position: relative;
-  padding: 5px;
+  padding: 7px;
 }
 
 .dropdown_content {
@@ -11,7 +11,10 @@
 }
 
 .dropdown_item {
-  text-align: left;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   padding: 10px;
   min-width: 70px;
   min-height: 20px;

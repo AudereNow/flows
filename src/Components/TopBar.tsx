@@ -28,7 +28,7 @@ class TopBar extends React.Component {
     try {
       await firebase.auth().signOut();
     } catch (e) {
-      console.log(`Error logging out: ${e}`);
+      alert(`Error logging out: ${e}`);
     }
   };
 
@@ -73,28 +73,19 @@ class TopBar extends React.Component {
       <input type="file" name="file" onChange={this._onFileSelected} />
     ) : null;
 
-    let dropdownConfig = [
-      {
-        label: "Logout",
-        onSelect: this._handleLogout
-      }
-    ];
-
     return (
       <div className="topbar_main">
         <img className="topbar_logo" src={logo} alt="logo" />
         <div className="topbar_user">
           {firebase.auth().currentUser!.displayName}
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row"
-          }}
-        >
+
+        <div className="topbar_row">
           {uploadButton}
           {uploader}
-          <Dropdown config={dropdownConfig} />
+          <Dropdown>
+            <div onClick={this._handleLogout}>Logout</div>
+          </Dropdown>
         </div>
       </div>
     );

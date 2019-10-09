@@ -8,7 +8,6 @@ interface dropdownConfig {
 }
 
 interface Props {
-  config: dropdownConfig[];
   labelURI?: string;
 }
 
@@ -22,12 +21,16 @@ export default class Dropdown extends PureComponent<Props, State> {
     this.state = { open: false };
   }
 
-  _toggleDropdown = () => {
-    this.setState({ open: !this.state.open });
+  _showDropdown = () => {
+    this.setState({ open: true });
+  };
+
+  _hideDropdown = () => {
+    this.setState({ open: false });
   };
 
   render() {
-    if (this.props.config.length === 0) {
+    if (!this.props.children) {
       return null;
     }
     const { open } = this.state;
@@ -36,8 +39,8 @@ export default class Dropdown extends PureComponent<Props, State> {
     return (
       <div
         className="dropdown_container"
-        onMouseEnter={this._toggleDropdown}
-        onMouseLeave={this._toggleDropdown}
+        onMouseEnter={this._showDropdown}
+        onMouseLeave={this._hideDropdown}
       >
         {!!labelURI ? (
           <img src={labelURI} alt={labelURI} />
@@ -46,17 +49,10 @@ export default class Dropdown extends PureComponent<Props, State> {
         )}
         {!!open && (
           <div className="dropdown_content">
-            {this.props.config.map(item => {
-              return (
-                <div
-                  key={item.label}
-                  className="dropdown_item"
-                  onClick={item.onSelect}
-                >
-                  <span>{item.label}</span>
-                </div>
-              );
-            })}
+            {!!this.props.children &&
+              React.Children.map(this.props.children, function(child) {
+                return <div className="dropdown_item">{child}</div>;
+              })}
           </div>
         )}
       </div>

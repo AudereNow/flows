@@ -12,10 +12,13 @@
   height: 32px;
 }
 
+.topbar_row {
+  display: flex;
+  flex-direction: row;
+}
+
 .topbar_upload_icon {
   height: 32px;
-  margin-right: 10px;
-  cursor: pointer;
 }
 
 .topbar_user {
