@@ -25,25 +25,29 @@ type Props = {};
 type State = {
   tasks: Task[];
   selectedTaskIndex: number;
+  allTasks: Task[];
   notes: string;
   numSamples: number;
-  searchPhrase: string;
+  searchTermGlobal: string;
+  searchTermDetails: string;
   showAllEntries: boolean;
 };
 
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
-    searchPhrase: "",
     selectedTaskIndex: -1,
+    allTasks: [],
     notes: "",
     numSamples: 0,
+    searchTermGlobal: "",
+    searchTermDetails: "",
     showAllEntries: false
   };
 
   async componentDidMount() {
     const tasks = await loadAuditorTasks();
-    this.setState({ tasks });
+    this.setState({ tasks, allTasks: tasks });
     if (tasks.length > 0) {
       this._onTaskSelect(0);
     }
@@ -94,14 +98,20 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _removeSelectedTask() {
-    const tasksCopy = this.state.tasks.slice(0);
-
-    tasksCopy.splice(this.state.selectedTaskIndex, 1);
-    const newIndex =
-      this.state.selectedTaskIndex >= tasksCopy.length
-        ? tasksCopy.length - 1
-        : this.state.selectedTaskIndex;
-    this.setState({ tasks: tasksCopy, selectedTaskIndex: newIndex });
+    const selectedTaskId = this.state.tasks[this.state.selectedTaskIndex].id;
+    const indexInMaster = this.state.allTasks.findIndex(task => {
+      return task.id === selectedTaskId;
+    });
+    const tasksCopy = this.state.allTasks.slice(0);
+    tasksCopy.splice(indexInMaster, 1);
+    this.setState({ allTasks: tasksCopy }, () => {
+      const tasks = this._computeFilteredTasks(this.state.searchTermGlobal);
+      const newIndex =
+        this.state.selectedTaskIndex >= tasks.length
+          ? tasks.length - 1
+          : this.state.selectedTaskIndex;
+      this.setState({ tasks, selectedTaskIndex: newIndex });
+    });
   }
 
   _extractImageURLs = (claim: ClaimEntry) => {
@@ -119,7 +129,7 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
-    const { searchPhrase } = this.state;
+    const { searchTermDetails } = this.state;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -132,7 +142,10 @@ class AuditorPanel extends React.Component<Props, State> {
 
     let checkEntry = Object.assign({}, entry, date, patient);
 
-    if (!!searchPhrase && !containsSearchTerm(searchPhrase, checkEntry)) {
+    if (
+      !!searchTermDetails &&
+      !containsSearchTerm(searchTermDetails, checkEntry)
+    ) {
       return null;
     }
 
@@ -150,13 +163,15 @@ class AuditorPanel extends React.Component<Props, State> {
     );
   };
 
-  _setSearchPhrase = debounce((input: string) => {
-    this.setState({ searchPhrase: input });
+  _setSearchTermDetails = debounce((input: string) => {
+    this.setState({ searchTermDetails: input });
   }, 500);
 
-  _handlePhraseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  _handleSearchTermDetailsChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     let input = event.target.value;
-    this._setSearchPhrase(input);
+    this._setSearchTermDetails(input);
   };
 
   _renderClaimDetails = (task: Task) => {
@@ -169,7 +184,7 @@ class AuditorPanel extends React.Component<Props, State> {
           <TextItem data={{ Pharmacy: task.site.name }} />
           <input
             type="text"
-            onChange={this._handlePhraseChange}
+            onChange={this._handleSearchTermDetailsChange}
             placeholder="Filter Details"
           />
         </div>
@@ -214,6 +229,40 @@ class AuditorPanel extends React.Component<Props, State> {
     });
   };
 
+  _computeFilteredTasks = (searchTerm: string) => {
+    return this.state.allTasks.filter(task => {
+      return (
+        searchTerm === "" ||
+        containsSearchTerm(searchTerm, task.site) ||
+        task.entries.filter(entry => {
+          return containsSearchTerm(searchTerm, entry);
+        }).length > 0
+      );
+    });
+  };
+
+  _handleSearchTermGlobalChange = debounce((searchTerm: string) => {
+    const { selectedTaskIndex, tasks } = this.state;
+    const selectedId =
+      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
+    const filteredTasks = this._computeFilteredTasks(searchTerm);
+    const selectedIndex = filteredTasks.findIndex(task => {
+      return task.id === selectedId;
+    });
+    this.setState(
+      {
+        tasks: filteredTasks,
+        searchTermGlobal: searchTerm,
+        selectedTaskIndex: selectedIndex
+      },
+      () => {
+        if (selectedIndex === -1 && filteredTasks.length > 0) {
+          this._onTaskSelect(0);
+        }
+      }
+    );
+  }, 500);
+
   render() {
     const { selectedTaskIndex } = this.state;
     return (
@@ -224,6 +273,7 @@ class AuditorPanel extends React.Component<Props, State> {
           renderItem={this._renderTaskListClaim}
           selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
+          onSearchTermUpdate={this._handleSearchTermGlobalChange}
         />
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 &&

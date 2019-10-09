@@ -8,6 +8,7 @@ import {
   getBestUserName
 } from "../store/corestore";
 import LabelWrapper from "./LabelWrapper";
+import LabelWrapperWithSearch from "./LabelWrapperWithSearch";
 import "./TaskList.css";
 import ReactTooltip from "react-tooltip";
 
@@ -20,6 +21,7 @@ type Props = {
   label?: string;
   onSelect?: (index: number) => void;
   selectedItem?: number;
+  onSearchTermUpdate?: (searchTerm: string) => void;
 };
 
 type State = {
@@ -90,37 +92,48 @@ class TaskList extends React.Component<Props, State> {
     return null;
   }
 
-  render() {
-    return (
-      <LabelWrapper
-        className={this.props.className}
-        label={this.props.label || "ITEMS TO REVIEW"}
-      >
-        <div>
-          {this.props.tasks.map((task, index) => {
-            const activeTask = this._isActiveTask(task);
-            const activeClass = activeTask ? "tasklist_active" : undefined;
-            const activeDataTip = activeTask
-              ? `${activeTask!.name} also working on this task`
-              : undefined;
+  _onSearchTermUpdate = (searchTerm: string) => {
+    this.props.onSearchTermUpdate!(searchTerm);
+  };
 
-            return (
-              <div
-                className={activeClass}
-                key={index}
-                data-tip={activeDataTip}
-                data-name={index}
-                onClick={this._onItemPressed}
-              >
-                {this.props.renderItem(
-                  task,
-                  index === this.state.selectedIndex
-                )}
-                <ReactTooltip key={activeDataTip} />
-              </div>
-            );
-          })}
-        </div>
+  render() {
+    const { className, onSearchTermUpdate } = this.props;
+    const label = this.props.label || "ITEMS TO REVIEW";
+    const innerResult = (
+      <div>
+        {this.props.tasks.map((task, index) => {
+          const activeTask = this._isActiveTask(task);
+          const activeClass = activeTask ? "tasklist_active" : undefined;
+          const activeDataTip = activeTask
+            ? `${activeTask!.name} also working on this task`
+            : undefined;
+
+          return (
+            <div
+              className={activeClass}
+              key={index}
+              data-tip={activeDataTip}
+              data-name={index}
+              onClick={this._onItemPressed}
+            >
+              {this.props.renderItem(task, index === this.state.selectedIndex)}
+              <ReactTooltip key={activeDataTip} />
+            </div>
+          );
+        })}
+      </div>
+    );
+    return !!onSearchTermUpdate ? (
+      <LabelWrapperWithSearch
+        className={className}
+        label={label}
+        onSearchTermUpdate={this._onSearchTermUpdate}
+      >
+        {innerResult}
+      </LabelWrapperWithSearch>
+    ) : (
+      <LabelWrapper className={className} label={label}>
+        {innerResult}
       </LabelWrapper>
     );
   }

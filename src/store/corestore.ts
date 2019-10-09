@@ -282,7 +282,7 @@ export async function loadAuditorTasks(): Promise<Task[]> {
           d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
         patientID: d["g4:B02"]["1 ID number on voucher"],
         phone: d["g2:A14 Phone Number"],
-        photoIDUri: d["g4:B03.1 Photo of ID card"],
+        photoIDUri: d["g4:B03"]["1 Photo of ID card"],
         photoMedUri: d["g5:B04 (Medication)"],
         photoMedBatchUri: d["g5:B05 (Medication batch)"],
         item: d["Type received"],
