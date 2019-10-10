@@ -11,11 +11,6 @@
   width: 100%;
 }
 
-.mainview_notes_row {
-  margin: 10px;
-  overflow-wrap: break-word;
-}
-
 .mainview_tasklist {
   min-width: 300px;
 }
