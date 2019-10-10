@@ -14,7 +14,8 @@ import {
   issuePayments,
   loadPayorTasks,
   savePaymentCompletedTask,
-  Task
+  Task,
+  TaskChangeMetadata
 } from "../store/corestore";
 import "./MainView.css";
 
@@ -156,6 +157,24 @@ class PayorPanel extends React.Component<Props, State> {
           data={{ "Total Reimbursement": claimsTotal.toFixed(2) + " KSh" }}
         />
         <DataTable data={cleanedData} />
+        {task.changes.length > 0 &&
+          task.changes.map((change: TaskChangeMetadata, index) => {
+            if (!change.notes) {
+              return null;
+            }
+            return (
+              <div
+                className="mainview_notes_row"
+                key={`${change.timestamp}-${index}`}
+              >
+                <b>
+                  {`${change.by} on 
+                  ${new Date(change.timestamp).toLocaleString()}: `}
+                </b>
+                {change.notes}
+              </div>
+            );
+          })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label="Notes"

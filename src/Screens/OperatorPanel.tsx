@@ -11,7 +11,8 @@ import {
   getLatestTaskNote,
   loadOperatorTasks,
   saveOperatorCompletedTask,
-  Task
+  Task,
+  TaskChangeMetadata
 } from "../store/corestore";
 import "./MainView.css";
 
@@ -124,6 +125,24 @@ class OperatorPanel extends React.Component<Props, State> {
       <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {task.entries.map(this._renderClaimEntryDetails)}
+        {task.changes.length > 0 &&
+          task.changes.map((change: TaskChangeMetadata, index) => {
+            if (!change.notes) {
+              return null;
+            }
+            return (
+              <div
+                className="mainview_notes_row"
+                key={`${change.timestamp}-${index}`}
+              >
+                <b>
+                  {`${change.by} on 
+                  ${new Date(change.timestamp).toLocaleString()}: `}
+                </b>
+                {change.notes}
+              </div>
+            );
+          })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
