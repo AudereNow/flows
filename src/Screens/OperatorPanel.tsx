@@ -124,7 +124,9 @@ class OperatorPanel extends React.Component<Props, State> {
       <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {task.entries.map(this._renderClaimEntryDetails)}
-        <NotesAudit changes={task.changes} />
+        {task.changes.map(change => {
+          return <NotesAudit change={change} />;
+        })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
