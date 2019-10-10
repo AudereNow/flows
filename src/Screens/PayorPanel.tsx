@@ -167,6 +167,11 @@ class PayorPanel extends React.Component<Props, State> {
         <div className="mainview_button_row">
           <Button
             disabled={paying}
+            label={"Decline Payment"}
+            onClick={this._onDecline}
+          />
+          <Button
+            disabled={paying}
             label={paying ? "Issuing Payment..." : "Issue Payment"}
             onClick={this._onIssuePayment}
           />

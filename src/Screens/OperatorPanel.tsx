@@ -11,6 +11,7 @@ import {
   ClaimEntry,
   loadOperatorTasks,
   saveOperatorCompletedTask,
+  saveOperatorRejectedTask,
   Task
 } from "../store/corestore";
 import "./MainView.css";
@@ -60,6 +61,14 @@ class OperatorPanel extends React.Component<Props, State> {
 
   _onNotesChanged = (notes: string) => {
     this.setState({ notes });
+  };
+
+  _onReject = async () => {
+    await saveOperatorRejectedTask(
+      this.state.tasks[this.state.selectedTaskIndex],
+      this.state.notes
+    );
+    this._removeSelectedTask();
   };
 
   _onCompleted = async () => {
@@ -138,6 +147,7 @@ class OperatorPanel extends React.Component<Props, State> {
           defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
+          <Button label="Reject" onClick={this._onReject} />
           <Button label="Mark Completed" onClick={this._onCompleted} />
         </div>
       </LabelWrapper>

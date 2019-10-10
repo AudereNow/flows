@@ -22,6 +22,8 @@ type Props = {
   onSelect?: (index: number) => void;
   selectedItem?: number;
   onSearchTermUpdate?: (searchTerm: string) => void;
+  filterItems?: string[];
+  onFilterUpdate?: (filterItem: string) => void;
 };
 
 type State = {
@@ -97,7 +99,12 @@ class TaskList extends React.Component<Props, State> {
   };
 
   render() {
-    const { className, onSearchTermUpdate } = this.props;
+    const {
+      className,
+      filterItems,
+      onFilterUpdate,
+      onSearchTermUpdate
+    } = this.props;
     const label = this.props.label || "ITEMS TO REVIEW";
     const innerResult = (
       <div>
@@ -128,6 +135,8 @@ class TaskList extends React.Component<Props, State> {
         className={className}
         label={label}
         onSearchTermUpdate={this._onSearchTermUpdate}
+        filterItems={filterItems}
+        onFilterUpdate={onFilterUpdate}
       >
         {innerResult}
       </LabelWrapperWithSearch>

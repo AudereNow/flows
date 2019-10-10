@@ -4,12 +4,15 @@ import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declineAudit,
   loadAuditorTasks,
+  loadCompletedPaymentTasks,
+  loadRejectedTasks,
   saveAuditorApprovedTask,
   Task
 } from "../store/corestore";
@@ -32,6 +35,12 @@ type State = {
   showAllEntries: boolean;
 };
 
+enum FilterType {
+  TODO = "Todo",
+  COMPLETED = "Completed",
+  REJECTED = "Rejected"
+}
+
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
@@ -43,14 +52,42 @@ class AuditorPanel extends React.Component<Props, State> {
     searchTermDetails: "",
     showAllEntries: false
   };
+  filterType: FilterType = FilterType.TODO;
 
   async componentDidMount() {
-    const tasks = await loadAuditorTasks();
-    this.setState({ tasks, allTasks: tasks });
-    if (tasks.length > 0) {
-      this._onTaskSelect(0);
-    }
+    this._setupTaskList();
   }
+
+  _setupTaskList = async () => {
+    let tasks;
+    switch (this.filterType) {
+      case FilterType.TODO:
+        tasks = await loadAuditorTasks();
+        break;
+      case FilterType.COMPLETED:
+        tasks = await loadCompletedPaymentTasks();
+        break;
+      case FilterType.REJECTED:
+        tasks = await loadRejectedTasks();
+        break;
+    }
+    if (tasks) {
+      this.setState({ tasks, allTasks: tasks });
+      if (tasks.length > 0) {
+        this._onTaskSelect(0);
+      }
+    }
+  };
+
+  _getLabelFromFilterType = (): string => {
+    switch (this.filterType) {
+      case FilterType.COMPLETED:
+        return "COMPLETED PAYMENTS";
+      case FilterType.REJECTED:
+        return "REJECTED CLAIMS";
+    }
+    return "ITEMS TO REVIEW";
+  };
 
   _renderTaskListClaim = (task: Task, isSelected: boolean) => {
     const previewName =
@@ -208,15 +245,20 @@ class AuditorPanel extends React.Component<Props, State> {
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
+        {task.changes.map(change => {
+          return <NotesAudit change={change} />;
+        })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
           defaultValue={this.state.notes}
         />
-        <div className="mainview_button_row">
-          <Button label="Decline" onClick={this._onDecline} />
-          <Button label="Approve" onClick={this._onApprove} />
-        </div>
+        {this.filterType === FilterType.TODO && (
+          <div className="mainview_button_row">
+            <Button label="Decline" onClick={this._onDecline} />
+            <Button label="Approve" onClick={this._onApprove} />
+          </div>
+        )}
       </LabelWrapper>
     );
   };
@@ -267,6 +309,11 @@ class AuditorPanel extends React.Component<Props, State> {
     );
   }, 500);
 
+  _handleFilterUpdate = (filterItem: string) => {
+    this.filterType = filterItem as FilterType;
+    this._setupTaskList();
+  };
+
   render() {
     const { selectedTaskIndex } = this.state;
     return (
@@ -277,7 +324,14 @@ class AuditorPanel extends React.Component<Props, State> {
           renderItem={this._renderTaskListClaim}
           selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
+          label={this._getLabelFromFilterType()}
           onSearchTermUpdate={this._handleSearchTermGlobalChange}
+          filterItems={[
+            FilterType.TODO,
+            FilterType.COMPLETED,
+            FilterType.REJECTED
+          ]}
+          onFilterUpdate={this._handleFilterUpdate}
         />
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 &&

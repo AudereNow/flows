@@ -1,4 +1,21 @@
-.labelwrapper_header_search {
+.labelwrapper_header_icon_container {
   position: absolute;
+  height: 100%;
+  top: 0;
+  right: 0;
+  display: flex;
+}
+
+.labelwrapper_header_icon {
   cursor: pointer;
+  height: 24px;
+  width: 24px;
+}
+
+.labelwrapper_dropdown_text {
+  cursor: pointer;
+  color: #000000;
+  text-align: left;
+  font-weight: normal;
+  font-size: medium;
 }

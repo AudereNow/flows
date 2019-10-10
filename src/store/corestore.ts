@@ -17,6 +17,7 @@ const OPERATOR_TASK_COLLECTION = "operator_task";
 const PAYOR_TASK_COLLECTION = "payor_task";
 const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
 const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
+const REJECTED_TASK_COLLECTION = "rejected_task";
 
 type AuditorTodo = {
   batchID: string;
@@ -35,7 +36,8 @@ export enum TaskDecision {
   DECLINE_AUDIT = "Decline Audit",
   APPROVE_AUDIT = "Approve Audit",
   DECLINE_PAYMENT = "Decline Payment",
-  PAYMENT_COMPLETE = "Payment Complete"
+  PAYMENT_COMPLETE = "Payment Complete",
+  TASK_REJECTED = "Task Rejected"
 }
 
 export type Site = {
@@ -113,16 +115,27 @@ export async function userRoles(): Promise<UserRole[]> {
 }
 
 export async function declineAudit(task: Task, notes?: string) {
-  await saveDeclinedTask(task, TaskDecision.DECLINE_AUDIT, notes);
+  await saveDeclinedTask(
+    task,
+    TaskDecision.DECLINE_AUDIT,
+    AUDITOR_TODO_COLLECTION,
+    notes
+  );
 }
 
 export async function declinePayment(task: Task, notes?: string) {
-  await saveDeclinedTask(task, TaskDecision.DECLINE_PAYMENT, notes);
+  await saveDeclinedTask(
+    task,
+    TaskDecision.DECLINE_PAYMENT,
+    PAYOR_TASK_COLLECTION,
+    notes
+  );
 }
 
 async function saveDeclinedTask(
   task: Task,
   decision: TaskDecision,
+  fromCollection: string,
   notes?: string
 ) {
   task.flow = decision;
@@ -142,7 +155,7 @@ async function saveDeclinedTask(
       .set(task),
     firebase
       .firestore()
-      .collection(AUDITOR_TODO_COLLECTION)
+      .collection(fromCollection)
       .doc(task.id)
       .delete()
   ]);
@@ -199,6 +212,30 @@ export async function saveOperatorCompletedTask(task: Task, notes?: string) {
     firebase
       .firestore()
       .collection(PAYOR_TASK_COLLECTION)
+      .doc(task.id)
+      .set(task),
+    firebase
+      .firestore()
+      .collection(OPERATOR_TASK_COLLECTION)
+      .doc(task.id)
+      .delete()
+  ]);
+}
+
+export async function saveOperatorRejectedTask(task: Task, notes?: string) {
+  task.flow = TaskDecision.TASK_REJECTED;
+  task.changes.push({
+    timestamp: Date.now(),
+    by: getBestUserName(),
+    desc: TaskDecision.TASK_REJECTED,
+    notes
+  });
+  removeEmptyFieldsInPlace(task);
+
+  return Promise.all([
+    firebase
+      .firestore()
+      .collection(REJECTED_TASK_COLLECTION)
       .doc(task.id)
       .set(task),
     firebase
@@ -299,6 +336,22 @@ export async function loadAuditorTasks(): Promise<Task[]> {
         changes: []
       };
     });
+}
+
+export async function loadCompletedPaymentTasks(): Promise<Task[]> {
+  const taskSnapshot = await firebase
+    .firestore()
+    .collection(PAYMENT_COMPLETE_TASK_COLLECTION)
+    .get();
+  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+}
+
+export async function loadRejectedTasks(): Promise<Task[]> {
+  const taskSnapshot = await firebase
+    .firestore()
+    .collection(REJECTED_TASK_COLLECTION)
+    .get();
+  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
 }
 
 export async function setRoles(email: string, roles: UserRole[]) {

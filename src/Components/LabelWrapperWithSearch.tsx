@@ -1,11 +1,15 @@
 import React, { Component } from "react";
+import DropDown from "./Dropdown";
 import "./LabelWrapper.css";
 import "./LabelWrapperWithSearch.css";
+import filterIcon from "../assets/filter.svg";
 
 interface Props {
   label?: string;
   className?: string;
   onSearchTermUpdate: (searchTerm: string) => void;
+  filterItems?: string[];
+  onFilterUpdate?: (filterItem: string) => void;
 }
 
 interface State {
@@ -35,16 +39,46 @@ class LabelWrapperWithSearch extends Component<Props> {
     }
   };
 
+  _onFilterItemClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    if (!!this.props.onFilterUpdate) {
+      const filterItem = event.currentTarget.getAttribute("data-name");
+      if (filterItem === null) {
+        return;
+      }
+      this.props.onFilterUpdate(filterItem);
+    }
+  };
+
   render() {
+    const dropDownContent = !!this.props.filterItems && (
+      <div className="labelwrapper_header_icon">
+        <DropDown labelURI={filterIcon}>
+          {this.props.filterItems.map(item => (
+            <div
+              className="labelwrapper_dropdown_text"
+              data-name={item}
+              onClick={this._onFilterItemClick}
+            >
+              {item}
+            </div>
+          ))}
+        </DropDown>
+      </div>
+    );
     const labelContent = (
       <div>
-        <span>{this.props.label}</span>
-        <span
-          className="labelwrapper_header_search"
-          onClick={this._onSearchClick}
-        >
-          &nbsp;&#x1F50E;
-        </span>
+        <div>{this.props.label}</div>
+        <div className="labelwrapper_header_icon_container">
+          <div
+            className="labelwrapper_header_icon"
+            onClick={this._onSearchClick}
+          >
+            &nbsp;&#x1F50E;
+          </div>
+          {!!this.props.filterItems && dropDownContent}
+        </div>
       </div>
     );
     const searchBoxContent = (
