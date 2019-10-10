@@ -9,7 +9,6 @@ import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declineAudit,
-  getLatestTaskNote,
   loadAuditorTasks,
   saveAuditorApprovedTask,
   Task
@@ -207,7 +206,7 @@ class AuditorPanel extends React.Component<Props, State> {
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
-          defaultValue={getLatestTaskNote(task)}
+          defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button label="Decline" onClick={this._onDecline} />

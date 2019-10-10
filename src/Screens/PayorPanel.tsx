@@ -11,7 +11,6 @@ import {
   ClaimEntry,
   declinePayment,
   getBestUserName,
-  getLatestTaskNote,
   issuePayments,
   loadPayorTasks,
   savePaymentCompletedTask,
@@ -161,7 +160,7 @@ class PayorPanel extends React.Component<Props, State> {
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label="Notes"
-          defaultValue={getLatestTaskNote(task)}
+          defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button

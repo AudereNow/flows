@@ -9,7 +9,6 @@ import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  getLatestTaskNote,
   loadOperatorTasks,
   saveOperatorCompletedTask,
   Task
@@ -129,7 +128,7 @@ class OperatorPanel extends React.Component<Props, State> {
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
-          defaultValue={getLatestTaskNote(task)}
+          defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button label="Mark Completed" onClick={this._onCompleted} />

@@ -365,16 +365,6 @@ export function subscribeActiveTasks(
   return unsubscriber;
 }
 
-export function getLatestTaskNote(task: Task): string {
-  let notes = "";
-  task.changes.forEach(c => {
-    if (c.notes) {
-      notes = c.notes;
-    }
-  });
-  return notes;
-}
-
 // https://stackoverflow.com/questions/286141/remove-blank-attributes-from-an-object-in-javascript
 function removeEmptyFieldsInPlace(obj: { [key: string]: any }) {
   Object.keys(obj).forEach(key => {
