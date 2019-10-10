@@ -114,18 +114,24 @@ class AuditorPanel extends React.Component<Props, State> {
     });
   }
 
-  _extractImageURLs = (claim: ClaimEntry) => {
-    const claimImageURLs: string[] = [];
+  _extractImages = (claim: ClaimEntry) => {
+    const claimImages = [];
+    if (!!claim.photoMedUri) {
+      claimImages.push({
+        url: claim.photoMedUri,
+        label: claim.item
+      });
+    }
     if (!!claim.photoIDUri) {
-      claimImageURLs.push(claim.photoIDUri);
+      claimImages.push({
+        url: claim.photoIDUri,
+        label: "ID: " + claim.patientID
+      });
     }
     if (!!claim.photoMedBatchUri) {
-      claimImageURLs.push(claim.photoMedBatchUri);
+      claimImages.push({ url: claim.photoMedBatchUri, label: "Batch" });
     }
-    if (!!claim.photoMedUri) {
-      claimImageURLs.push(claim.photoMedUri);
-    }
-    return claimImageURLs;
+    return claimImages;
   };
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
@@ -157,8 +163,7 @@ class AuditorPanel extends React.Component<Props, State> {
             Patient: patient
           }}
         />
-        <TextItem data={{ Item: entry.item }} />
-        <ImageRow imageURLs={this._extractImageURLs(entry)} />
+        <ImageRow images={this._extractImages(entry)} />
       </LabelWrapper>
     );
   };
@@ -234,9 +239,9 @@ class AuditorPanel extends React.Component<Props, State> {
       return (
         searchTerm === "" ||
         containsSearchTerm(searchTerm, task.site) ||
-        task.entries.filter(entry => {
+        task.entries.some(entry => {
           return containsSearchTerm(searchTerm, entry);
-        }).length > 0
+        })
       );
     });
   };

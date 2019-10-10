@@ -5,3 +5,14 @@
   justify-content: space-evenly;
   margin: 5px;
 }
+
+.imagerow_item {
+  display: flex;
+  flex-direction: column;
+  width: 20%;
+  height: 20%;
+}
+
+.imagerow_label {
+  text-align: center;
+}
