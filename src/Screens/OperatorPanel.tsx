@@ -4,11 +4,11 @@ import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
-  getLatestTaskNote,
   loadOperatorTasks,
   saveOperatorCompletedTask,
   Task
@@ -129,10 +129,13 @@ class OperatorPanel extends React.Component<Props, State> {
       <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {task.entries.map(this._renderClaimEntryDetails)}
+        {task.changes.map(change => {
+          return <NotesAudit change={change} />;
+        })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
-          defaultValue={getLatestTaskNote(task)}
+          defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button label="Mark Completed" onClick={this._onCompleted} />

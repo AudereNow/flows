@@ -69,7 +69,7 @@ class TopBar extends React.Component {
       ) : null;
     const uploader = showFileSelector ? (
       <input
-        style={{ width: "100px" }}
+        className="topbar_input"
         type="file"
         name="file"
         onChange={this._onFileSelected}

@@ -4,13 +4,13 @@ import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
+import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declinePayment,
   getBestUserName,
-  getLatestTaskNote,
   issuePayments,
   loadPayorTasks,
   savePaymentCompletedTask,
@@ -156,10 +156,13 @@ class PayorPanel extends React.Component<Props, State> {
           data={{ "Total Reimbursement": claimsTotal.toFixed(2) + " KSh" }}
         />
         <DataTable data={cleanedData} />
+        {task.changes.map(change => {
+          return <NotesAudit change={change} />;
+        })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label="Notes"
-          defaultValue={getLatestTaskNote(task)}
+          defaultValue={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button
