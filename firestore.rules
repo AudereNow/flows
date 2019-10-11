@@ -12,10 +12,14 @@ service cloud.firestore {
     }
     match /payment_complete_task/{docId} {
       allow write: if request.auth.token.roles.hasAny(['Payor'])
+      allow read: if request.auth.token.roles.hasAny(['Auditor', 'Payor'])
     }
     match /operator_task/{docId} {
       allow write: if request.auth.token.roles.hasAny(['Auditor', 'Payor'])
       allow read, write: if request.auth.token.roles.hasAny(['Operator'])
+    }
+    match /rejected_task/{docId} {
+      allow read, write: if request.auth.token.roles.hasAny(['Auditor', 'Operator'])
     }
   }
 }
