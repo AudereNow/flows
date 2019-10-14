@@ -1,6 +1,6 @@
 import React from "react";
-import ZoomableImage from "./ZoomableImage";
 import "./ImageRow.css";
+import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
@@ -20,8 +20,8 @@ const ImageRow = (props: Props) => {
           const url = isImgString ? (data as string) : (data as ImageData).url;
           const label = !isImgString ? (data as ImageData).label : undefined;
           return (
-            <div className="imagerow_item">
-              <ZoomableImage key={url + index} src={url} alt={url} />
+            <div key={url + index} className="imagerow_item">
+              <ZoomableImage src={url} alt={url} />
               {!!label && <span className="imagerow_label">{label}</span>}
             </div>
           );

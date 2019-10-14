@@ -1,12 +1,12 @@
 .dropdown_container {
   position: relative;
-  padding: 7px;
+  padding: 5px;
 }
 
 .dropdown_content {
   position: absolute;
   right: 0;
-  top: 33px;
+  top: 30px;
   width: 150px;
 }
 
