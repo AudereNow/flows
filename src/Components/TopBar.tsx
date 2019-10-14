@@ -11,12 +11,14 @@ import "./TopBar.css";
 type State = {
   roles: UserRole[];
   showFileSelector: boolean;
+  selectingFile: boolean;
 };
 
 class TopBar extends React.Component {
   state: State = {
     roles: [],
-    showFileSelector: false
+    showFileSelector: false,
+    selectingFile: false
   };
 
   async componentDidMount() {
@@ -36,6 +38,10 @@ class TopBar extends React.Component {
     this.setState({ showFileSelector: true });
   };
 
+  _onFileSelecting = () => {
+    this.setState({ selectingFile: true });
+  };
+
   _onFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length !== 1) {
       return;
@@ -52,7 +58,7 @@ class TopBar extends React.Component {
       await ref.put(file, { contentType: file.type });
 
       alert("File successfully uploaded!");
-      this.setState({ showFileSelector: false });
+      this.setState({ showFileSelector: false, selectingFile: false });
     } catch (e) {
       alert(e);
     }
@@ -72,6 +78,7 @@ class TopBar extends React.Component {
         className="topbar_input"
         type="file"
         name="file"
+        onClick={this._onFileSelecting}
         onChange={this._onFileSelected}
       />
     ) : null;
@@ -84,7 +91,7 @@ class TopBar extends React.Component {
         </div>
 
         <div className="topbar_row">
-          <Dropdown>
+          <Dropdown pinned={this.state.selectingFile}>
             <Fragment>
               {uploadButton}
               {uploader}

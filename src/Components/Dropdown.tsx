@@ -9,6 +9,7 @@ interface dropdownConfig {
 
 interface Props {
   labelURI?: string;
+  pinned?: boolean;
 }
 
 interface State {
@@ -26,6 +27,9 @@ export default class Dropdown extends PureComponent<Props, State> {
   };
 
   _hideDropdown = () => {
+    if (this.props.pinned) {
+      return;
+    }
     this.setState({ open: false });
   };
 
