@@ -1,8 +1,8 @@
 import React, { Component } from "react";
+import filterIcon from "../assets/filter.svg";
 import DropDown from "./Dropdown";
 import "./LabelWrapper.css";
 import "./LabelWrapperWithSearch.css";
-import filterIcon from "../assets/filter.svg";
 
 interface Props {
   label?: string;
@@ -57,6 +57,7 @@ class LabelWrapperWithSearch extends Component<Props> {
         <DropDown labelURI={filterIcon}>
           {this.props.filterItems.map(item => (
             <div
+              key={item}
               className="labelwrapper_dropdown_text"
               data-name={item}
               onClick={this._onFilterItemClick}
@@ -68,7 +69,7 @@ class LabelWrapperWithSearch extends Component<Props> {
       </div>
     );
     const labelContent = (
-      <div>
+      <div className="labelwrapper_header_container">
         <div>{this.props.label}</div>
         <div className="labelwrapper_header_icon_container">
           <div

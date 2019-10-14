@@ -1,3 +1,7 @@
+.labelwrapper_header_container {
+  position: relative;
+}
+
 .labelwrapper_header_icon_container {
   position: absolute;
   height: 100%;

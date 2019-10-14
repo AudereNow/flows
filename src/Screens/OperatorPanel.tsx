@@ -119,7 +119,7 @@ class OperatorPanel extends React.Component<Props, State> {
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper>
+      <LabelWrapper key={entry.timestamp + entry.totalCost}>
         <TextItem
           data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
         />
@@ -138,8 +138,8 @@ class OperatorPanel extends React.Component<Props, State> {
       <LabelWrapper label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {task.entries.map(this._renderClaimEntryDetails)}
-        {task.changes.map(change => {
-          return <NotesAudit change={change} />;
+        {task.changes.map((change, index) => {
+          return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}

@@ -156,8 +156,8 @@ class PayorPanel extends React.Component<Props, State> {
           data={{ "Total Reimbursement": claimsTotal.toFixed(2) + " KSh" }}
         />
         <DataTable data={cleanedData} />
-        {task.changes.map(change => {
-          return <NotesAudit change={change} />;
+        {task.changes.map((change, index) => {
+          return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
         <LabelTextInput
           onTextChange={this._onNotesChanged}
