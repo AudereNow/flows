@@ -14,8 +14,12 @@ const DEFAULT_CONFIG: Config = {
 let lastAccessTime: number = 0;
 let config: Config = DEFAULT_CONFIG;
 
+// This entire thing is only needed because Firebase Remote Config isn't
+// supported in Node.js yet, and we don't want to pull the whole web JS SDK
+// in just for this feature.
 export async function getConfig(key: string) {
-  if (Date.now() - lastAccessTime >= REFRESH_MSEC) {
+  const now = Date.now();
+  if (now - lastAccessTime >= REFRESH_MSEC) {
     const snap = await firebase
       .firestore()
       .collection("metadata")
@@ -23,6 +27,7 @@ export async function getConfig(key: string) {
       .get();
 
     if (snap.exists) {
+      lastAccessTime = now;
       config = snap.data() as Config;
     } else {
       console.log(
