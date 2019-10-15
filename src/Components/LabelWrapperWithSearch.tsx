@@ -71,7 +71,7 @@ class LabelWrapperWithSearch extends Component<Props> {
     if (!this.props.onSearchDatesUpdate) {
       return;
     }
-    this.props.onSearchDatesUpdate({ from: startDate, to: endDate });
+    this.props.onSearchDatesUpdate({ startDate, endDate });
   };
 
   _onFocusChange = (focusedInput: FocusedInputShape | null) => {
@@ -121,9 +121,11 @@ class LabelWrapperWithSearch extends Component<Props> {
       return (
         <div className="labelwrapper_search_container">
           <DateRangePicker
-            startDate={!!currentSearchDates ? currentSearchDates.from : null}
+            startDate={
+              !!currentSearchDates ? currentSearchDates.startDate : null
+            }
             startDateId={"startDate"}
-            endDate={!!currentSearchDates ? currentSearchDates.to : null}
+            endDate={!!currentSearchDates ? currentSearchDates.endDate : null}
             endDateId={"endDate"}
             onDatesChange={this._onDatesChange}
             focusedInput={this.state.focusedInput}

@@ -53,7 +53,7 @@ class AuditorPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     searchTermDetails: "",
     showAllEntries: false,
-    searchDates: { to: null, from: null }
+    searchDates: { startDate: null, endDate: null }
   };
   filterType: FilterType = FilterType.TODO;
 
@@ -364,7 +364,7 @@ class AuditorPanel extends React.Component<Props, State> {
   _clearSearch = () => {
     const { allTasks } = this.state;
     this.setState({
-      searchDates: { to: null, from: null },
+      searchDates: { startDate: null, endDate: null },
       tasks: allTasks
     });
   };

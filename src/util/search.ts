@@ -1,8 +1,8 @@
 import moment, { Moment } from "moment";
 
 export interface DateRange {
-  from: Moment | null;
-  to: Moment | null;
+  startDate: Moment | null;
+  endDate: Moment | null;
 }
 
 export const containsSearchTerm = (
@@ -46,11 +46,11 @@ export const withinDateRange = (dateRange: DateRange, entry: any) => {
 
   if (entry.hasOwnProperty("timestamp")) {
     let current = moment(entry.timestamp);
-    if (!dateRange.from || current >= dateRange.from) {
+    if (!dateRange.startDate || current >= dateRange.startDate) {
       fromTrue = true;
     }
 
-    if (!dateRange.to || current <= dateRange.to) {
+    if (!dateRange.endDate || current <= dateRange.endDate) {
       toTrue = true;
     }
 
