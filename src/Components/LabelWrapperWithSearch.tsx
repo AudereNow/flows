@@ -1,5 +1,12 @@
+import { Moment } from "moment";
 import React, { Component } from "react";
+import { DateRangePicker, FocusedInputShape } from "react-dates";
+import "react-dates/initialize";
+import "react-dates/lib/css/_datepicker.css";
 import filterIcon from "../assets/filter.svg";
+import { DateRange } from "../util/search";
+import Button from "./Button";
+import "./DateRangePicker.css";
 import DropDown from "./Dropdown";
 import "./LabelWrapper.css";
 import "./LabelWrapperWithSearch.css";
@@ -7,25 +14,28 @@ import "./LabelWrapperWithSearch.css";
 interface Props {
   label?: string;
   className?: string;
+  currentSearchDates?: DateRange | null;
   onSearchTermUpdate: (searchTerm: string) => void;
   filterItems?: string[];
+  onClear?: () => void;
   onFilterUpdate?: (filterItem: string) => void;
+  onSearchDatesUpdate?: (searchDates: DateRange) => void;
 }
 
 interface State {
   searchBoxOpen: boolean;
+  focusedInput: FocusedInputShape | null;
 }
 
 class LabelWrapperWithSearch extends Component<Props> {
   state: State = {
-    searchBoxOpen: false
+    searchBoxOpen: false,
+    focusedInput: null
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   _onSearchClick = () => {
-    this.setState({ searchBoxOpen: true }, () => {
-      this._inputRef.current!.focus();
-    });
+    this.setState({ searchBoxOpen: !this.state.searchBoxOpen });
   };
 
   _onSearchTermChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +59,29 @@ class LabelWrapperWithSearch extends Component<Props> {
       }
       this.props.onFilterUpdate(filterItem);
     }
+  };
+
+  _onDatesChange = ({
+    startDate,
+    endDate
+  }: {
+    startDate: Moment | null;
+    endDate: Moment | null;
+  }) => {
+    if (!this.props.onSearchDatesUpdate) {
+      return;
+    }
+    this.props.onSearchDatesUpdate({ from: startDate, to: endDate });
+  };
+
+  _onFocusChange = (focusedInput: FocusedInputShape | null) => {
+    this.setState({ focusedInput });
+  };
+
+  _clearSearch = () => {
+    const { onClear } = this.props;
+    this._inputRef.current!.value = "";
+    onClear && onClear();
   };
 
   render() {
@@ -82,19 +115,54 @@ class LabelWrapperWithSearch extends Component<Props> {
         </div>
       </div>
     );
-    const searchBoxContent = (
-      <input
-        type="text"
-        ref={this._inputRef}
-        onChange={this._onSearchTermChange}
-        onBlur={this._onSearchBlur}
-        placeholder="Search"
-      />
-    );
+    const renderSearchBoxContent = () => {
+      const { currentSearchDates } = this.props;
+
+      return (
+        <div className="labelwrapper_search_container">
+          <DateRangePicker
+            startDate={!!currentSearchDates ? currentSearchDates.from : null}
+            startDateId={"startDate"}
+            endDate={!!currentSearchDates ? currentSearchDates.to : null}
+            endDateId={"endDate"}
+            onDatesChange={this._onDatesChange}
+            focusedInput={this.state.focusedInput}
+            onFocusChange={this._onFocusChange}
+            isOutsideRange={() => false}
+          />
+
+          <div className="labelwrapper_row">
+            <input
+              className="labelwrapper_search_input"
+              type="text"
+              ref={this._inputRef}
+              onChange={this._onSearchTermChange}
+              onBlur={this._onSearchBlur}
+              placeholder="Search"
+            />
+            <Button
+              className="labelwrapper_button"
+              label="Clear Search"
+              onClick={this._clearSearch}
+            />
+            <div
+              className="labelwrapper_header_icon labelwrapper_icon_return"
+              onClick={this._onSearchClick}
+            >
+              X
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className={`labelwrapper_container ${this.props.className}`}>
-        <div className="labelwrapper_header">
-          {this.state.searchBoxOpen ? searchBoxContent : labelContent}
+        <div
+          className="labelwrapper_header"
+          style={{ height: this.state.searchBoxOpen ? 90 : 24 }}
+        >
+          {this.state.searchBoxOpen ? renderSearchBoxContent() : labelContent}
         </div>
         <div className="labelwrapper_inner">{this.props.children}</div>
       </div>

@@ -18,7 +18,7 @@ import {
   Task
 } from "../store/corestore";
 import debounce from "../util/debounce";
-import { containsSearchTerm } from "../util/search";
+import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
 
 const MIN_SAMPLE_FRACTION = 0.2;
@@ -34,6 +34,7 @@ type State = {
   searchTermGlobal: string;
   searchTermDetails: string;
   showAllEntries: boolean;
+  searchDates: DateRange;
 };
 
 enum FilterType {
@@ -51,7 +52,8 @@ class AuditorPanel extends React.Component<Props, State> {
     numSamples: 0,
     searchTermGlobal: "",
     searchTermDetails: "",
-    showAllEntries: false
+    showAllEntries: false,
+    searchDates: { to: null, from: null }
   };
   filterType: FilterType = FilterType.TODO;
 
@@ -140,18 +142,25 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _removeSelectedTask() {
-    const selectedTaskId = this.state.tasks[this.state.selectedTaskIndex].id;
-    const indexInMaster = this.state.allTasks.findIndex(task => {
+    const {
+      allTasks,
+      searchDates,
+      searchTermGlobal,
+      selectedTaskIndex,
+      tasks
+    } = this.state;
+    const selectedTaskId = tasks[selectedTaskIndex].id;
+    const indexInMaster = allTasks.findIndex(task => {
       return task.id === selectedTaskId;
     });
-    const tasksCopy = this.state.allTasks.slice(0);
+    const tasksCopy = allTasks.slice(0);
     tasksCopy.splice(indexInMaster, 1);
     this.setState({ allTasks: tasksCopy }, () => {
-      const tasks = this._computeFilteredTasks(this.state.searchTermGlobal);
+      const tasks = this._computeFilteredTasks(searchTermGlobal, searchDates);
       const newIndex =
-        this.state.selectedTaskIndex >= tasks.length
+        selectedTaskIndex >= tasks.length
           ? tasks.length - 1
-          : this.state.selectedTaskIndex;
+          : selectedTaskIndex;
       this.setState({ tasks, selectedTaskIndex: newIndex });
     });
   }
@@ -251,8 +260,8 @@ class AuditorPanel extends React.Component<Props, State> {
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
-        {task.changes.map(change => {
-          return <NotesAudit change={change} />;
+        {task.changes.map((change, index) => {
+          return <NotesAudit key={change.by + index} change={change} />;
         })}
         {this.filterType === FilterType.TODO && (
           <LabelTextInput
@@ -283,15 +292,23 @@ class AuditorPanel extends React.Component<Props, State> {
     });
   };
 
-  _computeFilteredTasks = (searchTerm: string) => {
+  _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     return this.state.allTasks.filter(task => {
-      return (
-        searchTerm === "" ||
-        containsSearchTerm(searchTerm, task.site) ||
-        task.entries.some(entry => {
-          return containsSearchTerm(searchTerm, entry);
-        })
-      );
+      if (searchTerm === "") {
+        return task.entries.some(entry => {
+          return withinDateRange(dateRange, entry);
+        });
+      } else {
+        return (
+          containsSearchTerm(searchTerm, task.site) ||
+          (task.entries.some(entry => {
+            return containsSearchTerm(searchTerm, entry);
+          }) ||
+            task.entries.some(entry => {
+              return withinDateRange(dateRange, entry);
+            }))
+        );
+      }
     });
   };
 
@@ -299,7 +316,10 @@ class AuditorPanel extends React.Component<Props, State> {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
-    const filteredTasks = this._computeFilteredTasks(searchTerm);
+    const filteredTasks = this._computeFilteredTasks(
+      searchTerm,
+      this.state.searchDates
+    );
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
@@ -322,6 +342,33 @@ class AuditorPanel extends React.Component<Props, State> {
     this._setupTaskList();
   };
 
+  _handleSearchDatesChange = debounce((searchDates: DateRange) => {
+    const { selectedTaskIndex, tasks } = this.state;
+    const selectedId =
+      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
+    const filteredTasks = this._computeFilteredTasks(
+      this.state.searchTermGlobal,
+      searchDates
+    );
+    const selectedIndex = filteredTasks.findIndex(task => {
+      return task.id === selectedId;
+    });
+
+    this.setState({
+      searchDates,
+      tasks: filteredTasks,
+      selectedTaskIndex: selectedIndex
+    });
+  }, 500);
+
+  _clearSearch = () => {
+    const { allTasks } = this.state;
+    this.setState({
+      searchDates: { to: null, from: null },
+      tasks: allTasks
+    });
+  };
+
   render() {
     const { selectedTaskIndex } = this.state;
     return (
@@ -333,7 +380,10 @@ class AuditorPanel extends React.Component<Props, State> {
           selectedItem={selectedTaskIndex}
           className="mainview_tasklist"
           label={this._getLabelFromFilterType()}
+          onClear={this._clearSearch}
           onSearchTermUpdate={this._handleSearchTermGlobalChange}
+          onSearchDatesUpdate={this._handleSearchDatesChange}
+          currentSearchDates={this.state.searchDates}
           filterItems={[
             FilterType.TODO,
             FilterType.COMPLETED,
@@ -341,10 +391,9 @@ class AuditorPanel extends React.Component<Props, State> {
           ]}
           onFilterUpdate={this._handleFilterUpdate}
         />
-        <div style={{ width: "100%" }}>
-          {selectedTaskIndex >= 0 &&
-            this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
-        </div>
+
+        {selectedTaskIndex >= 0 &&
+          this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
       </div>
     );
   }

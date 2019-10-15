@@ -1,16 +1,17 @@
 import React from "react";
+import ReactTooltip from "react-tooltip";
 import {
-  Task,
   ActiveTask,
   dateFromServerTimestamp,
-  subscribeActiveTasks,
+  getBestUserName,
   logActiveTaskView,
-  getBestUserName
+  subscribeActiveTasks,
+  Task
 } from "../store/corestore";
+import { DateRange } from "../util/search";
 import LabelWrapper from "./LabelWrapper";
 import LabelWrapperWithSearch from "./LabelWrapperWithSearch";
 import "./TaskList.css";
-import ReactTooltip from "react-tooltip";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 
@@ -18,12 +19,15 @@ type Props = {
   tasks: Task[];
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
+  currentSearchDates?: DateRange | null;
   label?: string;
   onSelect?: (index: number) => void;
   selectedItem?: number;
   onSearchTermUpdate?: (searchTerm: string) => void;
+  onSearchDatesUpdate?: (searchDates: DateRange) => void;
   filterItems?: string[];
   onFilterUpdate?: (filterItem: string) => void;
+  onClear?: () => void;
 };
 
 type State = {
@@ -133,10 +137,13 @@ class TaskList extends React.Component<Props, State> {
     return !!onSearchTermUpdate ? (
       <LabelWrapperWithSearch
         className={className}
+        currentSearchDates={this.props.currentSearchDates}
         label={label}
         onSearchTermUpdate={this._onSearchTermUpdate}
+        onSearchDatesUpdate={this.props.onSearchDatesUpdate}
         filterItems={filterItems}
         onFilterUpdate={onFilterUpdate}
+        onClear={this.props.onClear}
       >
         {innerResult}
       </LabelWrapperWithSearch>
