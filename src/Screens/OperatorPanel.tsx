@@ -11,7 +11,7 @@ import {
   ClaimEntry,
   formatCurrency,
   loadOperatorTasks,
-  saveOperatorCompletedTask,
+  saveOperatorApprovedTask,
   saveOperatorRejectedTask,
   Task
 } from "../store/corestore";
@@ -72,8 +72,8 @@ class OperatorPanel extends React.Component<Props, State> {
     this._removeSelectedTask();
   };
 
-  _onCompleted = async () => {
-    await saveOperatorCompletedTask(
+  _onApprove = async () => {
+    await saveOperatorApprovedTask(
       this.state.tasks[this.state.selectedTaskIndex],
       this.state.notes
     );
@@ -149,7 +149,7 @@ class OperatorPanel extends React.Component<Props, State> {
         />
         <div className="mainview_button_row">
           <Button label="Reject" onClick={this._onReject} />
-          <Button label="Mark Completed" onClick={this._onCompleted} />
+          <Button label="Approve for Payment" onClick={this._onApprove} />
         </div>
       </LabelWrapper>
     );

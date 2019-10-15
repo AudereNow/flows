@@ -198,7 +198,7 @@ export async function saveAuditorApprovedTask(
   ]);
 }
 
-export async function saveOperatorCompletedTask(task: Task, notes?: string) {
+export async function saveOperatorApprovedTask(task: Task, notes?: string) {
   task.flow = TaskDecision.APPROVE_AUDIT;
   task.changes.push({
     timestamp: Date.now(),
