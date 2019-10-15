@@ -72,7 +72,12 @@ class AuditorPanel extends React.Component<Props, State> {
         break;
     }
     if (tasks) {
-      this.setState({ tasks, allTasks: tasks });
+      this.setState({
+        tasks,
+        allTasks: tasks,
+        selectedTaskIndex: -1,
+        numSamples: 0
+      });
       if (tasks.length > 0) {
         this._onTaskSelect(0);
       }
