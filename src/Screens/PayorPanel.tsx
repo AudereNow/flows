@@ -16,11 +16,13 @@ import {
   savePaymentCompletedTask,
   Task
 } from "../store/corestore";
+import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
 
 type Props = {};
 type State = {
   tasks: Task[];
+  realPayments: boolean;
   selectedTaskIndex: number;
   notes: string;
   paying: boolean;
@@ -29,14 +31,18 @@ type State = {
 class PayorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
+    realPayments: false,
     selectedTaskIndex: -1,
     notes: "",
     paying: false
   };
 
   async componentDidMount() {
-    const tasks = await loadPayorTasks();
-    this.setState({ tasks });
+    const [tasks, realPayments] = await Promise.all([
+      loadPayorTasks(),
+      getConfig("enableRealPayments")
+    ]);
+    this.setState({ tasks, realPayments });
     if (tasks.length > 0) {
       this._onTaskSelect(0);
     }
@@ -101,9 +107,13 @@ class PayorPanel extends React.Component<Props, State> {
 
   _onIssuePayment = async () => {
     try {
+      let paid = true;
+
       this.setState({ paying: true });
 
-      const paid = await this._issuePayment();
+      if (this.state.realPayments) {
+        paid = await this._issuePayment();
+      }
       if (paid) {
         await savePaymentCompletedTask(
           this.state.tasks[this.state.selectedTaskIndex],
@@ -136,8 +146,13 @@ class PayorPanel extends React.Component<Props, State> {
   }
 
   _renderReimbursementDetails = (task: Task) => {
-    const { paying } = this.state;
+    const { paying, realPayments } = this.state;
     const claimsTotal = _getReimbursementTotal(task);
+    const payLabel = realPayments
+      ? paying
+        ? "Issuing Payment..."
+        : "Issue Payment"
+      : "Mark Paid";
 
     let cleanedData: any[] = [];
     task.entries.forEach((entry: ClaimEntry) => {
@@ -172,7 +187,7 @@ class PayorPanel extends React.Component<Props, State> {
           />
           <Button
             disabled={paying}
-            label={paying ? "Issuing Payment..." : "Issue Payment"}
+            label={payLabel}
             onClick={this._onIssuePayment}
           />
         </div>

@@ -21,5 +21,8 @@ service cloud.firestore {
     match /rejected_task/{docId} {
       allow read, write: if request.auth.token.roles.hasAny(['Auditor', 'Operator'])
     }
+    match /metadata/remoteConfig {
+      allow read: if true;
+    }
   }
 }
