@@ -10,6 +10,7 @@ import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declinePayment,
+  formatCurrency,
   getBestUserName,
   issuePayments,
   loadPayorTasks,
@@ -62,7 +63,7 @@ class PayorPanel extends React.Component<Props, State> {
         <div className="mainview_preview_header">
           <span>{task.site.name}</span>
         </div>
-        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   };
@@ -159,7 +160,7 @@ class PayorPanel extends React.Component<Props, State> {
       let row: any = {};
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
-      row["Reimbursement"] = entry.claimedCost;
+      row["Reimbursement"] = formatCurrency(entry.claimedCost);
       cleanedData.push(row);
     });
 
@@ -168,7 +169,9 @@ class PayorPanel extends React.Component<Props, State> {
         <TextItem data={{ Pharmacy: task.site.name }} />
         {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem
-          data={{ "Total Reimbursement": claimsTotal.toFixed(2) + " KSh" }}
+          data={{
+            "Total Reimbursement": formatCurrency(claimsTotal)
+          }}
         />
         <DataTable data={cleanedData} />
         {task.changes.map((change, index) => {

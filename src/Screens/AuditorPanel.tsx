@@ -10,6 +10,7 @@ import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   declineAudit,
+  formatCurrency,
   loadAuditorTasks,
   loadCompletedPaymentTasks,
   loadRejectedTasks,
@@ -110,7 +111,7 @@ class AuditorPanel extends React.Component<Props, State> {
           <span>{task.entries.length} Entries</span>
         </div>
         <div>{"Number of Claims: " + task.entries.length}</div>
-        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   };

@@ -9,6 +9,7 @@ import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
+  formatCurrency,
   loadOperatorTasks,
   saveOperatorCompletedTask,
   saveOperatorRejectedTask,
@@ -54,7 +55,7 @@ class OperatorPanel extends React.Component<Props, State> {
           <span>{task.entries.length} Entries</span>
         </div>
         <div>{"Claims to Review: " + task.entries.length}</div>
-        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   };

@@ -391,6 +391,12 @@ export function dateFromServerTimestamp(
   return timestamp.toDate();
 }
 
+export const CurrencyType: string = "KSh";
+
+export function formatCurrency(amount: number): string {
+  return `${amount.toFixed(2)} ${CurrencyType}`;
+}
+
 export async function logActiveTaskView(taskID: string) {
   const userID = firebase.auth().currentUser!.uid;
   const activeTask: ActiveTask = {
