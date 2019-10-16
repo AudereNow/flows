@@ -9,6 +9,7 @@
     "@types/react-dom": "^16.9.0",
     "@types/react-tabs": "^2.3.1",
     "@types/react-tooltip": "^3.9.3",
+    "chromedriver": "^77.0.0",
     "firebase": "^6.6.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
@@ -17,6 +18,7 @@
     "react-scripts": "3.1.1",
     "react-tabs": "^3.0.0",
     "react-tooltip": "^3.11.1",
+    "selenium-webdriver": "^4.0.0-alpha.5",
     "typescript": "^3.6.3"
   },
   "scripts": {
@@ -25,7 +27,8 @@
     "start:react": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test-ui": "jest test/ui.test.tsx"
   },
   "eslintConfig": {
     "extends": "react-app"
