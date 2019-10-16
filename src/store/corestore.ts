@@ -278,12 +278,16 @@ export function getBestUserName(): string {
   );
 }
 
-export async function loadTasks(taskCollection: string): Promise<Task[]> {
-  const taskSnapshot = await firebase
+export function subscribeToTasks(
+  taskCollection: string,
+  callback: (tasks: Task[]) => void
+): () => void {
+  return firebase
     .firestore()
     .collection(taskCollection)
-    .get();
-  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+    .onSnapshot(snapshot =>
+      callback(snapshot.docs.map(doc => (doc.data() as unknown) as Task))
+    );
 }
 
 export async function loadOperatorTasks(): Promise<Task[]> {

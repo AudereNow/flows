@@ -1,7 +1,7 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
 import TaskList from "../Components/TaskList";
-import { loadTasks, Task } from "../store/corestore";
+import { subscribeToTasks, Task } from "../store/corestore";
 import "./MainView.css";
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
 type State = {
   tasks: Task[];
   selectedTaskIndex: number;
+  selectedTaskId?: string;
 };
 
 export default class TaskPanel extends React.Component<Props, State> {
@@ -22,15 +23,37 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    const tasks = await loadTasks(this.props.taskCollection);
-    this.setState({ tasks });
-    if (tasks.length > 0) {
-      this._onTaskSelect(0);
-    }
+    subscribeToTasks(this.props.taskCollection, tasks => {
+      this.setState({ tasks });
+      if (tasks.length === 0) {
+        this.setState({ selectedTaskIndex: -1, selectedTaskId: undefined });
+        return;
+      }
+      if (this.state.selectedTaskIndex === -1) {
+        this.setState({
+          selectedTaskIndex: 0,
+          selectedTaskId: tasks[0].id
+        });
+        return;
+      }
+      let newIndex = tasks.findIndex(
+        task => task.id === this.state.selectedTaskId
+      );
+      if (newIndex === -1) {
+        newIndex = Math.min(this.state.selectedTaskIndex, tasks.length - 1);
+      }
+      this.setState({
+        selectedTaskIndex: newIndex,
+        selectedTaskId: tasks[newIndex].id
+      });
+    });
   }
 
   _onTaskSelect = (index: number) => {
-    this.setState({ selectedTaskIndex: index });
+    this.setState({
+      selectedTaskIndex: index,
+      selectedTaskId: this.state.tasks[index].id
+    });
   };
 
   _renderTaskListItem = (task: Task, isSelected: boolean) => {
