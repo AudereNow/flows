@@ -6,7 +6,7 @@ import AdminPanel from "./AdminPanel";
 import AuditorPanel from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
-import OperatorPanel from "./OperatorPanel";
+import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
 import TaskPanel from "./TaskPanel";
@@ -20,20 +20,21 @@ const PanelComponents: {
   [key: string]: React.ComponentClass<{}>;
 } = {
   Admin: AdminPanel,
-  AuditTask: AuditorPanel,
-  OperatorTask: OperatorPanel
+  AuditTask: AuditorPanel
 };
 
 const ItemComponents: {
   [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
 } = {
-  PayorTask: PayorItem
+  PayorTask: PayorItem,
+  OperatorTask: OperatorItem
 };
 
 const DetailsComponents: {
   [key: string]: React.ComponentClass<{ task: Task }>;
 } = {
-  PayorTask: PayorDetails
+  PayorTask: PayorDetails,
+  OperatorTask: OperatorDetails
 };
 
 class MainView extends React.Component<Props, State> {

@@ -37,7 +37,9 @@ export const defaultConfig: AppConfig = {
       roles: [UserRole.PAYOR]
     },
     Ops: {
-      panelComponent: "OperatorTask",
+      taskCollection: "operator_task",
+      taskListComponent: "OperatorTask",
+      detailsComponent: "OperatorTask",
       roles: [UserRole.OPERATOR]
     },
     Admin: {
