@@ -325,7 +325,7 @@ export async function loadAuditorTasks(): Promise<Task[]> {
         item: d["Type received"],
         totalCost: parseFloat(d["Total med price covered by SPIDER"]),
         claimedCost: parseFloat(d["Total reimbursement"]),
-        timestamp: new Date(d["YYYY"], d["MM"], d["DD"]).getTime()
+        timestamp: new Date(d["YYYY"], d["MM"] - 1, d["DD"]).getTime()
       }));
       return {
         id: t.id,
