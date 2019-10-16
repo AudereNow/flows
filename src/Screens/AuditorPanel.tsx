@@ -254,11 +254,13 @@ class AuditorPanel extends React.Component<Props, State> {
         {task.changes.map(change => {
           return <NotesAudit change={change} />;
         })}
-        <LabelTextInput
-          onTextChange={this._onNotesChanged}
-          label={"Notes"}
-          defaultValue={this.state.notes}
-        />
+        {this.filterType === FilterType.TODO && (
+          <LabelTextInput
+            onTextChange={this._onNotesChanged}
+            label={"Notes"}
+            defaultValue={this.state.notes}
+          />
+        )}
         {this.filterType === FilterType.TODO && (
           <div className="mainview_button_row">
             <Button label="Decline" onClick={this._onDecline} />
