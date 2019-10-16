@@ -278,10 +278,10 @@ export function getBestUserName(): string {
   );
 }
 
-export async function loadPayorTasks(): Promise<Task[]> {
+export async function loadTasks(taskCollection: string): Promise<Task[]> {
   const taskSnapshot = await firebase
     .firestore()
-    .collection(PAYOR_TASK_COLLECTION)
+    .collection(taskCollection)
     .get();
   return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
 }

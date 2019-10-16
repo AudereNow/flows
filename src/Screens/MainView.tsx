@@ -1,24 +1,39 @@
 import React from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import { UserRole, userRoles } from "../store/corestore";
+import { UserRole, userRoles, Task } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
 import AuditorPanel from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
 import OperatorPanel from "./OperatorPanel";
-import PayorPanel from "./PayorPanel";
+import { PayorItem, PayorDetails } from "./PayorPanel";
+import { isCustomPanel, defaultConfig } from "../store/config";
+import TaskPanel from "./TaskPanel";
 
 type Props = {};
 type State = {
   roles: UserRole[];
 };
 
-const RoleToPanelMap = {
-  Auditor: AuditorPanel,
-  Payor: PayorPanel,
-  Operator: OperatorPanel,
-  Admin: AdminPanel
+const PanelComponents: {
+  [key: string]: React.ComponentClass<{}>;
+} = {
+  Admin: AdminPanel,
+  AuditTask: AuditorPanel,
+  OperatorTask: OperatorPanel
+};
+
+const ItemComponents: {
+  [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
+} = {
+  PayorTask: PayorItem
+};
+
+const DetailsComponents: {
+  [key: string]: React.ComponentClass<{ task: Task }>;
+} = {
+  PayorTask: PayorDetails
 };
 
 class MainView extends React.Component<Props, State> {
@@ -35,15 +50,36 @@ class MainView extends React.Component<Props, State> {
       return "User has no enabled roles";
     }
 
+    const taskConfigs = defaultConfig.tabs;
+    const tabs = Object.keys(taskConfigs).filter(taskName =>
+      taskConfigs[taskName].roles.some(role => this.state.roles.includes(role))
+    );
+
     return (
       <Tabs>
         <TabList>
-          {this.state.roles.map(r => (
-            <Tab key={r}>{r}</Tab>
+          {tabs.map(tab => (
+            <Tab key={tab}>{tab}</Tab>
           ))}
         </TabList>
-        {this.state.roles.map((role, index) => {
-          const PanelTag = RoleToPanelMap[role];
+        {tabs.map((tab, index) => {
+          const tabConfig = taskConfigs[tab];
+          let panelElement;
+          if (isCustomPanel(tabConfig)) {
+            if (!PanelComponents[tabConfig.panelComponent]) {
+              throw new Error(`No component found for ${tab}`);
+            }
+            const PanelComponent = PanelComponents[tabConfig.panelComponent];
+            panelElement = <PanelComponent />;
+          } else {
+            panelElement = (
+              <TaskPanel
+                taskCollection={tabConfig.taskCollection}
+                itemComponent={ItemComponents[tabConfig.taskListComponent]}
+                detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
+              />
+            );
+          }
           return (
             <TabPanel
               key={"tab_" + index}
@@ -52,7 +88,7 @@ class MainView extends React.Component<Props, State> {
                 flexDirection: "row"
               }}
             >
-              <PanelTag />
+              {panelElement}
             </TabPanel>
           );
         })}
