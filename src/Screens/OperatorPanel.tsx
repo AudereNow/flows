@@ -120,9 +120,8 @@ export class OperatorItem extends React.Component<{
       <div className={previewName}>
         <div className="mainview_preview_header">
           <span>{this.props.task.site.name}</span>
-          <span>{this.props.task.entries.length} Entries</span>
+          <span>{this.props.task.entries.length} Claims</span>
         </div>
-        <div>{"Claims to Review: " + this.props.task.entries.length}</div>
         <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );

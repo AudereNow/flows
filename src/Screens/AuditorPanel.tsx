@@ -121,9 +121,8 @@ class AuditorPanel extends React.Component<Props, State> {
       <div className={previewName}>
         <div className="mainview_preview_header">
           <span>{task.site.name}</span>
-          <span>{task.entries.length} Entries</span>
+          <span>{task.entries.length} Claims</span>
         </div>
-        <div>{"Number of Claims: " + task.entries.length}</div>
         <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
