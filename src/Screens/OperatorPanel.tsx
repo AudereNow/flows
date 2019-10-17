@@ -5,59 +5,26 @@ import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
-import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
   formatCurrency,
-  loadOperatorTasks,
   saveOperatorApprovedTask,
   saveOperatorRejectedTask,
   Task
 } from "../store/corestore";
 import "./MainView.css";
 
-type Props = {};
+type Props = {
+  task: Task;
+};
 type State = {
-  tasks: Task[];
-  selectedTaskIndex: number;
   notes: string;
 };
 
-class OperatorPanel extends React.Component<Props, State> {
+export class OperatorDetails extends React.Component<Props, State> {
   state: State = {
-    tasks: [],
-    selectedTaskIndex: -1,
     notes: ""
-  };
-
-  async componentDidMount() {
-    const tasks = await loadOperatorTasks();
-    this.setState({ tasks });
-    if (tasks.length > 0) {
-      this._onTaskSelect(0);
-    }
-  }
-
-  _renderTaskList = (task: Task, isSelected: boolean) => {
-    const previewName =
-      "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{task.site.name}</span>
-          <span>{task.entries.length} Entries</span>
-        </div>
-        <div>{"Claims to Review: " + task.entries.length}</div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
-    );
   };
 
   _onNotesChanged = (notes: string) => {
@@ -65,31 +32,12 @@ class OperatorPanel extends React.Component<Props, State> {
   };
 
   _onReject = async () => {
-    await saveOperatorRejectedTask(
-      this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes
-    );
-    this._removeSelectedTask();
+    await saveOperatorRejectedTask(this.props.task, this.state.notes);
   };
 
   _onApprove = async () => {
-    await saveOperatorApprovedTask(
-      this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes
-    );
-    this._removeSelectedTask();
+    await saveOperatorApprovedTask(this.props.task, this.state.notes);
   };
-
-  _removeSelectedTask() {
-    const tasksCopy = this.state.tasks.slice(0);
-
-    tasksCopy.splice(this.state.selectedTaskIndex, 1);
-    const newIndex =
-      this.state.selectedTaskIndex >= tasksCopy.length
-        ? tasksCopy.length - 1
-        : this.state.selectedTaskIndex;
-    this.setState({ tasks: tasksCopy, selectedTaskIndex: newIndex });
-  }
 
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
@@ -134,12 +82,12 @@ class OperatorPanel extends React.Component<Props, State> {
     );
   };
 
-  _renderClaimDetails = (task: Task) => {
+  render() {
     return (
       <LabelWrapper label="DETAILS">
-        <TextItem data={{ Pharmacy: task.site.name }} />
-        {task.entries.map(this._renderClaimEntryDetails)}
-        {task.changes.map((change, index) => {
+        <TextItem data={{ Pharmacy: this.props.task.site.name }} />
+        {this.props.task.entries.map(this._renderClaimEntryDetails)}
+        {this.props.task.changes.map((change, index) => {
           return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
         <LabelTextInput
@@ -153,31 +101,31 @@ class OperatorPanel extends React.Component<Props, State> {
         </div>
       </LabelWrapper>
     );
-  };
+  }
+}
 
-  _onTaskSelect = (index: number) => {
-    this.setState({ selectedTaskIndex: index });
-  };
-
+export class OperatorItem extends React.Component<{
+  task: Task;
+  isSelected: boolean;
+}> {
   render() {
-    const { selectedTaskIndex } = this.state;
+    const previewName =
+      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
+    const claimAmounts = this.props.task.entries.map(entry => {
+      return entry.claimedCost;
+    });
+    const claimsTotal = claimAmounts.reduce(
+      (sum, claimedCost) => sum + claimedCost
+    );
     return (
-      <div className="mainview_content">
-        <TaskList
-          onSelect={this._onTaskSelect}
-          tasks={this.state.tasks}
-          renderItem={this._renderTaskList}
-          selectedItem={selectedTaskIndex}
-          label="CLAIMS FOR FOLLOW-UP"
-          className="mainview_tasklist"
-        />
-        <div>
-          {selectedTaskIndex >= 0 &&
-            this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
+      <div className={previewName}>
+        <div className="mainview_preview_header">
+          <span>{this.props.task.site.name}</span>
+          <span>{this.props.task.entries.length} Entries</span>
         </div>
+        <div>{"Claims to Review: " + this.props.task.entries.length}</div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   }
 }
-
-export default OperatorPanel;

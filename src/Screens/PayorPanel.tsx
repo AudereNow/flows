@@ -5,7 +5,6 @@ import DataTable from "../Components/DataTable";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
-import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
   ClaimEntry,
@@ -13,67 +12,39 @@ import {
   formatCurrency,
   getBestUserName,
   issuePayments,
-  loadPayorTasks,
   savePaymentCompletedTask,
   Task
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
 
-type Props = {};
+type Props = {
+  task: Task;
+};
 type State = {
-  tasks: Task[];
   realPayments: boolean;
-  selectedTaskIndex: number;
   notes: string;
   paying: boolean;
 };
 
-class PayorPanel extends React.Component<Props, State> {
-  state: State = {
-    tasks: [],
+export class PayorDetails extends React.Component<Props, State> {
+  state = {
     realPayments: false,
-    selectedTaskIndex: -1,
     notes: "",
     paying: false
   };
 
   async componentDidMount() {
-    const [tasks, realPayments] = await Promise.all([
-      loadPayorTasks(),
-      getConfig("enableRealPayments")
-    ]);
-    this.setState({ tasks, realPayments });
-    if (tasks.length > 0) {
-      this._onTaskSelect(0);
-    }
+    const realPayments = await getConfig("enableRealPayments");
+    this.setState({ realPayments });
   }
-
-  _renderTaskListReimbursement = (task: Task, isSelected: boolean) => {
-    const previewName =
-      "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{task.site.name}</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
-    );
-  };
 
   _onNotesChanged = (notes: string) => {
     this.setState({ notes });
   };
 
   async _issuePayment(): Promise<boolean> {
-    const task = this.state.tasks[this.state.selectedTaskIndex];
+    const { task } = this.props;
     const reimburseAmount = _getReimbursementTotal(task);
 
     if (reimburseAmount <= 0) {
@@ -116,11 +87,7 @@ class PayorPanel extends React.Component<Props, State> {
         paid = await this._issuePayment();
       }
       if (paid) {
-        await savePaymentCompletedTask(
-          this.state.tasks[this.state.selectedTaskIndex],
-          this.state.notes
-        );
-        this._removeSelectedTask();
+        await savePaymentCompletedTask(this.props.task, this.state.notes);
       }
     } catch (e) {
       alert(`Error: ${(e && e.message) || e}`);
@@ -130,24 +97,13 @@ class PayorPanel extends React.Component<Props, State> {
   };
 
   _onDecline = async () => {
-    const task = this.state.tasks[this.state.selectedTaskIndex];
+    const { task } = this.props;
     await declinePayment(task, this.state.notes);
-    this._removeSelectedTask();
   };
 
-  _removeSelectedTask() {
-    const tasksCopy = this.state.tasks.slice(0);
-
-    tasksCopy.splice(this.state.selectedTaskIndex, 1);
-    const newIndex =
-      this.state.selectedTaskIndex >= tasksCopy.length
-        ? tasksCopy.length - 1
-        : this.state.selectedTaskIndex;
-    this.setState({ tasks: tasksCopy, selectedTaskIndex: newIndex });
-  }
-
-  _renderReimbursementDetails = (task: Task) => {
+  render() {
     const { paying, realPayments } = this.state;
+    const { task } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
     const payLabel = realPayments
       ? paying
@@ -196,29 +152,28 @@ class PayorPanel extends React.Component<Props, State> {
         </div>
       </LabelWrapper>
     );
-  };
+  }
+}
 
-  _onTaskSelect = (index: number) => {
-    this.setState({ selectedTaskIndex: index });
-  };
-
+export class PayorItem extends React.Component<{
+  task: Task;
+  isSelected: boolean;
+}> {
   render() {
-    const { selectedTaskIndex } = this.state;
+    const previewName =
+      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
+    const claimAmounts = this.props.task.entries.map(entry => {
+      return entry.claimedCost;
+    });
+    const claimsTotal = claimAmounts.reduce(
+      (sum, claimedCost) => sum + claimedCost
+    );
     return (
-      <div className="mainview_content">
-        <TaskList
-          onSelect={this._onTaskSelect}
-          tasks={this.state.tasks}
-          renderItem={this._renderTaskListReimbursement}
-          selectedItem={selectedTaskIndex}
-          className="mainview_tasklist"
-        />
-        <div style={{ width: "100%" }}>
-          {selectedTaskIndex >= 0 &&
-            this._renderReimbursementDetails(
-              this.state.tasks[selectedTaskIndex]
-            )}
+      <div className={previewName}>
+        <div className="mainview_preview_header">
+          <span>{this.props.task.site.name}</span>
         </div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   }
@@ -230,5 +185,3 @@ function _getReimbursementTotal(task: Task): number {
   });
   return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
 }
-
-export default PayorPanel;
