@@ -53,3 +53,13 @@
 .mainview_button_disabled {
   background-color: #cccccc;
 }
+
+.mainview_search_container {
+  padding: 7px;
+  background-color: #888888;
+}
+
+.mainview_clear_search_button {
+  width: 100px;
+  height: 20px;
+}

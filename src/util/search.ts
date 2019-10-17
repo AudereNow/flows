@@ -41,6 +41,8 @@ export const containsSearchTerm = (
 };
 
 export const withinDateRange = (dateRange: DateRange, entry: any) => {
+  if (!dateRange.startDate && !dateRange.endDate) return true;
+
   let fromTrue = false;
   let toTrue = false;
 
@@ -53,7 +55,6 @@ export const withinDateRange = (dateRange: DateRange, entry: any) => {
     if (!dateRange.endDate || current <= dateRange.endDate) {
       toTrue = true;
     }
-
     return fromTrue && toTrue;
   }
   return false;

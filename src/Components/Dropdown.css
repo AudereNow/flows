@@ -8,6 +8,7 @@
   right: 0;
   top: 30px;
   width: 150px;
+  z-index: 5;
 }
 
 .dropdown_item {
@@ -21,6 +22,7 @@
   cursor: pointer;
   background-color: white;
   border: 1px solid black;
+  color: black;
 }
 
 .dropdown_item:hover {

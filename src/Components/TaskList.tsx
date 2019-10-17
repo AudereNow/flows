@@ -8,9 +8,6 @@ import {
   subscribeActiveTasks,
   Task
 } from "../store/corestore";
-import { DateRange } from "../util/search";
-import LabelWrapper from "./LabelWrapper";
-import LabelWrapperWithSearch from "./LabelWrapperWithSearch";
 import "./TaskList.css";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
@@ -19,15 +16,8 @@ type Props = {
   tasks: Task[];
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
-  currentSearchDates?: DateRange | null;
-  label?: string;
   onSelect?: (index: number) => void;
   selectedItem?: number;
-  onSearchTermUpdate?: (searchTerm: string) => void;
-  onSearchDatesUpdate?: (searchDates: DateRange) => void;
-  filterItems?: string[];
-  onFilterUpdate?: (filterItem: string) => void;
-  onClear?: () => void;
 };
 
 type State = {
@@ -98,20 +88,9 @@ class TaskList extends React.Component<Props, State> {
     return null;
   }
 
-  _onSearchTermUpdate = (searchTerm: string) => {
-    this.props.onSearchTermUpdate!(searchTerm);
-  };
-
   render() {
-    const {
-      className,
-      filterItems,
-      onFilterUpdate,
-      onSearchTermUpdate
-    } = this.props;
-    const label = this.props.label || "ITEMS TO REVIEW";
-    const innerResult = (
-      <div>
+    return (
+      <div className={this.props.className}>
         {this.props.tasks.map((task, index) => {
           const activeTask = this._isActiveTask(task);
           const activeClass = activeTask ? "tasklist_active" : undefined;
@@ -133,24 +112,6 @@ class TaskList extends React.Component<Props, State> {
           );
         })}
       </div>
-    );
-    return !!onSearchTermUpdate ? (
-      <LabelWrapperWithSearch
-        className={className}
-        currentSearchDates={this.props.currentSearchDates}
-        label={label}
-        onSearchTermUpdate={this._onSearchTermUpdate}
-        onSearchDatesUpdate={this.props.onSearchDatesUpdate}
-        filterItems={filterItems}
-        onFilterUpdate={onFilterUpdate}
-        onClear={this.props.onClear}
-      >
-        {innerResult}
-      </LabelWrapperWithSearch>
-    ) : (
-      <LabelWrapper className={className} label={label}>
-        {innerResult}
-      </LabelWrapper>
     );
   }
 }
