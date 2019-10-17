@@ -290,14 +290,6 @@ export function subscribeToTasks(
     );
 }
 
-export async function loadOperatorTasks(): Promise<Task[]> {
-  const taskSnapshot = await firebase
-    .firestore()
-    .collection(OPERATOR_TASK_COLLECTION)
-    .get();
-  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
-}
-
 export async function loadAuditorTasks(): Promise<Task[]> {
   const todoSnapshot = await firebase
     .firestore()
