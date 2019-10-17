@@ -173,7 +173,7 @@ export class PayorItem extends React.Component<{
         <div className="mainview_preview_header">
           <span>{this.props.task.site.name}</span>
         </div>
-        <div>{"Total Reimbursement: " + claimsTotal.toFixed(2) + " KSh"}</div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
   }
