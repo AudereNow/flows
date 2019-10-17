@@ -26,17 +26,17 @@ export function isCustomPanel(config: TabConfig): config is CustomPanelConfig {
 
 export const defaultConfig: AppConfig = {
   tabs: {
-    Audit: {
+    Auditor: {
       panelComponent: "AuditTask",
       roles: [UserRole.AUDITOR]
     },
-    Pay: {
+    Payor: {
       taskCollection: "payor_task",
       taskListComponent: "PayorTask",
       detailsComponent: "PayorTask",
       roles: [UserRole.PAYOR]
     },
-    Ops: {
+    Operator: {
       taskCollection: "operator_task",
       taskListComponent: "OperatorTask",
       detailsComponent: "OperatorTask",
