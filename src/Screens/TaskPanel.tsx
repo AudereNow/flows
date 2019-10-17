@@ -30,10 +30,7 @@ export default class TaskPanel extends React.Component<Props, State> {
         return;
       }
       if (this.state.selectedTaskIndex === -1) {
-        this.setState({
-          selectedTaskIndex: 0,
-          selectedTaskId: tasks[0].id
-        });
+        this._onTaskSelect(0, tasks);
         return;
       }
       let newIndex = tasks.findIndex(
@@ -42,17 +39,14 @@ export default class TaskPanel extends React.Component<Props, State> {
       if (newIndex === -1) {
         newIndex = Math.min(this.state.selectedTaskIndex, tasks.length - 1);
       }
-      this.setState({
-        selectedTaskIndex: newIndex,
-        selectedTaskId: tasks[newIndex].id
-      });
+      this._onTaskSelect(newIndex, tasks);
     });
   }
 
-  _onTaskSelect = (index: number) => {
+  _onTaskSelect = (index: number, tasks: Task[] = this.state.tasks) => {
     this.setState({
       selectedTaskIndex: index,
-      selectedTaskId: this.state.tasks[index].id
+      selectedTaskId: index === -1 ? undefined : tasks[index].id
     });
   };
 
