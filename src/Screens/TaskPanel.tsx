@@ -23,25 +23,27 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    subscribeToTasks(this.props.taskCollection, tasks => {
-      this.setState({ tasks });
-      if (tasks.length === 0) {
-        this.setState({ selectedTaskIndex: -1, selectedTaskId: undefined });
-        return;
-      }
-      if (this.state.selectedTaskIndex === -1) {
-        this._onTaskSelect(0, tasks);
-        return;
-      }
-      let newIndex = tasks.findIndex(
-        task => task.id === this.state.selectedTaskId
-      );
-      if (newIndex === -1) {
-        newIndex = Math.min(this.state.selectedTaskIndex, tasks.length - 1);
-      }
-      this._onTaskSelect(newIndex, tasks);
-    });
+    subscribeToTasks(this.props.taskCollection, this._onTasksChanged);
   }
+
+  _onTasksChanged = (tasks: Task[]) => {
+    this.setState({ tasks });
+    if (tasks.length === 0) {
+      this.setState({ selectedTaskIndex: -1, selectedTaskId: undefined });
+      return;
+    }
+    if (this.state.selectedTaskIndex === -1) {
+      this._onTaskSelect(0, tasks);
+      return;
+    }
+    let newIndex = tasks.findIndex(
+      task => task.id === this.state.selectedTaskId
+    );
+    if (newIndex === -1) {
+      newIndex = Math.min(this.state.selectedTaskIndex, tasks.length - 1);
+    }
+    this._onTaskSelect(newIndex, tasks);
+  };
 
   _onTaskSelect = (index: number, tasks: Task[] = this.state.tasks) => {
     this.setState({
