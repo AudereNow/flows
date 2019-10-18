@@ -68,7 +68,7 @@ export class OperatorDetails extends React.Component<Props, State> {
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper key={entry.timestamp + entry.totalCost}>
+      <LabelWrapper key={patientInfo}>
         <TextItem
           data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
         />

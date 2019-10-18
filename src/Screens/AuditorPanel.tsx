@@ -305,21 +305,15 @@ class AuditorPanel extends React.Component<Props, State> {
 
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     return this.state.allTasks.filter(task => {
-      if (searchTerm === "") {
-        return task.entries.some(entry => {
-          return withinDateRange(dateRange, entry);
-        });
-      } else {
-        return (
-          (containsSearchTerm(searchTerm, task.site) ||
-            task.entries.some(entry => {
-              return containsSearchTerm(searchTerm, entry);
-            })) &&
+      return (
+        (containsSearchTerm(searchTerm, task.site) ||
           task.entries.some(entry => {
-            return withinDateRange(dateRange, entry);
-          })
-        );
-      }
+            return containsSearchTerm(searchTerm, entry);
+          })) &&
+        task.entries.some(entry => {
+          return withinDateRange(dateRange, entry);
+        })
+      );
     });
   };
 

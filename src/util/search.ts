@@ -9,6 +9,9 @@ export const containsSearchTerm = (
   searchPhrase: string,
   entry: any
 ): boolean => {
+  if (searchPhrase === "") {
+    return true;
+  }
   const keys = Object.keys(entry);
 
   let searchKey;
