@@ -4,11 +4,19 @@ import csvtojson from "csvtojson";
 import axios, { AxiosResponse } from "axios";
 import africasTalkingOptions from "./africas-talking-options.json";
 import {
-  Task,
+  AdminLogEvent,
+  ADMIN_LOG_EVENT_COLLECTION,
   AUDITOR_TASK_COLLECTION,
+  DEFAULT_REMOTE_CONFIG,
+  METADATA_COLLECTION,
+  REMOTE_CONFIG_DOC,
+  RemoteConfig,
+  removeEmptyFieldsInPlace,
+  Task,
   TaskChangeMetadata,
   UploaderInfo,
-  removeEmptyFieldsInPlace
+  User,
+  UserRole
 } from "./sharedtypes";
 
 // You're going to need this file on your local machine.  It's stored in our
@@ -19,6 +27,7 @@ const CSV_UPLOAD_COLLECTION = "csv_uploads";
 const CSV_UPLOAD_RECORDS_COLLECTION = "records";
 
 const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
+const RECORD_ID_FIELD = "meta:instanceID";
 
 // Needed for access to Storage.  If there's a way to actually pull files from
 // there without credentials (but securely, given we're in the same Firebase
@@ -98,16 +107,6 @@ function hasRole(
   );
 }
 
-// Copied from corestore.ts in the main app for now.  Once we factor real
-// backend APIs out, shared types like this should be consumed directly and
-// correctly (via npms, shared libs, or some such).
-enum UserRole {
-  AUDITOR = "Auditor",
-  PAYOR = "Payor",
-  OPERATOR = "Operator",
-  ADMIN = "Admin"
-}
-
 async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
   const user = await admin.auth().getUserByEmail(email);
 
@@ -131,16 +130,19 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
     uploaderName: "Unknown Person",
     uploaderID: "unknown"
   }) as UploaderInfo;
+  const user: User = {
+    name: uploader.uploaderName,
+    id: uploader.uploaderID
+  };
 
   if (
     !filePath ||
     !filePath.startsWith("csvuploads/") ||
     contentType !== "text/csv"
   ) {
-    console.log(`Skipping unrecognized file ${filePath}`);
-    return;
+    return LogAdminEvent(user, `Skipping unrecognized file ${filePath}`);
   }
-  console.log(`Processing ${filePath} of type ${contentType}`);
+  await LogAdminEvent(user, `Processing CSV upload: ${filePath}`);
 
   const stream = admin
     .storage()
@@ -156,13 +158,13 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
         row => {
           cache.push(row);
         },
-        err => {
-          console.log("CSV parsing error", err);
+        async err => {
+          await LogAdminEvent(user, `CSV parsing error: ${err.err}`);
           rej(err);
         },
         async () => {
           try {
-            await completeCSVProcessing(cache, uploader);
+            await completeCSVProcessing(cache, user);
           } catch (e) {
             rej(e);
             return;
@@ -173,6 +175,21 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
   );
 });
 
+async function LogAdminEvent(user: User, desc: string) {
+  const dateString = `${new Date().toUTCString()} ${Math.random()}`;
+  const event: AdminLogEvent = {
+    timestamp: Date.now(),
+    user,
+    desc
+  };
+  console.log(desc);
+  await admin
+    .firestore()
+    .collection(ADMIN_LOG_EVENT_COLLECTION)
+    .doc(dateString)
+    .set(event);
+}
+
 async function addToCSVUploads(cache: any[], batchID: string) {
   const records = admin
     .firestore()
@@ -180,17 +197,13 @@ async function addToCSVUploads(cache: any[], batchID: string) {
     .doc(batchID)
     .collection(CSV_UPLOAD_RECORDS_COLLECTION);
 
-  await Promise.all(cache.map(r => records.doc(r["meta:instanceID"]).set(r)));
+  await Promise.all(cache.map(r => records.doc(r[RECORD_ID_FIELD]).set(r)));
   console.log(
     `Set ${cache.length} records into ${CSV_UPLOAD_COLLECTION}/${batchID}`
   );
 }
 
-async function createAuditorTasks(
-  cache: any[],
-  batchID: string,
-  uploader: UploaderInfo
-) {
+async function createAuditorTasks(cache: any[], batchID: string, user: User) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
   const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
     key: pharm.key,
@@ -198,7 +211,7 @@ async function createAuditorTasks(
   }));
   const change: TaskChangeMetadata = {
     timestamp: Date.now(),
-    by: uploader.uploaderName,
+    by: user.name,
     desc: `Uploaded CSV containing ${shuffledRowsByPharmacy.length} pharmacies`
   };
 
@@ -243,14 +256,71 @@ async function createAuditorTasks(
   );
 }
 
-async function completeCSVProcessing(cache: any[], uploader: UploaderInfo) {
+async function isDuplicateUpload(cache: any[]): Promise<boolean> {
+  if (cache.length === 0) {
+    return false;
+  }
+
+  const firstItemID = cache[0][RECORD_ID_FIELD];
+  if (!firstItemID) {
+    // It's a matter of opinion how "safe" we want to be here.  To be
+    // conservative, we assume that if the first record doesn't even have
+    // an ID, it's a duplicate CSV.
+    console.log(`Ignoring CSV with a first record missing ${RECORD_ID_FIELD}`);
+    return true;
+  }
+
+  const items = await admin
+    .firestore()
+    .collectionGroup(CSV_UPLOAD_RECORDS_COLLECTION)
+    .where(RECORD_ID_FIELD, "==", firstItemID)
+    .get();
+
+  console.log(
+    `Searched for ${firstItemID} and found ${items.docs.length} matches`
+  );
+
+  return !items.empty;
+}
+
+async function completeCSVProcessing(cache: any[], user: User) {
   console.log(`Full CSV parsed with ${cache.length} lines`);
+
+  const allowDupes = await getConfig("allowDuplicateUploads");
+  if (!allowDupes) {
+    const dupeExists = await isDuplicateUpload(cache);
+
+    if (dupeExists) {
+      return LogAdminEvent(user, `Duplicate CSV upload ignored`);
+    }
+  }
 
   const batchID = new Date().toISOString();
   await Promise.all([
     addToCSVUploads(cache, batchID),
-    createAuditorTasks(cache, batchID, uploader)
+    createAuditorTasks(cache, batchID, user)
   ]);
+}
+
+// Copied and modified from the main app because we didn't want to inherit
+// a dependency on the non-admin version of Firebase
+async function getConfig(key: string) {
+  const snap = await admin
+    .firestore()
+    .collection(METADATA_COLLECTION)
+    .doc(REMOTE_CONFIG_DOC)
+    .get();
+
+  if (snap.exists) {
+    const config = snap.data() as RemoteConfig;
+    if (key in config) {
+      // @ts-ignore
+      return config[key];
+    }
+  }
+  console.log("Didn't find /metadata/remoteConfig on server. Using defaults.");
+  // @ts-ignore
+  return DEFAULT_REMOTE_CONFIG[key];
 }
 
 // Groups an array of things by a string key in each element, or by a
