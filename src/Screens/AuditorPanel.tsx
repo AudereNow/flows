@@ -14,6 +14,7 @@ import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
   declineAudit,
   formatCurrency,
@@ -25,7 +26,6 @@ import {
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
-import { Task, ClaimEntry } from "../sharedtypes";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -66,6 +66,7 @@ class AuditorPanel extends React.Component<Props, State> {
     focusedInput: null
   };
   filterType: FilterType = FilterType.TODO;
+  _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   async componentDidMount() {
     this._setupTaskList();
@@ -367,6 +368,7 @@ class AuditorPanel extends React.Component<Props, State> {
 
   _clearSearch = () => {
     const { allTasks } = this.state;
+    this._inputRef.current!.value = "";
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks
@@ -452,6 +454,7 @@ class AuditorPanel extends React.Component<Props, State> {
         />
         <div className="labelwrapper_row">
           <input
+            ref={this._inputRef}
             type="text"
             onChange={this._onSearchTermChange}
             placeholder="Search"
