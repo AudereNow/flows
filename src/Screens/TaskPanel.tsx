@@ -1,8 +1,9 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
 import TaskList from "../Components/TaskList";
-import { subscribeToTasks, Task } from "../store/corestore";
+import { subscribeToTasks } from "../store/corestore";
 import "./MainView.css";
+import { Task } from "../sharedtypes";
 
 type Props = {
   taskCollection: string;

@@ -1,6 +1,6 @@
 import React from "react";
-import { TaskChangeMetadata } from "../store/corestore";
 import "./NotesAudit.css";
+import { TaskChangeMetadata } from "../sharedtypes";
 
 interface Props {
   change: TaskChangeMetadata;

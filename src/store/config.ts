@@ -1,4 +1,4 @@
-import { UserRole } from "./corestore";
+import { UserRole } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
