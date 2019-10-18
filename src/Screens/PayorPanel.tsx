@@ -112,8 +112,10 @@ export class PayorDetails extends React.Component<Props, State> {
       : "Mark Paid";
 
     let cleanedData: any[] = [];
+    task.entries.sort((a, b) => a.timestamp - b.timestamp);
     task.entries.forEach((entry: ClaimEntry) => {
       let row: any = {};
+      row["Date"] = new Date(entry.timestamp).toLocaleDateString();
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
