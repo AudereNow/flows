@@ -3,6 +3,13 @@ import * as admin from "firebase-admin";
 import csvtojson from "csvtojson";
 import axios, { AxiosResponse } from "axios";
 import africasTalkingOptions from "./africas-talking-options.json";
+import {
+  Task,
+  AUDITOR_TASK_COLLECTION,
+  TaskChangeMetadata,
+  UploaderInfo,
+  removeEmptyFieldsInPlace
+} from "./sharedtypes";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
@@ -10,7 +17,6 @@ const serviceAccount = require("../flows-app-staging-key.json");
 
 const CSV_UPLOAD_COLLECTION = "csv_uploads";
 const CSV_UPLOAD_RECORDS_COLLECTION = "records";
-const AUDITOR_TODO_COLLECTION = "auditor_todo";
 
 const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
 
@@ -121,6 +127,10 @@ async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
 exports.parseCSV = functions.storage.object().onFinalize(async object => {
   const filePath = object.name; // File path in the bucket.
   const contentType = object.contentType; // File content type.
+  const uploader = (object.metadata || {
+    uploaderName: "Unknown Person",
+    uploaderID: "unknown"
+  }) as UploaderInfo;
 
   if (
     !filePath ||
@@ -130,7 +140,7 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
     console.log(`Skipping unrecognized file ${filePath}`);
     return;
   }
-  console.log(`Processing ${filePath} of type ${contentType}`);
+  console.log(`Processing ${filePath} of type ${contentType} - new`);
 
   const stream = admin
     .storage()
@@ -152,7 +162,7 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
         },
         async () => {
           try {
-            await completeCSVProcessing(cache);
+            await completeCSVProcessing(cache, uploader);
           } catch (e) {
             rej(e);
             return;
@@ -176,26 +186,56 @@ async function addToCSVUploads(cache: any[], batchID: string) {
   );
 }
 
-async function createAuditorTodos(cache: any[], batchID: string) {
+async function createAuditorTasks(
+  cache: any[],
+  batchID: string,
+  uploader: UploaderInfo
+) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
   const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
     key: pharm.key,
     values: shuffleArray(pharm.values)
   }));
+  const change: TaskChangeMetadata = {
+    timestamp: Date.now(),
+    by: uploader.uploaderName,
+    desc: `Uploaded CSV containing ${shuffledRowsByPharmacy.length} pharmacies`
+  };
 
   // Now generate Auditor work items representing each sampled row.
   await Promise.all(
     shuffledRowsByPharmacy.map(async pharm => {
-      console.log(`Pharmacy ${pharm.key} has ${pharm.values.length} rows`);
-      await admin
+      const doc = admin
         .firestore()
-        .collection(AUDITOR_TODO_COLLECTION)
-        .doc()
-        .set({
-          batchID,
-          pharmacyID: pharm.key,
-          data: pharm.values
-        });
+        .collection(AUDITOR_TASK_COLLECTION)
+        .doc();
+      const patients = pharm.values.map((d: any) => ({
+        patientAge: d["g2:A12 Age"],
+        patientFirstName: d["g2:A10 First Name"],
+        patientLastName: d["g2:A11 Last Name"],
+        patientSex:
+          d["g2:A13 Male or Female (0 male, 1 female)"] === "0" ? "M" : "F",
+        patientID: d["g4:B02"]["1 ID number on voucher"],
+        phone: d["g2:A14 Phone Number"],
+        photoIDUri: d["g4:B03"]["1 Photo of ID card"],
+        photoMedUri: d["g5:B04 (Medication)"],
+        photoMedBatchUri: d["g5:B05 (Medication batch)"],
+        item: d["Type received"],
+        totalCost: parseFloat(d["Total med price covered by SPIDER"]),
+        claimedCost: parseFloat(d["Total reimbursement"]),
+        timestamp: new Date(d["YYYY"], d["MM"] - 1, d["DD"]).getTime()
+      }));
+      const task: Task = {
+        id: doc.id,
+        batchID,
+        entries: patients,
+        site: {
+          name: pharm.values[0]["g3:B01 Pharmacy name"]
+        },
+        changes: [change]
+      };
+      removeEmptyFieldsInPlace(task);
+      await doc.set(task);
     })
   );
   console.log(
@@ -203,13 +243,13 @@ async function createAuditorTodos(cache: any[], batchID: string) {
   );
 }
 
-async function completeCSVProcessing(cache: any[]) {
+async function completeCSVProcessing(cache: any[], uploader: UploaderInfo) {
   console.log(`Full CSV parsed with ${cache.length} lines`);
 
   const batchID = new Date().toISOString();
   await Promise.all([
     addToCSVUploads(cache, batchID),
-    createAuditorTodos(cache, batchID)
+    createAuditorTasks(cache, batchID, uploader)
   ]);
 }
 

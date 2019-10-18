@@ -5,8 +5,9 @@ import React, { Fragment } from "react";
 import uploadIcon from "../assets/cloud_upload.svg";
 import logo from "../assets/maishalogo.png";
 import Dropdown from "../Components/Dropdown";
-import { UserRole, userRoles } from "../store/corestore";
+import { userRoles, getBestUserName } from "../store/corestore";
 import "./TopBar.css";
+import { UserRole, UploaderInfo } from "../sharedtypes";
 
 type State = {
   roles: UserRole[];
@@ -53,9 +54,16 @@ class TopBar extends React.Component {
       .ref()
       .child(`csvuploads/${filename}`);
     const file = event.target.files[0];
+    const uploader: UploaderInfo = {
+      uploaderName: getBestUserName(),
+      uploaderID: firebase.auth().currentUser!.uid
+    };
 
     try {
-      await ref.put(file, { contentType: file.type });
+      await ref.put(file, {
+        contentType: file.type,
+        customMetadata: uploader
+      });
 
       alert("File successfully uploaded!");
       this.setState({ showFileSelector: false, selectingFile: false });

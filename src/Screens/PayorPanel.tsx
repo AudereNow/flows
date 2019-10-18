@@ -7,16 +7,15 @@ import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import {
-  ClaimEntry,
   declinePayment,
   formatCurrency,
   getBestUserName,
   issuePayments,
-  savePaymentCompletedTask,
-  Task
+  savePaymentCompletedTask
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
+import { Task, ClaimEntry } from "../sharedtypes";
 
 type Props = {
   task: Task;

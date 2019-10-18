@@ -1,7 +1,7 @@
 import React from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
-import { UserRole, userRoles, Task } from "../store/corestore";
+import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
 import AuditorPanel from "./AuditorPanel";
 import MainChrome from "./MainChrome";
@@ -10,6 +10,7 @@ import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
 import TaskPanel from "./TaskPanel";
+import { UserRole, Task } from "../sharedtypes";
 
 type Props = {};
 type State = {

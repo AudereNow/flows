@@ -6,6 +6,9 @@ service cloud.firestore {
     match /auditor_todo/{docId} {
       allow read, write: if request.auth.token.roles.hasAny(['Auditor'])
     }
+    match /auditor_task/{docId} {
+      allow read, write: if request.auth.token.roles.hasAny(['Auditor'])
+    }
     match /payor_task/{docId} {
       allow write: if request.auth.token.roles.hasAny(['Auditor', 'Operator'])
       allow read, write: if request.auth.token.roles.hasAny(['Payor'])

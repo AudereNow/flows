@@ -15,18 +15,17 @@ import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import {
-  ClaimEntry,
   declineAudit,
   formatCurrency,
   loadAuditorTasks,
   loadCompletedPaymentTasks,
   loadRejectedTasks,
-  saveAuditorApprovedTask,
-  Task
+  saveAuditorApprovedTask
 } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
+import { Task, ClaimEntry } from "../sharedtypes";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;

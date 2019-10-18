@@ -7,13 +7,12 @@ import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import {
-  ClaimEntry,
   formatCurrency,
   saveOperatorApprovedTask,
-  saveOperatorRejectedTask,
-  Task
+  saveOperatorRejectedTask
 } from "../store/corestore";
 import "./MainView.css";
+import { Task, ClaimEntry } from "../sharedtypes";
 
 type Props = {
   task: Task;

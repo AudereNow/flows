@@ -13,3 +13,6 @@ src/africas-talking-options.json
 
 # Firebase deployment auto-gened files
 lib/
+
+# Hacky type-sharing with the main react app
+src/sharedtypes.ts

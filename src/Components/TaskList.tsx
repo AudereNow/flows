@@ -5,10 +5,10 @@ import {
   dateFromServerTimestamp,
   getBestUserName,
   logActiveTaskView,
-  subscribeActiveTasks,
-  Task
+  subscribeActiveTasks
 } from "../store/corestore";
 import "./TaskList.css";
+import { Task } from "../sharedtypes";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 

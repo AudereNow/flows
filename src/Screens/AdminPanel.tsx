@@ -1,5 +1,6 @@
 import React from "react";
-import { setRoles, UserRole } from "../store/corestore";
+import { setRoles } from "../store/corestore";
+import { UserRole } from "../sharedtypes";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
