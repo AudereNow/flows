@@ -22,6 +22,7 @@ import {
   loadRejectedTasks,
   saveAuditorApprovedTask
 } from "../store/corestore";
+import downloadCSV from "../util/csv";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
@@ -435,6 +436,10 @@ class AuditorPanel extends React.Component<Props, State> {
     this._handleSearchTermGlobalChange(input);
   };
 
+  _downloadCSV = () => {
+    downloadCSV(this.state.tasks);
+  };
+
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
     return (
@@ -461,6 +466,7 @@ class AuditorPanel extends React.Component<Props, State> {
             label="Clear Search"
             onClick={this._clearSearch}
           />
+          <Button label={"Download CSV"} onClick={this._downloadCSV} />
         </div>
       </div>
     );
