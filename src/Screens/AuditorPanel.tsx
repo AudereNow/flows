@@ -1,6 +1,13 @@
-import React from "react";
+import { Moment } from "moment";
+import React, { Fragment } from "react";
+import { DateRangePicker, FocusedInputShape } from "react-dates";
+import "react-dates/initialize";
+import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
+import filterIcon from "../assets/filter.svg";
 import Button from "../Components/Button";
+import "../Components/DateRangePickerOverride.css";
+import DropDown from "../Components/Dropdown";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -18,7 +25,7 @@ import {
   Task
 } from "../store/corestore";
 import debounce from "../util/debounce";
-import { containsSearchTerm } from "../util/search";
+import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
 
 const MIN_SAMPLE_FRACTION = 0.2;
@@ -31,9 +38,12 @@ type State = {
   allTasks: Task[];
   notes: string;
   numSamples: number;
+  focusedInput: FocusedInputShape | null;
   searchTermGlobal: string;
   searchTermDetails: string;
   showAllEntries: boolean;
+  searchDates: DateRange;
+  showSearch: boolean;
 };
 
 enum FilterType {
@@ -51,7 +61,10 @@ class AuditorPanel extends React.Component<Props, State> {
     numSamples: 0,
     searchTermGlobal: "",
     searchTermDetails: "",
-    showAllEntries: false
+    showAllEntries: false,
+    searchDates: { startDate: null, endDate: null },
+    showSearch: false,
+    focusedInput: null
   };
   filterType: FilterType = FilterType.TODO;
 
@@ -140,18 +153,25 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _removeSelectedTask() {
-    const selectedTaskId = this.state.tasks[this.state.selectedTaskIndex].id;
-    const indexInMaster = this.state.allTasks.findIndex(task => {
+    const {
+      allTasks,
+      searchDates,
+      searchTermGlobal,
+      selectedTaskIndex,
+      tasks
+    } = this.state;
+    const selectedTaskId = tasks[selectedTaskIndex].id;
+    const indexInMaster = allTasks.findIndex(task => {
       return task.id === selectedTaskId;
     });
-    const tasksCopy = this.state.allTasks.slice(0);
+    const tasksCopy = allTasks.slice(0);
     tasksCopy.splice(indexInMaster, 1);
     this.setState({ allTasks: tasksCopy }, () => {
-      const tasks = this._computeFilteredTasks(this.state.searchTermGlobal);
+      const tasks = this._computeFilteredTasks(searchTermGlobal, searchDates);
       const newIndex =
-        this.state.selectedTaskIndex >= tasks.length
+        selectedTaskIndex >= tasks.length
           ? tasks.length - 1
-          : this.state.selectedTaskIndex;
+          : selectedTaskIndex;
       this.setState({ tasks, selectedTaskIndex: newIndex });
     });
   }
@@ -251,8 +271,8 @@ class AuditorPanel extends React.Component<Props, State> {
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
-        {task.changes.map(change => {
-          return <NotesAudit change={change} />;
+        {task.changes.map((change, index) => {
+          return <NotesAudit key={change.by + index} change={change} />;
         })}
         {this.filterType === FilterType.TODO && (
           <LabelTextInput
@@ -283,13 +303,15 @@ class AuditorPanel extends React.Component<Props, State> {
     });
   };
 
-  _computeFilteredTasks = (searchTerm: string) => {
+  _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     return this.state.allTasks.filter(task => {
       return (
-        searchTerm === "" ||
-        containsSearchTerm(searchTerm, task.site) ||
+        (containsSearchTerm(searchTerm, task.site) ||
+          task.entries.some(entry => {
+            return containsSearchTerm(searchTerm, entry);
+          })) &&
         task.entries.some(entry => {
-          return containsSearchTerm(searchTerm, entry);
+          return withinDateRange(dateRange, entry);
         })
       );
     });
@@ -299,7 +321,10 @@ class AuditorPanel extends React.Component<Props, State> {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
-    const filteredTasks = this._computeFilteredTasks(searchTerm);
+    const filteredTasks = this._computeFilteredTasks(
+      searchTerm,
+      this.state.searchDates
+    );
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
@@ -322,29 +347,145 @@ class AuditorPanel extends React.Component<Props, State> {
     this._setupTaskList();
   };
 
+  _handleSearchDatesChange = (searchDates: DateRange) => {
+    const { selectedTaskIndex, tasks } = this.state;
+    const selectedId =
+      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
+    const filteredTasks = this._computeFilteredTasks(
+      this.state.searchTermGlobal,
+      searchDates
+    );
+    const selectedIndex = filteredTasks.findIndex(task => {
+      return task.id === selectedId;
+    });
+
+    this.setState({
+      searchDates,
+      tasks: filteredTasks,
+      selectedTaskIndex: selectedIndex
+    });
+  };
+
+  _clearSearch = () => {
+    const { allTasks } = this.state;
+    this.setState({
+      searchDates: { startDate: null, endDate: null },
+      tasks: allTasks
+    });
+  };
+
+  _onFilterItemClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    const filterItem = event.currentTarget.getAttribute("data-name");
+    if (filterItem === null) {
+      return;
+    }
+    this._handleFilterUpdate(filterItem);
+  };
+
+  _onSearchClick = () => {
+    this.setState({ showSearch: !this.state.showSearch });
+  };
+
+  _renderLabelItems = () => {
+    const filterTypes = [
+      FilterType.TODO,
+      FilterType.COMPLETED,
+      FilterType.REJECTED
+    ];
+    return (
+      <Fragment>
+        <div className="labelwrapper_header_icon" onClick={this._onSearchClick}>
+          &nbsp;&#x1F50E;
+        </div>
+        <div className="labelwrapper_header_icon">
+          <DropDown labelURI={filterIcon}>
+            {filterTypes.map(item => (
+              <div
+                key={item}
+                className="labelwrapper_dropdown_text"
+                data-name={item}
+                onClick={this._onFilterItemClick}
+              >
+                {item}
+              </div>
+            ))}
+          </DropDown>
+        </div>
+      </Fragment>
+    );
+  };
+
+  _onFocusChange = (focusedInput: FocusedInputShape | null) => {
+    this.setState({ focusedInput });
+  };
+
+  _onDatesChange = ({
+    startDate,
+    endDate
+  }: {
+    startDate: Moment | null;
+    endDate: Moment | null;
+  }) => {
+    this._handleSearchDatesChange({ startDate, endDate });
+  };
+
+  _onSearchTermChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let input = event.target.value;
+    this._handleSearchTermGlobalChange(input);
+  };
+
+  _renderSearchPanel = () => {
+    const { focusedInput, searchDates } = this.state;
+    return (
+      <div className="mainview_search_container">
+        <DateRangePicker
+          startDate={searchDates.startDate}
+          startDateId={"startDate"}
+          endDate={searchDates.endDate}
+          endDateId={"endDate"}
+          onDatesChange={this._onDatesChange}
+          focusedInput={focusedInput}
+          onFocusChange={this._onFocusChange}
+          isOutsideRange={() => false}
+          regular={true}
+        />
+        <div className="labelwrapper_row">
+          <input
+            type="text"
+            onChange={this._onSearchTermChange}
+            placeholder="Search"
+          />
+          <Button
+            className="mainview_clear_search_button"
+            label="Clear Search"
+            onClick={this._clearSearch}
+          />
+        </div>
+      </div>
+    );
+  };
+
   render() {
-    const { selectedTaskIndex } = this.state;
+    const { selectedTaskIndex, showSearch } = this.state;
     return (
       <div className="mainview_content">
-        <TaskList
-          onSelect={this._onTaskSelect}
-          tasks={this.state.tasks}
-          renderItem={this._renderTaskListClaim}
-          selectedItem={selectedTaskIndex}
-          className="mainview_tasklist"
+        <LabelWrapper
           label={this._getLabelFromFilterType()}
-          onSearchTermUpdate={this._handleSearchTermGlobalChange}
-          filterItems={[
-            FilterType.TODO,
-            FilterType.COMPLETED,
-            FilterType.REJECTED
-          ]}
-          onFilterUpdate={this._handleFilterUpdate}
-        />
-        <div style={{ width: "100%" }}>
-          {selectedTaskIndex >= 0 &&
-            this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
-        </div>
+          className="mainview_tasklist"
+          renderLabelItems={this._renderLabelItems}
+        >
+          {!!showSearch && <div>{this._renderSearchPanel()}</div>}
+          <TaskList
+            onSelect={this._onTaskSelect}
+            tasks={this.state.tasks}
+            renderItem={this._renderTaskListClaim}
+            selectedItem={selectedTaskIndex}
+          />
+        </LabelWrapper>
+        {selectedTaskIndex >= 0 &&
+          this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
       </div>
     );
   }

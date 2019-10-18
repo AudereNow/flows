@@ -13,6 +13,7 @@
 
 .mainview_tasklist {
   min-width: 300px;
+  width: 20%;
 }
 
 .mainview_task_preview {
@@ -51,4 +52,14 @@
 
 .mainview_button_disabled {
   background-color: #cccccc;
+}
+
+.mainview_search_container {
+  padding: 7px;
+  background-color: #888888;
+}
+
+.mainview_clear_search_button {
+  width: 100px;
+  height: 20px;
 }

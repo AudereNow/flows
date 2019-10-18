@@ -1,7 +1,17 @@
+import moment, { Moment } from "moment";
+
+export interface DateRange {
+  startDate: Moment | null;
+  endDate: Moment | null;
+}
+
 export const containsSearchTerm = (
   searchPhrase: string,
   entry: any
 ): boolean => {
+  if (searchPhrase === "") {
+    return true;
+  }
   const keys = Object.keys(entry);
 
   let searchKey;
@@ -19,15 +29,36 @@ export const containsSearchTerm = (
     if (
       ((!!searchKey && keys[i].toLowerCase().includes(searchKey)) ||
         !searchKey) &&
-      !!value &&
-      value
-        .toString()
-        .trim()
-        .toLowerCase()
-        .includes(searchPhrase)
+      (!!value &&
+        value
+          .toString()
+          .trim()
+          .toLowerCase()
+          .includes(searchPhrase))
     ) {
       return true;
     }
+  }
+
+  return false;
+};
+
+export const withinDateRange = (dateRange: DateRange, entry: any) => {
+  if (!dateRange.startDate && !dateRange.endDate) return true;
+
+  let fromTrue = false;
+  let toTrue = false;
+
+  if (entry.hasOwnProperty("timestamp")) {
+    let current = moment(entry.timestamp);
+    if (!dateRange.startDate || current >= dateRange.startDate) {
+      fromTrue = true;
+    }
+
+    if (!dateRange.endDate || current <= dateRange.endDate) {
+      toTrue = true;
+    }
+    return fromTrue && toTrue;
   }
   return false;
 };

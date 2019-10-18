@@ -11,4 +11,30 @@
   text-align: center;
   height: 24px;
   line-height: 24px;
+  position: relative;
+}
+
+.labelwrapper_header_container {
+  position: relative;
+}
+
+.labelwrapper_header_icon_container {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  right: 0;
+}
+
+.labelwrapper_header_icon {
+  cursor: pointer;
+  height: 24px;
+  width: 24px;
+}
+
+.labelwrapper_labelitems_container {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  display: flex;
+  flex-direction: row;
 }
