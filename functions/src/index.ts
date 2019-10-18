@@ -18,6 +18,10 @@ import {
   User,
   UserRole
 } from "./sharedtypes";
+import {
+  TASK_CHANGE_COLLECTION,
+  TaskChangeRecord
+} from "../../src/sharedtypes.js";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
@@ -247,8 +251,20 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         },
         changes: [change]
       };
+      const record: TaskChangeRecord = {
+        ...change,
+        taskID: doc.id,
+        collection: AUDITOR_TASK_COLLECTION
+      };
       removeEmptyFieldsInPlace(task);
-      await doc.set(task);
+      await Promise.all([
+        doc.set(task),
+        admin
+          .firestore()
+          .collection(TASK_CHANGE_COLLECTION)
+          .doc()
+          .set(record)
+      ]);
     })
   );
   console.log(

@@ -13,6 +13,7 @@ export const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
 export const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
 export const REJECTED_TASK_COLLECTION = "rejected_task";
 export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
+export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
 
 export const REMOTE_CONFIG_DOC = "remoteConfig";
@@ -74,6 +75,11 @@ export type TaskChangeMetadata = {
   by: string;
   desc?: string;
   notes?: string;
+};
+
+export type TaskChangeRecord = TaskChangeMetadata & {
+  taskID: string;
+  collection: string;
 };
 
 export type Task = ClaimTask & {
