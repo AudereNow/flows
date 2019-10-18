@@ -6,13 +6,13 @@ import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
   formatCurrency,
   saveOperatorApprovedTask,
   saveOperatorRejectedTask
 } from "../store/corestore";
 import "./MainView.css";
-import { Task, ClaimEntry } from "../sharedtypes";
 
 type Props = {
   task: Task;
@@ -83,7 +83,7 @@ export class OperatorDetails extends React.Component<Props, State> {
 
   render() {
     return (
-      <LabelWrapper label="DETAILS">
+      <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: this.props.task.site.name }} />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.task.changes.map((change, index) => {

@@ -6,6 +6,7 @@ import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
   declinePayment,
   formatCurrency,
@@ -15,7 +16,6 @@ import {
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
-import { Task, ClaimEntry } from "../sharedtypes";
 
 type Props = {
   task: Task;
@@ -122,7 +122,7 @@ export class PayorDetails extends React.Component<Props, State> {
     });
 
     return (
-      <LabelWrapper label="DETAILS">
+      <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
         {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem

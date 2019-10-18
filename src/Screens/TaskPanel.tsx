@@ -1,9 +1,10 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
+import LabelWrapper from "../Components/LabelWrapper";
 import TaskList from "../Components/TaskList";
+import { Task } from "../sharedtypes";
 import { subscribeToTasks } from "../store/corestore";
 import "./MainView.css";
-import { Task } from "../sharedtypes";
 
 type Props = {
   taskCollection: string;
@@ -61,13 +62,15 @@ export default class TaskPanel extends React.Component<Props, State> {
     const { selectedTaskIndex } = this.state;
     return (
       <div className="mainview_content">
-        <TaskList
-          onSelect={this._onTaskSelect}
-          tasks={this.state.tasks}
-          renderItem={this._renderTaskListItem}
-          selectedItem={selectedTaskIndex}
-          className="mainview_tasklist"
-        />
+        <LabelWrapper label="ITEMS TO REVIEW" className="mainview_tasklist">
+          <TaskList
+            onSelect={this._onTaskSelect}
+            tasks={this.state.tasks}
+            renderItem={this._renderTaskListItem}
+            selectedItem={selectedTaskIndex}
+            className="mainview_tasklist"
+          />
+        </LabelWrapper>
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 && (
             <this.props.detailsComponent
