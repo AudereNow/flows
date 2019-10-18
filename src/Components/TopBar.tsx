@@ -96,7 +96,9 @@ class TopBar extends React.Component {
               {uploadButton}
               {uploader}
             </Fragment>
-            <div onClick={this._handleLogout}>Logout</div>
+            <div className="nav_menu_item" onClick={this._handleLogout}>
+              Logout
+            </div>
           </Dropdown>
         </div>
       </div>
