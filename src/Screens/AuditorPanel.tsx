@@ -1,3 +1,4 @@
+import { json2csv } from "json-2-csv";
 import { Moment } from "moment";
 import React, { Fragment } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
@@ -14,6 +15,7 @@ import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
   declineAudit,
   formatCurrency,
@@ -22,11 +24,9 @@ import {
   loadRejectedTasks,
   saveAuditorApprovedTask
 } from "../store/corestore";
-import downloadCSV from "../util/csv";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
-import { Task, ClaimEntry } from "../sharedtypes";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -437,7 +437,41 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _downloadCSV = () => {
-    downloadCSV(this.state.tasks);
+    const { tasks } = this.state;
+
+    if (tasks.length === 0) {
+      alert("There are no tasks to download! Please adjust your search.");
+    }
+    const fileName = tasks[0].site.name + "-" + tasks[0].id;
+    let rows: any[] = [];
+    const json2csvOptions = { checkSchemaDifferences: true };
+    tasks.forEach(task => {
+      task.entries.forEach(entry => {
+        let entryCopy = Object.assign(
+          { id: task.id, siteName: task.site.name },
+          entry
+        );
+
+        rows.push(entryCopy);
+      });
+    });
+
+    json2csv(
+      rows,
+      (err, csv) => {
+        if (!csv || err) {
+          alert("Something went wrong when trying to download your csv");
+        }
+
+        const dataString = "data:text/csv;charset=utf-8," + csv;
+        const encodedURI = encodeURI(dataString);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedURI);
+        link.setAttribute("download", `${fileName}.csv`);
+        link.click();
+      },
+      json2csvOptions
+    );
   };
 
   _renderSearchPanel = () => {
