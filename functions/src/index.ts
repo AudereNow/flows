@@ -14,14 +14,12 @@ import {
   removeEmptyFieldsInPlace,
   Task,
   TaskChangeMetadata,
+  TASK_CHANGE_COLLECTION,
+  TaskChangeRecord,
   UploaderInfo,
   User,
   UserRole
 } from "./sharedtypes";
-import {
-  TASK_CHANGE_COLLECTION,
-  TaskChangeRecord
-} from "../../src/sharedtypes.js";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
