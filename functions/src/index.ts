@@ -140,7 +140,7 @@ exports.parseCSV = functions.storage.object().onFinalize(async object => {
     console.log(`Skipping unrecognized file ${filePath}`);
     return;
   }
-  console.log(`Processing ${filePath} of type ${contentType} - new`);
+  console.log(`Processing ${filePath} of type ${contentType}`);
 
   const stream = admin
     .storage()
