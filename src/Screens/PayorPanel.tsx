@@ -116,6 +116,7 @@ export class PayorDetails extends React.Component<Props, State> {
       let row: any = {};
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
+      row["Date"] = new Date(entry.timestamp).toLocaleDateString();
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
       cleanedData.push(row);
     });
