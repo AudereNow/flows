@@ -11,6 +11,7 @@
     "@types/react-tabs": "^2.3.1",
     "@types/react-tooltip": "^3.9.3",
     "firebase": "^6.6.1",
+    "json-2-csv": "^3.5.7",
     "react": "^16.9.0",
     "react-dates": "^21.2.1",
     "react-dom": "^16.9.0",

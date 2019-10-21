@@ -1,3 +1,4 @@
+import { json2csv } from "json-2-csv";
 import { Moment } from "moment";
 import React, { Fragment } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
@@ -436,6 +437,44 @@ class AuditorPanel extends React.Component<Props, State> {
     this._handleSearchTermGlobalChange(input);
   };
 
+  _downloadCSV = () => {
+    const { tasks } = this.state;
+
+    if (tasks.length === 0) {
+      alert("There are no tasks to download! Please adjust your search.");
+    }
+    const fileName = tasks[0].site.name + "-" + tasks[0].id;
+    let rows: any[] = [];
+    const json2csvOptions = { checkSchemaDifferences: true };
+    tasks.forEach(task => {
+      task.entries.forEach(entry => {
+        let entryCopy = Object.assign(
+          { id: task.id, siteName: task.site.name },
+          entry
+        );
+
+        rows.push(entryCopy);
+      });
+    });
+
+    json2csv(
+      rows,
+      (err, csv) => {
+        if (!csv || err) {
+          alert("Something went wrong when trying to download your csv");
+        }
+
+        const dataString = "data:text/csv;charset=utf-8," + csv;
+        const encodedURI = encodeURI(dataString);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedURI);
+        link.setAttribute("download", `${fileName}.csv`);
+        link.click();
+      },
+      json2csvOptions
+    );
+  };
+
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
     return (
@@ -463,6 +502,7 @@ class AuditorPanel extends React.Component<Props, State> {
             label="Clear Search"
             onClick={this._clearSearch}
           />
+          <Button label={"Download CSV"} onClick={this._downloadCSV} />
         </div>
       </div>
     );
