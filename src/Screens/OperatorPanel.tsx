@@ -98,7 +98,7 @@ export class OperatorDetails extends React.Component<Props, State> {
         <LabelTextInput
           onTextChange={this._onNotesChanged}
           label={"Notes"}
-          defaultValue={this.state.notes}
+          value={this.state.notes}
         />
         <div className="mainview_button_row">
           <Button label="Reject" onClick={this._onReject} />
