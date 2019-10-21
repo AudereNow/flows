@@ -13,7 +13,10 @@ import {
   PAYMENT_COMPLETE_TASK_COLLECTION,
   PaymentRecipient,
   ACTIVE_TASK_COLLECTION,
-  removeEmptyFieldsInPlace
+  removeEmptyFieldsInPlace,
+  TaskChangeMetadata,
+  TASK_CHANGE_COLLECTION,
+  TaskChangeRecord
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -73,13 +76,19 @@ async function saveDeclinedTask(
   fromCollection: string,
   notes?: string
 ) {
-  task.flow = decision;
-  task.changes.push({
+  const change: TaskChangeMetadata = {
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: decision as string,
     notes
-  });
+  };
+  const record: TaskChangeRecord = {
+    ...change,
+    taskID: task.id,
+    collection: OPERATOR_TASK_COLLECTION
+  };
+  task.flow = decision;
+  task.changes.push(change);
   removeEmptyFieldsInPlace(task);
 
   return Promise.all([
@@ -88,6 +97,11 @@ async function saveDeclinedTask(
       .collection(OPERATOR_TASK_COLLECTION)
       .doc(task.id)
       .set(task),
+    firebase
+      .firestore()
+      .collection(TASK_CHANGE_COLLECTION)
+      .doc()
+      .set(record),
     firebase
       .firestore()
       .collection(fromCollection)
@@ -101,13 +115,19 @@ export async function saveAuditorApprovedTask(
   notes: string,
   samplesReviewed: number
 ) {
-  task.flow = TaskDecision.APPROVE_AUDIT;
-  task.changes.push({
+  const change: TaskChangeMetadata = {
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: TaskDecision.APPROVE_AUDIT,
     notes
-  });
+  };
+  const record: TaskChangeRecord = {
+    ...change,
+    taskID: task.id,
+    collection: PAYOR_TASK_COLLECTION
+  };
+  task.flow = TaskDecision.APPROVE_AUDIT;
+  task.changes.push(change);
   task.entries = task.entries.map((entry, index) => {
     if (index < samplesReviewed) {
       return {
@@ -127,6 +147,11 @@ export async function saveAuditorApprovedTask(
       .set(task),
     firebase
       .firestore()
+      .collection(TASK_CHANGE_COLLECTION)
+      .doc()
+      .set(record),
+    firebase
+      .firestore()
       .collection(AUDITOR_TASK_COLLECTION)
       .doc(task.id)
       .delete()
@@ -134,13 +159,19 @@ export async function saveAuditorApprovedTask(
 }
 
 export async function saveOperatorApprovedTask(task: Task, notes?: string) {
-  task.flow = TaskDecision.APPROVE_AUDIT;
-  task.changes.push({
+  const change: TaskChangeMetadata = {
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: TaskDecision.APPROVE_AUDIT,
     notes
-  });
+  };
+  const record: TaskChangeRecord = {
+    ...change,
+    taskID: task.id,
+    collection: PAYOR_TASK_COLLECTION
+  };
+  task.flow = TaskDecision.APPROVE_AUDIT;
+  task.changes.push(change);
   removeEmptyFieldsInPlace(task);
 
   return Promise.all([
@@ -151,6 +182,11 @@ export async function saveOperatorApprovedTask(task: Task, notes?: string) {
       .set(task),
     firebase
       .firestore()
+      .collection(TASK_CHANGE_COLLECTION)
+      .doc()
+      .set(record),
+    firebase
+      .firestore()
       .collection(OPERATOR_TASK_COLLECTION)
       .doc(task.id)
       .delete()
@@ -158,13 +194,19 @@ export async function saveOperatorApprovedTask(task: Task, notes?: string) {
 }
 
 export async function saveOperatorRejectedTask(task: Task, notes?: string) {
-  task.flow = TaskDecision.TASK_REJECTED;
-  task.changes.push({
+  const change: TaskChangeMetadata = {
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: TaskDecision.TASK_REJECTED,
     notes
-  });
+  };
+  const record: TaskChangeRecord = {
+    ...change,
+    taskID: task.id,
+    collection: REJECTED_TASK_COLLECTION
+  };
+  task.flow = TaskDecision.TASK_REJECTED;
+  task.changes.push(change);
   removeEmptyFieldsInPlace(task);
 
   return Promise.all([
@@ -175,6 +217,11 @@ export async function saveOperatorRejectedTask(task: Task, notes?: string) {
       .set(task),
     firebase
       .firestore()
+      .collection(TASK_CHANGE_COLLECTION)
+      .doc()
+      .set(record),
+    firebase
+      .firestore()
       .collection(OPERATOR_TASK_COLLECTION)
       .doc(task.id)
       .delete()
@@ -182,13 +229,19 @@ export async function saveOperatorRejectedTask(task: Task, notes?: string) {
 }
 
 export async function savePaymentCompletedTask(task: Task, notes?: string) {
-  task.flow = TaskDecision.PAYMENT_COMPLETE;
-  task.changes.push({
+  const change: TaskChangeMetadata = {
     timestamp: Date.now(),
     by: getBestUserName(),
     desc: TaskDecision.PAYMENT_COMPLETE,
     notes
-  });
+  };
+  const record: TaskChangeRecord = {
+    ...change,
+    taskID: task.id,
+    collection: PAYMENT_COMPLETE_TASK_COLLECTION
+  };
+  task.flow = TaskDecision.PAYMENT_COMPLETE;
+  task.changes.push(change);
   removeEmptyFieldsInPlace(task);
 
   return Promise.all([
@@ -197,6 +250,11 @@ export async function savePaymentCompletedTask(task: Task, notes?: string) {
       .collection(PAYMENT_COMPLETE_TASK_COLLECTION)
       .doc(task.id)
       .set(task),
+    firebase
+      .firestore()
+      .collection(TASK_CHANGE_COLLECTION)
+      .doc()
+      .set(record),
     firebase
       .firestore()
       .collection(PAYOR_TASK_COLLECTION)

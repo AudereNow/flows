@@ -3,6 +3,9 @@ service cloud.firestore {
     match /actively_viewed_tasks/{docId} {
       allow read, write: if true
     }
+    match /task_changes/{docId} {
+      allow read, write: if true
+    }
     match /auditor_todo/{docId} {
       allow read, write: if request.auth.token.roles.hasAny(['Auditor'])
     }
