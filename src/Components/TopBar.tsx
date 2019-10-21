@@ -86,6 +86,7 @@ class TopBar extends React.Component {
         className="topbar_input"
         type="file"
         name="file"
+        accept=".csv"
         onClick={this._onFileSelecting}
         onChange={this._onFileSelected}
       />
