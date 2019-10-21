@@ -33,6 +33,12 @@ export class PayorDetails extends React.Component<Props, State> {
     paying: false
   };
 
+  componentWillReceiveProps(nextProps: Props) {
+    if (nextProps.task !== this.props.task) {
+      this.setState({ notes: "" });
+    }
+  }
+
   async componentDidMount() {
     const realPayments = await getConfig("enableRealPayments");
     this.setState({ realPayments });

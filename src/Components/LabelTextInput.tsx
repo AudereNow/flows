@@ -22,7 +22,7 @@ class LabelTextInput extends Component<Props> {
         )}
         <textarea
           className="labeltextinput_input"
-          defaultValue={this.props.defaultValue}
+          value={this.props.defaultValue}
           onChange={this._onTextChange}
         />
       </div>

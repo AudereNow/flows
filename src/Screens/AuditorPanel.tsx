@@ -299,7 +299,8 @@ class AuditorPanel extends React.Component<Props, State> {
     this.setState({
       selectedTaskIndex: index,
       numSamples,
-      showAllEntries: false
+      showAllEntries: false,
+      notes: ""
     });
   };
 
