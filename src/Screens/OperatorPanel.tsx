@@ -26,7 +26,7 @@ export class OperatorDetails extends React.Component<Props, State> {
     notes: ""
   };
 
-  componentWillReceiveProps(nextProps: Props) {
+  componentDidUpdate(nextProps: Props) {
     if (nextProps.task !== this.props.task) {
       this.setState({ notes: "" });
     }
