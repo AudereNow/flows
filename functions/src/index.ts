@@ -25,11 +25,17 @@ import {
 // team's LastPass ServerInfrastructure section.
 const serviceAccount = require("../flows-app-staging-key.json");
 
-const CSV_UPLOAD_COLLECTION = "csv_uploads";
-const CSV_UPLOAD_RECORDS_COLLECTION = "records";
+const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
 const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
 const RECORD_ID_FIELD = "meta:instanceID";
+
+type RecordUploadLog = {
+  csvID: string;
+  batchID: string;
+  by: string;
+  timestamp: number;
+};
 
 // Needed for access to Storage.  If there's a way to actually pull files from
 // there without credentials (but securely, given we're in the same Firebase
@@ -192,16 +198,21 @@ async function LogAdminEvent(user: User, desc: string) {
     .set(event);
 }
 
-async function addToCSVUploads(cache: any[], batchID: string) {
-  const records = admin
-    .firestore()
-    .collection(CSV_UPLOAD_COLLECTION)
-    .doc(batchID)
-    .collection(CSV_UPLOAD_RECORDS_COLLECTION);
+async function logUploadedRecords(cache: any[], batchID: string, user: User) {
+  const logs = admin.firestore().collection(UPLOADED_RECORDS_COLLECTION);
+  const timestamp = Date.now();
 
-  await Promise.all(cache.map(r => records.doc(r[RECORD_ID_FIELD]).set(r)));
-  console.log(
-    `Set ${cache.length} records into ${CSV_UPLOAD_COLLECTION}/${batchID}`
+  await Promise.all(
+    cache.map(r => {
+      const csvID = r[RECORD_ID_FIELD];
+      const log: RecordUploadLog = {
+        csvID,
+        batchID,
+        timestamp,
+        by: user.name
+      };
+      return logs.doc(csvID).set(log);
+    })
   );
 }
 
@@ -225,6 +236,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         .collection(TASKS_COLLECTION)
         .doc();
       const patients = pharm.values.map((d: any) => ({
+        csvID: d[RECORD_ID_FIELD],
         patientAge: d["g2:A12 Age"],
         patientFirstName: d["g2:A10 First Name"],
         patientLastName: d["g2:A11 Last Name"],
@@ -242,7 +254,6 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
       }));
       const task: Task = {
         id: doc.id,
-        batchID,
         state: TaskState.AUDIT,
         entries: patients,
         site: {
@@ -271,49 +282,42 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
   );
 }
 
-async function isDuplicateUpload(cache: any[]): Promise<boolean> {
+async function findDuplicateRecords(cache: any[]): Promise<string[]> {
   if (cache.length === 0) {
-    return false;
+    return [];
   }
 
-  const firstItemID = cache[0][RECORD_ID_FIELD];
-  if (!firstItemID) {
-    // It's a matter of opinion how "safe" we want to be here.  To be
-    // conservative, we assume that if the first record doesn't even have
-    // an ID, it's a duplicate CSV.
-    console.log(`Ignoring CSV with a first record missing ${RECORD_ID_FIELD}`);
-    return true;
-  }
-
-  const items = await admin
-    .firestore()
-    .collectionGroup(CSV_UPLOAD_RECORDS_COLLECTION)
-    .where(RECORD_ID_FIELD, "==", firstItemID)
-    .get();
-
-  console.log(
-    `Searched for ${firstItemID} and found ${items.docs.length} matches`
+  const logs = admin.firestore().collection(UPLOADED_RECORDS_COLLECTION);
+  const snaps = await Promise.all(
+    cache.map(c => logs.doc(c[RECORD_ID_FIELD]).get())
   );
+  const dupeSnaps = snaps.filter(s => s.exists);
 
-  return !items.empty;
+  return dupeSnaps.map(d => d.id);
 }
 
 async function completeCSVProcessing(cache: any[], user: User) {
+  let dedupedCache = cache;
   console.log(`Full CSV parsed with ${cache.length} lines`);
 
   const allowDupes = await getConfig("allowDuplicateUploads");
   if (!allowDupes) {
-    const dupeExists = await isDuplicateUpload(cache);
+    const dupes = await findDuplicateRecords(cache);
 
-    if (dupeExists) {
-      return LogAdminEvent(user, `Duplicate CSV upload ignored`);
+    if (dupes.length > 0) {
+      await LogAdminEvent(
+        user,
+        `Duplicate CSV records ignored: ${JSON.stringify(dupes)}`
+      );
+
+      dedupedCache = cache.filter(c => !dupes.includes(c[RECORD_ID_FIELD]));
     }
   }
 
   const batchID = new Date().toISOString();
   await Promise.all([
-    addToCSVUploads(cache, batchID),
-    createAuditorTasks(cache, batchID, user)
+    logUploadedRecords(dedupedCache, batchID, user),
+    createAuditorTasks(dedupedCache, batchID, user)
   ]);
 }
 

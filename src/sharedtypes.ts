@@ -74,7 +74,6 @@ export type TaskChangeRecord = {
 
 export type Task = {
   id: string;
-  batchID: string;
   state: TaskState;
   entries: ClaimEntry[];
   site: Site;
