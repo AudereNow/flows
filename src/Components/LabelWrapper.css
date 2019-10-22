@@ -14,6 +14,11 @@
   position: relative;
 }
 
+.labelwrapper_inner {
+  max-height: 80vh;
+  overflow-y: scroll;
+}
+
 .labelwrapper_header_container {
   position: relative;
 }
