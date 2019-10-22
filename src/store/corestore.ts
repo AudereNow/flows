@@ -58,7 +58,6 @@ export async function changeTaskState(
     fromState: task.state,
     timestamp: Date.now(),
     by: getBestUserName(),
-    desc: `Changed to ${newState}`,
     notes
   };
   const updatedTask = {
@@ -107,6 +106,7 @@ export async function getChanges(taskID: string) {
     .firestore()
     .collection(TASK_CHANGE_COLLECTION)
     .where("taskID", "==", taskID)
+    .orderBy("timestamp")
     .get();
   return changes.docs.map(d => d.data() as TaskChangeRecord);
 }

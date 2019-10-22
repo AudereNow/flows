@@ -68,7 +68,6 @@ export type TaskChangeRecord = {
   fromState: TaskState;
   timestamp: number;
   by: string;
-  desc: string;
   notes?: string;
 };
 

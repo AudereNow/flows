@@ -7,18 +7,21 @@ interface Props {
 }
 
 const NotesAudit = (props: Props) => {
-  if (!props.change.notes) {
-    return null;
-  }
-
-  const { timestamp, by, notes } = props.change;
+  const { timestamp, by, state, fromState, notes } = props.change;
+  const notesClause = notes ? (
+    <span>
+      {": "}
+      <strong>{notes}</strong>
+    </span>
+  ) : (
+    ""
+  );
+  const desc = `moved from ${fromState} to ${state}`;
   return (
     <div className="notesaudit_row" key={`${props.change.timestamp}`}>
-      <b>
-        {`${by} on
-            ${new Date(timestamp).toLocaleString()}: `}
-      </b>
-      {notes}
+      {`${by} ${desc} on
+            ${new Date(timestamp).toLocaleString()}`}
+      {notesClause}
     </div>
   );
 };

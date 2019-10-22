@@ -280,6 +280,7 @@ class AuditorPanel extends React.Component<Props, State> {
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
+        <div className="mainview_actions_so_far_header">Actions so far:</div>
         {changes.map((change, index) => {
           return <NotesAudit key={change.by + index} change={change} />;
         })}

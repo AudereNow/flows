@@ -213,8 +213,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
   }));
   const changeTemplate = {
     timestamp: Date.now(),
-    by: user.name,
-    desc: `Uploaded CSV containing ${shuffledRowsByPharmacy.length} pharmacies`
+    by: user.name
   };
 
   // Now generate Auditor work items representing each sampled row.
