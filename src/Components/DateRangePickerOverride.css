@@ -1,3 +1,12 @@
 .DateRangePickerInput {
   overflow: hidden;
 }
+
+.DateRangePicker {
+  position: static;
+}
+
+.DateRangePicker_picker {
+  left: 30px !important;
+  top: 185px !important;
+}
