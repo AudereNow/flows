@@ -236,7 +236,6 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         .collection(TASKS_COLLECTION)
         .doc();
       const patients = pharm.values.map((d: any) => ({
-        csvID: d[RECORD_ID_FIELD],
         patientAge: d["g2:A12 Age"],
         patientFirstName: d["g2:A10 First Name"],
         patientLastName: d["g2:A11 Last Name"],
