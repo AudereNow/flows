@@ -80,10 +80,10 @@ class AuditorPanel extends React.Component<Props, State> {
         tasks = await loadTasks(TaskState.AUDIT);
         break;
       case FilterType.COMPLETED:
-        tasks = await loadTasks(TaskState.COMPLETE);
+        tasks = await loadTasks(TaskState.COMPLETED);
         break;
       case FilterType.REJECTED:
-        tasks = await loadTasks(TaskState.REJECT);
+        tasks = await loadTasks(TaskState.REJECTED);
         break;
     }
     if (tasks) {

@@ -43,28 +43,34 @@ export default class TaskPanel extends React.Component<Props, State> {
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-    this.setState({ tasks, changes });
+    let { selectedTaskIndex, selectedTaskId } = this.state;
+
     if (tasks.length === 0) {
-      this.setState({ selectedTaskIndex: -1, selectedTaskId: undefined });
-      return;
+      selectedTaskIndex = -1;
+      selectedTaskId = undefined;
+    } else {
+      if (selectedTaskIndex === -1) {
+        selectedTaskIndex = 0;
+        selectedTaskId = tasks[0].id;
+      } else {
+        selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
+        if (selectedTaskIndex === -1) {
+          selectedTaskIndex = Math.min(
+            this.state.selectedTaskIndex,
+            tasks.length - 1
+          );
+          selectedTaskId = tasks[selectedTaskIndex].id;
+        }
+      }
     }
-    if (this.state.selectedTaskIndex === -1) {
-      this._onTaskSelect(0, tasks);
-      return;
-    }
-    let newIndex = tasks.findIndex(
-      task => task.id === this.state.selectedTaskId
-    );
-    if (newIndex === -1) {
-      newIndex = Math.min(this.state.selectedTaskIndex, tasks.length - 1);
-    }
-    this._onTaskSelect(newIndex, tasks);
+
+    this.setState({ tasks, changes, selectedTaskIndex, selectedTaskId });
   };
 
-  _onTaskSelect = (index: number, tasks: Task[] = this.state.tasks) => {
+  _onTaskSelect = (index: number) => {
     this.setState({
       selectedTaskIndex: index,
-      selectedTaskId: index === -1 ? undefined : tasks[index].id
+      selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id
     });
   };
 

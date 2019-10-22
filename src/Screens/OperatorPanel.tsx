@@ -34,7 +34,11 @@ export class OperatorDetails extends React.Component<Props, State> {
   };
 
   _onReject = async () => {
-    await changeTaskState(this.props.task, TaskState.REJECT, this.state.notes);
+    await changeTaskState(
+      this.props.task,
+      TaskState.REJECTED,
+      this.state.notes
+    );
   };
 
   _onApprove = async () => {

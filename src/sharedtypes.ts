@@ -17,8 +17,8 @@ export enum TaskState {
   AUDIT = "AUDIT",
   FOLLOWUP = "FOLLOWUP",
   PAY = "PAY",
-  COMPLETE = "COMPLETE",
-  REJECT = "REJECT"
+  COMPLETED = "COMPLETED",
+  REJECTED = "REJECTED"
 }
 
 export const REMOTE_CONFIG_DOC = "remoteConfig";

@@ -5,7 +5,7 @@ service cloud.firestore {
     }
     match /tasks/{docId} {
       allow read, write: if request.auth.token.roles.hasAny(['Admin'])
-      allow read, write: if request.auth.token.roles.hasAny(['Auditor']) && (request.resource.data.state == "AUDIT" || resource.data.state == "AUDIT")
+      allow read, write: if request.auth.token.roles.hasAny(['Auditor']) && (request.resource.data.state == "AUDIT" || resource.data.state == "AUDIT" || request.resource.data.state == "COMPLETED" || resource.data.state == "COMPLETED" || request.resource.data.state == "REJECTED" || resource.data.state == "REJECTED")
       allow read, write: if request.auth.token.roles.hasAny(['Payor']) && (request.resource.data.state == "PAY" || resource.data.state == "PAY")
       allow read, write: if request.auth.token.roles.hasAny(['Operator']) && (request.resource.data.state == "FOLLOWUP" || resource.data.state == "FOLLOWUP")
     }

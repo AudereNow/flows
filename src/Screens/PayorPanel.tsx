@@ -95,7 +95,7 @@ export class PayorDetails extends React.Component<Props, State> {
       if (paid) {
         await changeTaskState(
           this.props.task,
-          TaskState.COMPLETE,
+          TaskState.COMPLETED,
           this.state.notes
         );
       }
