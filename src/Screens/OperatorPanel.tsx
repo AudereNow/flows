@@ -6,16 +6,13 @@ import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
-import {
-  formatCurrency,
-  saveOperatorApprovedTask,
-  saveOperatorRejectedTask
-} from "../store/corestore";
+import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import { formatCurrency, changeTaskState } from "../store/corestore";
 import "./MainView.css";
 
 type Props = {
   task: Task;
+  changes: TaskChangeRecord[];
 };
 type State = {
   notes: string;
@@ -37,11 +34,11 @@ export class OperatorDetails extends React.Component<Props, State> {
   };
 
   _onReject = async () => {
-    await saveOperatorRejectedTask(this.props.task, this.state.notes);
+    await changeTaskState(this.props.task, TaskState.REJECT, this.state.notes);
   };
 
   _onApprove = async () => {
-    await saveOperatorApprovedTask(this.props.task, this.state.notes);
+    await changeTaskState(this.props.task, TaskState.PAY, this.state.notes);
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -92,7 +89,7 @@ export class OperatorDetails extends React.Component<Props, State> {
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: this.props.task.site.name }} />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
-        {this.props.task.changes.map((change, index) => {
+        {this.props.changes.map((change, index) => {
           return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
         <LabelTextInput

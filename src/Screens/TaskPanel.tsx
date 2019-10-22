@@ -2,18 +2,22 @@ import React from "react";
 import "react-tabs/style/react-tabs.css";
 import LabelWrapper from "../Components/LabelWrapper";
 import TaskList from "../Components/TaskList";
-import { Task } from "../sharedtypes";
-import { subscribeToTasks } from "../store/corestore";
+import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import { subscribeToTasks, getChanges } from "../store/corestore";
 import "./MainView.css";
 
 type Props = {
-  taskCollection: string;
+  taskState: TaskState;
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
-  detailsComponent: React.ComponentClass<{ task: Task }>;
+  detailsComponent: React.ComponentClass<{
+    task: Task;
+    changes: TaskChangeRecord[];
+  }>;
 };
 
 type State = {
   tasks: Task[];
+  changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
   selectedTaskId?: string;
 };
@@ -21,15 +25,25 @@ type State = {
 export default class TaskPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
+    changes: [],
     selectedTaskIndex: -1
   };
+  _unsubscribe = () => {};
 
   async componentDidMount() {
-    subscribeToTasks(this.props.taskCollection, this._onTasksChanged);
+    this._unsubscribe = subscribeToTasks(
+      this.props.taskState,
+      this._onTasksChanged
+    );
   }
 
-  _onTasksChanged = (tasks: Task[]) => {
-    this.setState({ tasks });
+  componentWillUnmount() {
+    this._unsubscribe();
+  }
+
+  _onTasksChanged = async (tasks: Task[]) => {
+    const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
+    this.setState({ tasks, changes });
     if (tasks.length === 0) {
       this.setState({ selectedTaskIndex: -1, selectedTaskId: undefined });
       return;
@@ -75,6 +89,7 @@ export default class TaskPanel extends React.Component<Props, State> {
           {selectedTaskIndex >= 0 && (
             <this.props.detailsComponent
               task={this.state.tasks[selectedTaskIndex]}
+              changes={this.state.changes[selectedTaskIndex]}
             />
           )}
         </div>
