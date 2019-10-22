@@ -6,15 +6,20 @@
   You should only put things in here that don't have module dependencies.
   Simple types, simple functions.
 */
-export const AUDITOR_TASK_COLLECTION = "auditor_task";
-export const OPERATOR_TASK_COLLECTION = "operator_task";
-export const PAYOR_TASK_COLLECTION = "payor_task";
-export const PAYMENT_COMPLETE_TASK_COLLECTION = "payment_complete_task";
 export const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
-export const REJECTED_TASK_COLLECTION = "rejected_task";
 export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
 export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
+export const TASKS_COLLECTION = "tasks";
+
+export enum TaskState {
+  CSV = "CSV",
+  AUDIT = "AUDIT",
+  FOLLOWUP = "FOLLOWUP",
+  PAY = "PAY",
+  COMPLETED = "COMPLETED",
+  REJECTED = "REJECTED"
+}
 
 export const REMOTE_CONFIG_DOC = "remoteConfig";
 
@@ -33,14 +38,6 @@ export enum UserRole {
   PAYOR = "Payor",
   OPERATOR = "Operator",
   ADMIN = "Admin"
-}
-
-export enum TaskDecision {
-  DECLINE_AUDIT = "Decline Audit",
-  APPROVE_AUDIT = "Approve Audit",
-  DECLINE_PAYMENT = "Decline Payment",
-  PAYMENT_COMPLETE = "Payment Complete",
-  TASK_REJECTED = "Task Rejected"
 }
 
 export type Site = {
@@ -65,28 +62,22 @@ export type ClaimEntry = {
   reviewed?: boolean;
 };
 
-export type ClaimTask = {
-  entries: ClaimEntry[];
-  site: Site;
-};
-
-export type TaskChangeMetadata = {
+export type TaskChangeRecord = {
+  taskID: string;
+  state: TaskState;
+  fromState: TaskState;
   timestamp: number;
   by: string;
-  desc?: string;
+  desc: string;
   notes?: string;
 };
 
-export type TaskChangeRecord = TaskChangeMetadata & {
-  taskID: string;
-  collection: string;
-};
-
-export type Task = ClaimTask & {
+export type Task = {
   id: string;
   batchID: string;
-  flow?: TaskDecision;
-  changes: TaskChangeMetadata[];
+  state: TaskState;
+  entries: ClaimEntry[];
+  site: Site;
 };
 
 export type PaymentRecipient = {

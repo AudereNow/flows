@@ -6,20 +6,21 @@ import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
+import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import {
-  declinePayment,
+  changeTaskState,
   formatCurrency,
   getBestUserName,
-  issuePayments,
-  savePaymentCompletedTask
+  issuePayments
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
 
 type Props = {
   task: Task;
+  changes: TaskChangeRecord[];
 };
+
 type State = {
   realPayments: boolean;
   notes: string;
@@ -92,7 +93,11 @@ export class PayorDetails extends React.Component<Props, State> {
         paid = await this._issuePayment();
       }
       if (paid) {
-        await savePaymentCompletedTask(this.props.task, this.state.notes);
+        await changeTaskState(
+          this.props.task,
+          TaskState.COMPLETED,
+          this.state.notes
+        );
       }
     } catch (e) {
       alert(`Error: ${(e && e.message) || e}`);
@@ -103,7 +108,7 @@ export class PayorDetails extends React.Component<Props, State> {
 
   _onDecline = async () => {
     const { task } = this.props;
-    await declinePayment(task, this.state.notes);
+    await changeTaskState(task, TaskState.FOLLOWUP, this.state.notes);
   };
 
   render() {
@@ -137,7 +142,7 @@ export class PayorDetails extends React.Component<Props, State> {
           }}
         />
         <DataTable data={cleanedData} />
-        {task.changes.map((change, index) => {
+        {this.props.changes.map((change, index) => {
           return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
         <LabelTextInput

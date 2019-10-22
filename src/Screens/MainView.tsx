@@ -10,7 +10,7 @@ import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
 import TaskPanel from "./TaskPanel";
-import { UserRole, Task } from "../sharedtypes";
+import { UserRole, Task, TaskChangeRecord } from "../sharedtypes";
 
 type Props = {};
 type State = {
@@ -32,7 +32,10 @@ const ItemComponents: {
 };
 
 const DetailsComponents: {
-  [key: string]: React.ComponentClass<{ task: Task }>;
+  [key: string]: React.ComponentClass<{
+    task: Task;
+    changes: TaskChangeRecord[];
+  }>;
 } = {
   PayorTask: PayorDetails,
   OperatorTask: OperatorDetails
@@ -76,7 +79,7 @@ class MainView extends React.Component<Props, State> {
           } else {
             panelElement = (
               <TaskPanel
-                taskCollection={tabConfig.taskCollection}
+                taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
               />

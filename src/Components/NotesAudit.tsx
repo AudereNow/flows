@@ -1,9 +1,9 @@
 import React from "react";
 import "./NotesAudit.css";
-import { TaskChangeMetadata } from "../sharedtypes";
+import { TaskChangeRecord } from "../sharedtypes";
 
 interface Props {
-  change: TaskChangeMetadata;
+  change: TaskChangeRecord;
 }
 
 const NotesAudit = (props: Props) => {

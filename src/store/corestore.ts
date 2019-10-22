@@ -5,18 +5,13 @@ import "firebase/functions";
 import {
   UserRole,
   Task,
-  TaskDecision,
-  AUDITOR_TASK_COLLECTION,
-  PAYOR_TASK_COLLECTION,
-  OPERATOR_TASK_COLLECTION,
-  REJECTED_TASK_COLLECTION,
-  PAYMENT_COMPLETE_TASK_COLLECTION,
+  TaskState,
   PaymentRecipient,
   ACTIVE_TASK_COLLECTION,
   removeEmptyFieldsInPlace,
-  TaskChangeMetadata,
   TASK_CHANGE_COLLECTION,
-  TaskChangeRecord
+  TaskChangeRecord,
+  TASKS_COLLECTION
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -52,214 +47,37 @@ export async function userRoles(): Promise<UserRole[]> {
   return token.claims.roles;
 }
 
-export async function declineAudit(task: Task, notes?: string) {
-  await saveDeclinedTask(
-    task,
-    TaskDecision.DECLINE_AUDIT,
-    AUDITOR_TASK_COLLECTION,
-    notes
-  );
-}
-
-export async function declinePayment(task: Task, notes?: string) {
-  await saveDeclinedTask(
-    task,
-    TaskDecision.DECLINE_PAYMENT,
-    PAYOR_TASK_COLLECTION,
-    notes
-  );
-}
-
-async function saveDeclinedTask(
+export async function changeTaskState(
   task: Task,
-  decision: TaskDecision,
-  fromCollection: string,
+  newState: TaskState,
   notes?: string
 ) {
-  const change: TaskChangeMetadata = {
+  const change: TaskChangeRecord = {
+    taskID: task.id,
+    state: newState,
+    fromState: task.state,
     timestamp: Date.now(),
     by: getBestUserName(),
-    desc: decision as string,
+    desc: `Changed to ${newState}`,
     notes
   };
-  const record: TaskChangeRecord = {
-    ...change,
-    taskID: task.id,
-    collection: OPERATOR_TASK_COLLECTION
+  const updatedTask = {
+    ...task,
+    state: newState
   };
-  task.flow = decision;
-  task.changes.push(change);
-  removeEmptyFieldsInPlace(task);
+  removeEmptyFieldsInPlace(updatedTask);
 
   return Promise.all([
     firebase
       .firestore()
-      .collection(OPERATOR_TASK_COLLECTION)
+      .collection(TASKS_COLLECTION)
       .doc(task.id)
-      .set(task),
+      .set(updatedTask),
     firebase
       .firestore()
       .collection(TASK_CHANGE_COLLECTION)
       .doc()
-      .set(record),
-    firebase
-      .firestore()
-      .collection(fromCollection)
-      .doc(task.id)
-      .delete()
-  ]);
-}
-
-export async function saveAuditorApprovedTask(
-  task: Task,
-  notes: string,
-  samplesReviewed: number
-) {
-  const change: TaskChangeMetadata = {
-    timestamp: Date.now(),
-    by: getBestUserName(),
-    desc: TaskDecision.APPROVE_AUDIT,
-    notes
-  };
-  const record: TaskChangeRecord = {
-    ...change,
-    taskID: task.id,
-    collection: PAYOR_TASK_COLLECTION
-  };
-  task.flow = TaskDecision.APPROVE_AUDIT;
-  task.changes.push(change);
-  task.entries = task.entries.map((entry, index) => {
-    if (index < samplesReviewed) {
-      return {
-        ...entry,
-        reviewed: true
-      };
-    }
-    return entry;
-  });
-  removeEmptyFieldsInPlace(task);
-
-  return Promise.all([
-    firebase
-      .firestore()
-      .collection(PAYOR_TASK_COLLECTION)
-      .doc(task.id)
-      .set(task),
-    firebase
-      .firestore()
-      .collection(TASK_CHANGE_COLLECTION)
-      .doc()
-      .set(record),
-    firebase
-      .firestore()
-      .collection(AUDITOR_TASK_COLLECTION)
-      .doc(task.id)
-      .delete()
-  ]);
-}
-
-export async function saveOperatorApprovedTask(task: Task, notes?: string) {
-  const change: TaskChangeMetadata = {
-    timestamp: Date.now(),
-    by: getBestUserName(),
-    desc: TaskDecision.APPROVE_AUDIT,
-    notes
-  };
-  const record: TaskChangeRecord = {
-    ...change,
-    taskID: task.id,
-    collection: PAYOR_TASK_COLLECTION
-  };
-  task.flow = TaskDecision.APPROVE_AUDIT;
-  task.changes.push(change);
-  removeEmptyFieldsInPlace(task);
-
-  return Promise.all([
-    firebase
-      .firestore()
-      .collection(PAYOR_TASK_COLLECTION)
-      .doc(task.id)
-      .set(task),
-    firebase
-      .firestore()
-      .collection(TASK_CHANGE_COLLECTION)
-      .doc()
-      .set(record),
-    firebase
-      .firestore()
-      .collection(OPERATOR_TASK_COLLECTION)
-      .doc(task.id)
-      .delete()
-  ]);
-}
-
-export async function saveOperatorRejectedTask(task: Task, notes?: string) {
-  const change: TaskChangeMetadata = {
-    timestamp: Date.now(),
-    by: getBestUserName(),
-    desc: TaskDecision.TASK_REJECTED,
-    notes
-  };
-  const record: TaskChangeRecord = {
-    ...change,
-    taskID: task.id,
-    collection: REJECTED_TASK_COLLECTION
-  };
-  task.flow = TaskDecision.TASK_REJECTED;
-  task.changes.push(change);
-  removeEmptyFieldsInPlace(task);
-
-  return Promise.all([
-    firebase
-      .firestore()
-      .collection(REJECTED_TASK_COLLECTION)
-      .doc(task.id)
-      .set(task),
-    firebase
-      .firestore()
-      .collection(TASK_CHANGE_COLLECTION)
-      .doc()
-      .set(record),
-    firebase
-      .firestore()
-      .collection(OPERATOR_TASK_COLLECTION)
-      .doc(task.id)
-      .delete()
-  ]);
-}
-
-export async function savePaymentCompletedTask(task: Task, notes?: string) {
-  const change: TaskChangeMetadata = {
-    timestamp: Date.now(),
-    by: getBestUserName(),
-    desc: TaskDecision.PAYMENT_COMPLETE,
-    notes
-  };
-  const record: TaskChangeRecord = {
-    ...change,
-    taskID: task.id,
-    collection: PAYMENT_COMPLETE_TASK_COLLECTION
-  };
-  task.flow = TaskDecision.PAYMENT_COMPLETE;
-  task.changes.push(change);
-  removeEmptyFieldsInPlace(task);
-
-  return Promise.all([
-    firebase
-      .firestore()
-      .collection(PAYMENT_COMPLETE_TASK_COLLECTION)
-      .doc(task.id)
-      .set(task),
-    firebase
-      .firestore()
-      .collection(TASK_CHANGE_COLLECTION)
-      .doc()
-      .set(record),
-    firebase
-      .firestore()
-      .collection(PAYOR_TASK_COLLECTION)
-      .doc(task.id)
-      .delete()
+      .set(change)
   ]);
 }
 
@@ -272,37 +90,32 @@ export function getBestUserName(): string {
 }
 
 export function subscribeToTasks(
-  taskCollection: string,
+  state: TaskState,
   callback: (tasks: Task[]) => void
 ): () => void {
   return firebase
     .firestore()
-    .collection(taskCollection)
+    .collection(TASKS_COLLECTION)
+    .where("state", "==", state)
     .onSnapshot(snapshot =>
       callback(snapshot.docs.map(doc => (doc.data() as unknown) as Task))
     );
 }
 
-export async function loadAuditorTasks(): Promise<Task[]> {
-  const taskSnapshot = await firebase
+export async function getChanges(taskID: string) {
+  const changes = await firebase
     .firestore()
-    .collection(AUDITOR_TASK_COLLECTION)
+    .collection(TASK_CHANGE_COLLECTION)
+    .where("taskID", "==", taskID)
     .get();
-  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+  return changes.docs.map(d => d.data() as TaskChangeRecord);
 }
 
-export async function loadCompletedPaymentTasks(): Promise<Task[]> {
+export async function loadTasks(taskState: TaskState): Promise<Task[]> {
   const taskSnapshot = await firebase
     .firestore()
-    .collection(PAYMENT_COMPLETE_TASK_COLLECTION)
-    .get();
-  return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
-}
-
-export async function loadRejectedTasks(): Promise<Task[]> {
-  const taskSnapshot = await firebase
-    .firestore()
-    .collection(REJECTED_TASK_COLLECTION)
+    .collection(TASKS_COLLECTION)
+    .where("state", "==", taskState)
     .get();
   return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
 }

@@ -6,19 +6,19 @@ import africasTalkingOptions from "./africas-talking-options.json";
 import {
   AdminLogEvent,
   ADMIN_LOG_EVENT_COLLECTION,
-  AUDITOR_TASK_COLLECTION,
   DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
   REMOTE_CONFIG_DOC,
   RemoteConfig,
   removeEmptyFieldsInPlace,
   Task,
-  TaskChangeMetadata,
   TASK_CHANGE_COLLECTION,
   TaskChangeRecord,
   UploaderInfo,
   User,
-  UserRole
+  UserRole,
+  TaskState,
+  TASKS_COLLECTION
 } from "./sharedtypes";
 
 // You're going to need this file on your local machine.  It's stored in our
@@ -211,7 +211,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
     key: pharm.key,
     values: shuffleArray(pharm.values)
   }));
-  const change: TaskChangeMetadata = {
+  const changeTemplate = {
     timestamp: Date.now(),
     by: user.name,
     desc: `Uploaded CSV containing ${shuffledRowsByPharmacy.length} pharmacies`
@@ -222,7 +222,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
     shuffledRowsByPharmacy.map(async pharm => {
       const doc = admin
         .firestore()
-        .collection(AUDITOR_TASK_COLLECTION)
+        .collection(TASKS_COLLECTION)
         .doc();
       const patients = pharm.values.map((d: any) => ({
         patientAge: d["g2:A12 Age"],
@@ -243,16 +243,17 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
       const task: Task = {
         id: doc.id,
         batchID,
+        state: TaskState.AUDIT,
         entries: patients,
         site: {
           name: pharm.values[0]["g3:B01 Pharmacy name"]
-        },
-        changes: [change]
+        }
       };
       const record: TaskChangeRecord = {
-        ...change,
+        ...changeTemplate,
         taskID: doc.id,
-        collection: AUDITOR_TASK_COLLECTION
+        state: TaskState.AUDIT,
+        fromState: TaskState.CSV
       };
       removeEmptyFieldsInPlace(task);
       await Promise.all([

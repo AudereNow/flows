@@ -1,4 +1,4 @@
-import { UserRole } from "../sharedtypes";
+import { UserRole, TaskState } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
@@ -9,7 +9,7 @@ interface CustomPanelConfig extends TabConfig {
 }
 
 interface TaskConfig extends TabConfig {
-  taskCollection: string;
+  taskState: TaskState;
   taskListComponent: string;
   detailsComponent: string;
 }
@@ -31,13 +31,13 @@ export const defaultConfig: AppConfig = {
       roles: [UserRole.AUDITOR]
     },
     Payor: {
-      taskCollection: "payor_task",
+      taskState: TaskState.PAY,
       taskListComponent: "PayorTask",
       detailsComponent: "PayorTask",
       roles: [UserRole.PAYOR]
     },
     Operator: {
-      taskCollection: "operator_task",
+      taskState: TaskState.FOLLOWUP,
       taskListComponent: "OperatorTask",
       detailsComponent: "OperatorTask",
       roles: [UserRole.OPERATOR]

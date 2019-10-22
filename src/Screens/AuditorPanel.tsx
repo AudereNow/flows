@@ -15,14 +15,12 @@ import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
+import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import {
-  declineAudit,
+  changeTaskState,
   formatCurrency,
-  loadAuditorTasks,
-  loadCompletedPaymentTasks,
-  loadRejectedTasks,
-  saveAuditorApprovedTask
+  loadTasks,
+  getChanges
 } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
@@ -34,6 +32,7 @@ const MIN_SAMPLES = 1;
 type Props = {};
 type State = {
   tasks: Task[];
+  changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
   allTasks: Task[];
   notes: string;
@@ -55,6 +54,7 @@ enum FilterType {
 class AuditorPanel extends React.Component<Props, State> {
   state: State = {
     tasks: [],
+    changes: [],
     selectedTaskIndex: -1,
     allTasks: [],
     notes: "",
@@ -70,25 +70,27 @@ class AuditorPanel extends React.Component<Props, State> {
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   async componentDidMount() {
-    this._setupTaskList();
+    await this._setupTaskList();
   }
 
   _setupTaskList = async () => {
     let tasks;
     switch (this.filterType) {
       case FilterType.TODO:
-        tasks = await loadAuditorTasks();
+        tasks = await loadTasks(TaskState.AUDIT);
         break;
       case FilterType.COMPLETED:
-        tasks = await loadCompletedPaymentTasks();
+        tasks = await loadTasks(TaskState.COMPLETED);
         break;
       case FilterType.REJECTED:
-        tasks = await loadRejectedTasks();
+        tasks = await loadTasks(TaskState.REJECTED);
         break;
     }
     if (tasks) {
+      const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
       this.setState({
         tasks,
+        changes,
         allTasks: tasks,
         selectedTaskIndex: -1,
         numSamples: 0
@@ -138,17 +140,24 @@ class AuditorPanel extends React.Component<Props, State> {
   };
 
   _onApprove = async () => {
-    await saveAuditorApprovedTask(
-      this.state.tasks[this.state.selectedTaskIndex],
-      this.state.notes,
-      this.state.numSamples
-    );
+    const task = this.state.tasks[this.state.selectedTaskIndex];
+    task.entries = task.entries.map((entry, index) => {
+      if (index < this.state.numSamples) {
+        return {
+          ...entry,
+          reviewed: true
+        };
+      }
+      return entry;
+    });
+
+    await changeTaskState(task, TaskState.PAY, this.state.notes);
     this._removeSelectedTask();
   };
 
   _onDecline = async () => {
     const task = this.state.tasks[this.state.selectedTaskIndex];
-    await declineAudit(task, this.state.notes);
+    await changeTaskState(task, TaskState.FOLLOWUP, this.state.notes);
     this._removeSelectedTask();
   };
 
@@ -241,7 +250,7 @@ class AuditorPanel extends React.Component<Props, State> {
     this._setSearchTermDetails(input);
   };
 
-  _renderClaimDetails = (task: Task) => {
+  _renderClaimDetails = (task: Task, changes: TaskChangeRecord[]) => {
     const { showAllEntries } = this.state;
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
@@ -271,7 +280,7 @@ class AuditorPanel extends React.Component<Props, State> {
           task.entries
             .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
-        {task.changes.map((change, index) => {
+        {changes.map((change, index) => {
           return <NotesAudit key={change.by + index} change={change} />;
         })}
         {this.filterType === FilterType.TODO && (
@@ -527,7 +536,10 @@ class AuditorPanel extends React.Component<Props, State> {
           />
         </LabelWrapper>
         {selectedTaskIndex >= 0 &&
-          this._renderClaimDetails(this.state.tasks[selectedTaskIndex])}
+          this._renderClaimDetails(
+            this.state.tasks[selectedTaskIndex],
+            this.state.changes[selectedTaskIndex]
+          )}
       </div>
     );
   }
