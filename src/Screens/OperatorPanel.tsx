@@ -93,6 +93,7 @@ export class OperatorDetails extends React.Component<Props, State> {
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: this.props.task.site.name }} />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
+        <div className="mainview_actions_so_far_header">Actions so far:</div>
         {this.props.changes.map((change, index) => {
           return <NotesAudit key={change.timestamp + index} change={change} />;
         })}

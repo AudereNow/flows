@@ -142,6 +142,7 @@ export class PayorDetails extends React.Component<Props, State> {
           }}
         />
         <DataTable data={cleanedData} />
+        <div className="mainview_actions_so_far_header">Actions so far:</div>
         {this.props.changes.map((change, index) => {
           return <NotesAudit key={change.timestamp + index} change={change} />;
         })}
