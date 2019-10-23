@@ -5,9 +5,9 @@ import React, { Fragment } from "react";
 import uploadIcon from "../assets/cloud_upload.svg";
 import logo from "../assets/maishalogo.png";
 import Dropdown from "../Components/Dropdown";
-import { userRoles, getBestUserName } from "../store/corestore";
+import { userRoles, uploadCSV } from "../store/corestore";
 import "./TopBar.css";
-import { UserRole, UploaderInfo } from "../sharedtypes";
+import { UserRole } from "../sharedtypes";
 
 type State = {
   roles: UserRole[];
@@ -48,27 +48,30 @@ class TopBar extends React.Component {
       return;
     }
 
-    const filename = new Date().toISOString() + ".csv";
-    const ref = firebase
-      .storage()
-      .ref()
-      .child(`csvuploads/${filename}`);
+    const reader = new FileReader();
     const file = event.target.files[0];
-    const uploader: UploaderInfo = {
-      uploaderName: getBestUserName(),
-      uploaderID: firebase.auth().currentUser!.uid
+
+    reader.onload = this._onFileLoaded;
+    reader.onerror = e => {
+      alert(`Error reading file: ${e}`);
     };
+    reader.readAsText(file);
+  };
 
-    try {
-      await ref.put(file, {
-        contentType: file.type,
-        customMetadata: uploader
-      });
-
-      alert("File successfully uploaded!");
-      this.setState({ showFileSelector: false, selectingFile: false });
-    } catch (e) {
-      alert(e);
+  _onFileLoaded = async (e: ProgressEvent<FileReader>) => {
+    if (!e.target || !e.target.result) {
+      alert("Error reading file.  It appears empty.");
+      return;
+    }
+    const result = await uploadCSV(e.target.result);
+    if (!result.data || !(result.data.result || result.data.error)) {
+      alert("Encountered unknown error processing CSV");
+      return;
+    }
+    if (result.data.result) {
+      alert(result.data.result);
+    } else {
+      alert(result.data.error);
     }
   };
 

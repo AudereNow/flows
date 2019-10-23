@@ -147,6 +147,14 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
   });
 }
 
+export async function uploadCSV(content: any) {
+  const serverUploadCSV = firebase.functions().httpsCallable("uploadCSV");
+
+  return await serverUploadCSV({
+    content
+  });
+}
+
 export function toServerTimestamp(date: Date): firebase.firestore.Timestamp {
   return firebase.firestore.Timestamp.fromDate(date);
 }

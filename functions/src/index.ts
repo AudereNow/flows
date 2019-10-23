@@ -14,12 +14,12 @@ import {
   Task,
   TASK_CHANGE_COLLECTION,
   TaskChangeRecord,
-  UploaderInfo,
   User,
   UserRole,
   TaskState,
   TASKS_COLLECTION
 } from "./sharedtypes";
+import { UserRecord } from "firebase-functions/lib/providers/auth";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
@@ -131,57 +131,49 @@ async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
   };
 }
 
-exports.parseCSV = functions.storage.object().onFinalize(async object => {
-  const filePath = object.name; // File path in the bucket.
-  const contentType = object.contentType; // File content type.
-  const uploader = (object.metadata || {
-    uploaderName: "Unknown Person",
-    uploaderID: "unknown"
-  }) as UploaderInfo;
-  const user: User = {
-    name: uploader.uploaderName,
-    id: uploader.uploaderID
-  };
+function getBestUserName(user: UserRecord) {
+  return user.displayName || user.email || user.uid;
+}
 
-  if (
-    !filePath ||
-    !filePath.startsWith("csvuploads/") ||
-    contentType !== "text/csv"
-  ) {
-    return LogAdminEvent(user, `Skipping unrecognized file ${filePath}`);
-  }
-  await LogAdminEvent(user, `Processing CSV upload: ${filePath}`);
+exports.uploadCSV = functions.https.onCall(
+  async (data, context): Promise<CallResult> => {
+    const authUser = await admin.auth().getUser(context.auth!.uid);
+    const user: User = {
+      name: getBestUserName(authUser),
+      id: authUser.uid
+    };
+    if (!data.content) {
+      return { error: "Empty file uploaded" };
+    }
 
-  const stream = admin
-    .storage()
-    .bucket(object.bucket)
-    .file(filePath)
-    .createReadStream();
-  const cache: any[] = [];
+    await LogAdminEvent(user, `Processing CSV upload from ${user.name}`);
+    const cache: any[] = [];
 
-  await new Promise((res, rej) =>
-    csvtojson({ needEmitAll: true })
-      .fromStream(stream)
-      .subscribe(
-        row => {
-          cache.push(row);
-        },
-        async err => {
-          await LogAdminEvent(user, `CSV parsing error: ${err.err}`);
-          rej(err);
-        },
-        async () => {
-          try {
-            await completeCSVProcessing(cache, user);
-          } catch (e) {
-            rej(e);
-            return;
+    const result: CallResult = await new Promise((res, rej) =>
+      csvtojson({ needEmitAll: true })
+        .fromString(data.content)
+        .subscribe(
+          row => {
+            cache.push(row);
+          },
+          async err => {
+            await LogAdminEvent(user, `CSV parsing error: ${err.err}`);
+            rej({ error: err.err });
+          },
+          async () => {
+            try {
+              await completeCSVProcessing(cache, user);
+            } catch (e) {
+              rej({ error: e.err || e.message || e });
+            }
+            res({ result: `Successfully processed ${cache.length} records` });
           }
-          res();
-        }
-      )
-  );
-});
+        )
+    );
+
+    return result;
+  }
+);
 
 async function LogAdminEvent(user: User, desc: string) {
   const dateString = `${new Date().toUTCString()} ${Math.random()}`;
