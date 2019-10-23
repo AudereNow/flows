@@ -29,7 +29,10 @@ import "./MainView.css";
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 
-type Props = {};
+type Props = {
+  task: Task;
+  changes: TaskChangeRecord[];
+};
 type State = {
   tasks: Task[];
   changes: TaskChangeRecord[][];
@@ -51,7 +54,33 @@ enum FilterType {
   REJECTED = "Rejected"
 }
 
-class AuditorPanel extends React.Component<Props, State> {
+export class AuditorItem extends React.Component<{
+  task: Task;
+  isSelected: boolean;
+}> {
+  render() {
+    const { task, isSelected } = this.props;
+    const previewName =
+      "mainview_task_preview" + (isSelected ? " selected" : "");
+    const claimAmounts = task.entries.map(entry => {
+      return entry.claimedCost;
+    });
+    const claimsTotal = claimAmounts.reduce(
+      (sum, claimedCost) => sum + claimedCost
+    );
+    return (
+      <div className={previewName}>
+        <div className="mainview_preview_header">
+          <span>{task.site.name}</span>
+          <span>{task.entries.length} Claims</span>
+        </div>
+        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
+      </div>
+    );
+  }
+}
+
+export class AuditorDetails extends React.Component<Props, State> {
   state: State = {
     tasks: [],
     changes: [],
@@ -109,26 +138,6 @@ class AuditorPanel extends React.Component<Props, State> {
         return "REJECTED CLAIMS";
     }
     return "ITEMS TO REVIEW";
-  };
-
-  _renderTaskListClaim = (task: Task, isSelected: boolean) => {
-    const previewName =
-      "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{task.site.name}</span>
-          <span>{task.entries.length} Claims</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
-    );
   };
 
   _onShowAll = () => {
@@ -250,8 +259,9 @@ class AuditorPanel extends React.Component<Props, State> {
     this._setSearchTermDetails(input);
   };
 
-  _renderClaimDetails = (task: Task, changes: TaskChangeRecord[]) => {
+  render() {
     const { showAllEntries } = this.state;
+    const { task, changes } = this.props;
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
     return (
@@ -299,7 +309,7 @@ class AuditorPanel extends React.Component<Props, State> {
         )}
       </LabelWrapper>
     );
-  };
+  }
 
   _onTaskSelect = (index: number) => {
     const numSamples = Math.max(
@@ -518,34 +528,4 @@ class AuditorPanel extends React.Component<Props, State> {
       </div>
     );
   };
-
-  render() {
-    const { selectedTaskIndex, showSearch } = this.state;
-    return (
-      <div className="mainview_content">
-        <LabelWrapper
-          label={`${this._getLabelFromFilterType()}: ${
-            this.state.tasks.length
-          }`}
-          className="mainview_tasklist"
-          renderLabelItems={this._renderLabelItems}
-        >
-          {!!showSearch && <div>{this._renderSearchPanel()}</div>}
-          <TaskList
-            onSelect={this._onTaskSelect}
-            tasks={this.state.tasks}
-            renderItem={this._renderTaskListClaim}
-            selectedItem={selectedTaskIndex}
-          />
-        </LabelWrapper>
-        {selectedTaskIndex >= 0 &&
-          this._renderClaimDetails(
-            this.state.tasks[selectedTaskIndex],
-            this.state.changes[selectedTaskIndex]
-          )}
-      </div>
-    );
-  }
 }
-
-export default AuditorPanel;

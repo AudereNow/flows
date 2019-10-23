@@ -12,6 +12,7 @@ interface TaskConfig extends TabConfig {
   taskState: TaskState;
   taskListComponent: string;
   detailsComponent: string;
+  listLabel: string;
 }
 
 export interface AppConfig {
@@ -27,19 +28,24 @@ export function isCustomPanel(config: TabConfig): config is CustomPanelConfig {
 export const defaultConfig: AppConfig = {
   tabs: {
     Auditor: {
-      panelComponent: "AuditTask",
+      taskState: TaskState.AUDIT,
+      taskListComponent: "AuditTask",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR]
     },
     Payor: {
       taskState: TaskState.PAY,
       taskListComponent: "PayorTask",
       detailsComponent: "PayorTask",
+      listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.PAYOR]
     },
     Operator: {
       taskState: TaskState.FOLLOWUP,
       taskListComponent: "OperatorTask",
       detailsComponent: "OperatorTask",
+      listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR]
     },
     Admin: {
