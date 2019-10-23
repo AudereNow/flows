@@ -82,7 +82,10 @@ export default class TaskPanel extends React.Component<Props, State> {
     const { selectedTaskIndex } = this.state;
     return (
       <div className="mainview_content">
-        <LabelWrapper label="ITEMS TO REVIEW" className="mainview_tasklist">
+        <LabelWrapper
+          label={`ITEMS TO REVIEW: ${this.state.tasks.length}`}
+          className="mainview_tasklist"
+        >
           <TaskList
             onSelect={this._onTaskSelect}
             tasks={this.state.tasks}

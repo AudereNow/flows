@@ -524,7 +524,9 @@ class AuditorPanel extends React.Component<Props, State> {
     return (
       <div className="mainview_content">
         <LabelWrapper
-          label={this._getLabelFromFilterType()}
+          label={`${this._getLabelFromFilterType()}: ${
+            this.state.tasks.length
+          }`}
           className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
         >
