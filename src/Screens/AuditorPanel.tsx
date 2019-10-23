@@ -1,26 +1,19 @@
 import { json2csv } from "json-2-csv";
 import { Moment } from "moment";
-import React, { Fragment } from "react";
+import React from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
-import filterIcon from "../assets/filter.svg";
 import Button from "../Components/Button";
 import "../Components/DateRangePickerOverride.css";
-import DropDown from "../Components/Dropdown";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
-import {
-  changeTaskState,
-  formatCurrency,
-  loadTasks,
-  getChanges
-} from "../store/corestore";
+import { changeTaskState, formatCurrency } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
@@ -47,12 +40,6 @@ type State = {
   searchDates: DateRange;
   showSearch: boolean;
 };
-
-enum FilterType {
-  TODO = "Todo",
-  COMPLETED = "Completed",
-  REJECTED = "Rejected"
-}
 
 export class AuditorItem extends React.Component<{
   task: Task;
@@ -95,50 +82,7 @@ export class AuditorDetails extends React.Component<Props, State> {
     showSearch: false,
     focusedInput: null
   };
-  filterType: FilterType = FilterType.TODO;
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-
-  async componentDidMount() {
-    await this._setupTaskList();
-  }
-
-  _setupTaskList = async () => {
-    let tasks;
-    switch (this.filterType) {
-      case FilterType.TODO:
-        tasks = await loadTasks(TaskState.AUDIT);
-        break;
-      case FilterType.COMPLETED:
-        tasks = await loadTasks(TaskState.COMPLETED);
-        break;
-      case FilterType.REJECTED:
-        tasks = await loadTasks(TaskState.REJECTED);
-        break;
-    }
-    if (tasks) {
-      const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-      this.setState({
-        tasks,
-        changes,
-        allTasks: tasks,
-        selectedTaskIndex: -1,
-        numSamples: 0
-      });
-      if (tasks.length > 0) {
-        this._onTaskSelect(0);
-      }
-    }
-  };
-
-  _getLabelFromFilterType = (): string => {
-    switch (this.filterType) {
-      case FilterType.COMPLETED:
-        return "COMPLETED PAYMENTS";
-      case FilterType.REJECTED:
-        return "REJECTED CLAIMS";
-    }
-    return "ITEMS TO REVIEW";
-  };
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
@@ -365,11 +309,6 @@ export class AuditorDetails extends React.Component<Props, State> {
     );
   }, 500);
 
-  _handleFilterUpdate = (filterItem: string) => {
-    this.filterType = filterItem as FilterType;
-    this._setupTaskList();
-  };
-
   _handleSearchDatesChange = (searchDates: DateRange) => {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
@@ -398,47 +337,8 @@ export class AuditorDetails extends React.Component<Props, State> {
     });
   };
 
-  _onFilterItemClick = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
-    const filterItem = event.currentTarget.getAttribute("data-name");
-    if (filterItem === null) {
-      return;
-    }
-    this._handleFilterUpdate(filterItem);
-  };
-
   _onSearchClick = () => {
     this.setState({ showSearch: !this.state.showSearch });
-  };
-
-  _renderLabelItems = () => {
-    const filterTypes = [
-      FilterType.TODO,
-      FilterType.COMPLETED,
-      FilterType.REJECTED
-    ];
-    return (
-      <Fragment>
-        <div className="labelwrapper_header_icon" onClick={this._onSearchClick}>
-          &nbsp;&#x1F50E;
-        </div>
-        <div className="labelwrapper_header_icon">
-          <DropDown labelURI={filterIcon}>
-            {filterTypes.map(item => (
-              <div
-                key={item}
-                className="labelwrapper_dropdown_text"
-                data-name={item}
-                onClick={this._onFilterItemClick}
-              >
-                {item}
-              </div>
-            ))}
-          </DropDown>
-        </div>
-      </Fragment>
-    );
   };
 
   _onFocusChange = (focusedInput: FocusedInputShape | null) => {
