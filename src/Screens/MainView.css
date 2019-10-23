@@ -76,3 +76,11 @@
   margin: 5px;
   font-weight: bold;
 }
+
+.mainview_fullscreen_loader {
+  position: fixed;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}

@@ -9,17 +9,23 @@ import { userRoles, uploadCSV } from "../store/corestore";
 import "./TopBar.css";
 import { UserRole } from "../sharedtypes";
 
+type Props = {
+  onLoadingChanged: (loading: boolean) => void;
+};
+
 type State = {
   roles: UserRole[];
   showFileSelector: boolean;
   selectingFile: boolean;
+  uploading: boolean;
 };
 
-class TopBar extends React.Component {
+class TopBar extends React.Component<Props, State> {
   state: State = {
     roles: [],
     showFileSelector: false,
-    selectingFile: false
+    selectingFile: false,
+    uploading: false
   };
 
   async componentDidMount() {
@@ -48,6 +54,9 @@ class TopBar extends React.Component {
       return;
     }
 
+    this.setState({ selectingFile: false, uploading: true });
+    this.props.onLoadingChanged(true);
+
     const reader = new FileReader();
     const file = event.target.files[0];
 
@@ -64,6 +73,10 @@ class TopBar extends React.Component {
       return;
     }
     const result = await uploadCSV(e.target.result);
+
+    this.setState({ uploading: false });
+    this.props.onLoadingChanged(false);
+
     if (!result.data || !(result.data.result || result.data.error)) {
       alert("Encountered unknown error processing CSV");
       return;
@@ -76,7 +89,7 @@ class TopBar extends React.Component {
   };
 
   render() {
-    const { roles, showFileSelector } = this.state;
+    const { roles, showFileSelector, uploading } = this.state;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
         <div className="topbar_row" onClick={this._onUploadIconClick}>
