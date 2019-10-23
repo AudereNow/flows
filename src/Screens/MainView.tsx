@@ -3,9 +3,9 @@ import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
-import AuditorPanel from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
+import { AuditorItem, AuditorDetails } from "./AuditorPanel";
 import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
@@ -20,13 +20,13 @@ type State = {
 const PanelComponents: {
   [key: string]: React.ComponentClass<{}>;
 } = {
-  Admin: AdminPanel,
-  AuditTask: AuditorPanel
+  Admin: AdminPanel
 };
 
 const ItemComponents: {
   [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
 } = {
+  AuditTask: AuditorItem,
   PayorTask: PayorItem,
   OperatorTask: OperatorItem
 };
@@ -35,8 +35,10 @@ const DetailsComponents: {
   [key: string]: React.ComponentClass<{
     task: Task;
     changes: TaskChangeRecord[];
+    actionable?: boolean;
   }>;
 } = {
+  AuditTask: AuditorDetails,
   PayorTask: PayorDetails,
   OperatorTask: OperatorDetails
 };
@@ -82,6 +84,8 @@ class MainView extends React.Component<Props, State> {
                 taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
+                listLabel={tabConfig.listLabel}
+                actionable={tabConfig.actionable}
               />
             );
           }

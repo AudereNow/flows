@@ -1,27 +1,19 @@
 import { json2csv } from "json-2-csv";
 import { Moment } from "moment";
-import React, { Fragment } from "react";
+import React from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
-import filterIcon from "../assets/filter.svg";
 import Button from "../Components/Button";
 import "../Components/DateRangePickerOverride.css";
-import DropDown from "../Components/Dropdown";
 import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
-import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
-import {
-  changeTaskState,
-  formatCurrency,
-  loadTasks,
-  getChanges
-} from "../store/corestore";
+import { changeTaskState, formatCurrency } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
@@ -29,7 +21,11 @@ import "./MainView.css";
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 
-type Props = {};
+type Props = {
+  task: Task;
+  changes: TaskChangeRecord[];
+  actionable?: boolean;
+};
 type State = {
   tasks: Task[];
   changes: TaskChangeRecord[][];
@@ -45,73 +41,12 @@ type State = {
   showSearch: boolean;
 };
 
-enum FilterType {
-  TODO = "Todo",
-  COMPLETED = "Completed",
-  REJECTED = "Rejected"
-}
-
-class AuditorPanel extends React.Component<Props, State> {
-  state: State = {
-    tasks: [],
-    changes: [],
-    selectedTaskIndex: -1,
-    allTasks: [],
-    notes: "",
-    numSamples: 0,
-    searchTermGlobal: "",
-    searchTermDetails: "",
-    showAllEntries: false,
-    searchDates: { startDate: null, endDate: null },
-    showSearch: false,
-    focusedInput: null
-  };
-  filterType: FilterType = FilterType.TODO;
-  _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-
-  async componentDidMount() {
-    await this._setupTaskList();
-  }
-
-  _setupTaskList = async () => {
-    let tasks;
-    switch (this.filterType) {
-      case FilterType.TODO:
-        tasks = await loadTasks(TaskState.AUDIT);
-        break;
-      case FilterType.COMPLETED:
-        tasks = await loadTasks(TaskState.COMPLETED);
-        break;
-      case FilterType.REJECTED:
-        tasks = await loadTasks(TaskState.REJECTED);
-        break;
-    }
-    if (tasks) {
-      const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-      this.setState({
-        tasks,
-        changes,
-        allTasks: tasks,
-        selectedTaskIndex: -1,
-        numSamples: 0
-      });
-      if (tasks.length > 0) {
-        this._onTaskSelect(0);
-      }
-    }
-  };
-
-  _getLabelFromFilterType = (): string => {
-    switch (this.filterType) {
-      case FilterType.COMPLETED:
-        return "COMPLETED PAYMENTS";
-      case FilterType.REJECTED:
-        return "REJECTED CLAIMS";
-    }
-    return "ITEMS TO REVIEW";
-  };
-
-  _renderTaskListClaim = (task: Task, isSelected: boolean) => {
+export class AuditorItem extends React.Component<{
+  task: Task;
+  isSelected: boolean;
+}> {
+  render() {
+    const { task, isSelected } = this.props;
     const previewName =
       "mainview_task_preview" + (isSelected ? " selected" : "");
     const claimAmounts = task.entries.map(entry => {
@@ -129,7 +64,25 @@ class AuditorPanel extends React.Component<Props, State> {
         <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
       </div>
     );
+  }
+}
+
+export class AuditorDetails extends React.Component<Props, State> {
+  state: State = {
+    tasks: [],
+    changes: [],
+    selectedTaskIndex: -1,
+    allTasks: [],
+    notes: "",
+    numSamples: 0,
+    searchTermGlobal: "",
+    searchTermDetails: "",
+    showAllEntries: false,
+    searchDates: { startDate: null, endDate: null },
+    showSearch: false,
+    focusedInput: null
   };
+  _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
@@ -250,10 +203,13 @@ class AuditorPanel extends React.Component<Props, State> {
     this._setSearchTermDetails(input);
   };
 
-  _renderClaimDetails = (task: Task, changes: TaskChangeRecord[]) => {
+  render() {
     const { showAllEntries } = this.state;
+    const { task, changes } = this.props;
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
+    const actionable =
+      this.props.actionable !== undefined ? this.props.actionable : true;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <div className="mainview_spaced_row">
@@ -284,14 +240,14 @@ class AuditorPanel extends React.Component<Props, State> {
         {changes.map((change, index) => {
           return <NotesAudit key={change.by + index} change={change} />;
         })}
-        {this.filterType === FilterType.TODO && (
+        {actionable && (
           <LabelTextInput
             onTextChange={this._onNotesChanged}
             label={"Notes"}
             value={this.state.notes}
           />
         )}
-        {this.filterType === FilterType.TODO && (
+        {actionable && (
           <div className="mainview_button_row">
             <Button label="Decline" onClick={this._onDecline} />
             <Button label="Approve" onClick={this._onApprove} />
@@ -299,7 +255,7 @@ class AuditorPanel extends React.Component<Props, State> {
         )}
       </LabelWrapper>
     );
-  };
+  }
 
   _onTaskSelect = (index: number) => {
     const numSamples = Math.max(
@@ -353,11 +309,6 @@ class AuditorPanel extends React.Component<Props, State> {
     );
   }, 500);
 
-  _handleFilterUpdate = (filterItem: string) => {
-    this.filterType = filterItem as FilterType;
-    this._setupTaskList();
-  };
-
   _handleSearchDatesChange = (searchDates: DateRange) => {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
@@ -386,47 +337,8 @@ class AuditorPanel extends React.Component<Props, State> {
     });
   };
 
-  _onFilterItemClick = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
-    const filterItem = event.currentTarget.getAttribute("data-name");
-    if (filterItem === null) {
-      return;
-    }
-    this._handleFilterUpdate(filterItem);
-  };
-
   _onSearchClick = () => {
     this.setState({ showSearch: !this.state.showSearch });
-  };
-
-  _renderLabelItems = () => {
-    const filterTypes = [
-      FilterType.TODO,
-      FilterType.COMPLETED,
-      FilterType.REJECTED
-    ];
-    return (
-      <Fragment>
-        <div className="labelwrapper_header_icon" onClick={this._onSearchClick}>
-          &nbsp;&#x1F50E;
-        </div>
-        <div className="labelwrapper_header_icon">
-          <DropDown labelURI={filterIcon}>
-            {filterTypes.map(item => (
-              <div
-                key={item}
-                className="labelwrapper_dropdown_text"
-                data-name={item}
-                onClick={this._onFilterItemClick}
-              >
-                {item}
-              </div>
-            ))}
-          </DropDown>
-        </div>
-      </Fragment>
-    );
   };
 
   _onFocusChange = (focusedInput: FocusedInputShape | null) => {
@@ -518,34 +430,4 @@ class AuditorPanel extends React.Component<Props, State> {
       </div>
     );
   };
-
-  render() {
-    const { selectedTaskIndex, showSearch } = this.state;
-    return (
-      <div className="mainview_content">
-        <LabelWrapper
-          label={`${this._getLabelFromFilterType()}: ${
-            this.state.tasks.length
-          }`}
-          className="mainview_tasklist"
-          renderLabelItems={this._renderLabelItems}
-        >
-          {!!showSearch && <div>{this._renderSearchPanel()}</div>}
-          <TaskList
-            onSelect={this._onTaskSelect}
-            tasks={this.state.tasks}
-            renderItem={this._renderTaskListClaim}
-            selectedItem={selectedTaskIndex}
-          />
-        </LabelWrapper>
-        {selectedTaskIndex >= 0 &&
-          this._renderClaimDetails(
-            this.state.tasks[selectedTaskIndex],
-            this.state.changes[selectedTaskIndex]
-          )}
-      </div>
-    );
-  }
 }
-
-export default AuditorPanel;
