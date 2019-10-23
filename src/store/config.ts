@@ -35,22 +35,6 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR]
     },
-    Rejected: {
-      taskState: TaskState.REJECTED,
-      taskListComponent: "AuditTask",
-      detailsComponent: "AuditTask",
-      listLabel: "ITEMS TO REVIEW",
-      actionable: false,
-      roles: [UserRole.AUDITOR]
-    },
-    Complete: {
-      taskState: TaskState.COMPLETED,
-      taskListComponent: "AuditTask",
-      detailsComponent: "AuditTask",
-      listLabel: "ITEMS TO REVIEW",
-      actionable: false,
-      roles: [UserRole.AUDITOR]
-    },
     Payor: {
       taskState: TaskState.PAY,
       taskListComponent: "PayorTask",
@@ -64,6 +48,22 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR]
+    },
+    Rejected: {
+      taskState: TaskState.REJECTED,
+      taskListComponent: "AuditTask",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS",
+      actionable: false,
+      roles: [UserRole.AUDITOR]
+    },
+    Complete: {
+      taskState: TaskState.COMPLETED,
+      taskListComponent: "AuditTask",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS",
+      actionable: false,
+      roles: [UserRole.AUDITOR]
     },
     Admin: {
       panelComponent: "Admin",
