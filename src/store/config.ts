@@ -13,6 +13,7 @@ interface TaskConfig extends TabConfig {
   taskListComponent: string;
   detailsComponent: string;
   listLabel: string;
+  actionable?: boolean;
 }
 
 export interface AppConfig {
@@ -32,6 +33,22 @@ export const defaultConfig: AppConfig = {
       taskListComponent: "AuditTask",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
+      roles: [UserRole.AUDITOR]
+    },
+    Rejected: {
+      taskState: TaskState.REJECTED,
+      taskListComponent: "AuditTask",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS TO REVIEW",
+      actionable: false,
+      roles: [UserRole.AUDITOR]
+    },
+    Complete: {
+      taskState: TaskState.COMPLETED,
+      taskListComponent: "AuditTask",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS TO REVIEW",
+      actionable: false,
       roles: [UserRole.AUDITOR]
     },
     Payor: {

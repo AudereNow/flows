@@ -13,7 +13,6 @@ import ImageRow from "../Components/ImageRow";
 import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
 import NotesAudit from "../Components/NotesAudit";
-import TaskList from "../Components/TaskList";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import {
@@ -32,6 +31,7 @@ const MIN_SAMPLES = 1;
 type Props = {
   task: Task;
   changes: TaskChangeRecord[];
+  actionable?: boolean;
 };
 type State = {
   tasks: Task[];
@@ -264,6 +264,8 @@ export class AuditorDetails extends React.Component<Props, State> {
     const { task, changes } = this.props;
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
+    const actionable =
+      this.props.actionable !== undefined ? this.props.actionable : true;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <div className="mainview_spaced_row">
@@ -294,14 +296,14 @@ export class AuditorDetails extends React.Component<Props, State> {
         {changes.map((change, index) => {
           return <NotesAudit key={change.by + index} change={change} />;
         })}
-        {this.filterType === FilterType.TODO && (
+        {actionable && (
           <LabelTextInput
             onTextChange={this._onNotesChanged}
             label={"Notes"}
             value={this.state.notes}
           />
         )}
-        {this.filterType === FilterType.TODO && (
+        {actionable && (
           <div className="mainview_button_row">
             <Button label="Decline" onClick={this._onDecline} />
             <Button label="Approve" onClick={this._onApprove} />

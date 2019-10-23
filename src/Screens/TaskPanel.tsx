@@ -19,7 +19,9 @@ type Props = {
   detailsComponent: React.ComponentClass<{
     task: Task;
     changes: TaskChangeRecord[];
+    actionable?: boolean;
   }>;
+  actionable?: boolean;
 };
 
 type State = {
@@ -296,6 +298,7 @@ export default class TaskPanel extends React.Component<Props, State> {
             <this.props.detailsComponent
               task={this.state.tasks[selectedTaskIndex]}
               changes={this.state.changes[selectedTaskIndex]}
+              actionable={this.props.actionable}
             />
           )}
         </div>

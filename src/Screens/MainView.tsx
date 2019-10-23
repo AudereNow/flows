@@ -35,6 +35,7 @@ const DetailsComponents: {
   [key: string]: React.ComponentClass<{
     task: Task;
     changes: TaskChangeRecord[];
+    actionable?: boolean;
   }>;
 } = {
   AuditTask: AuditorDetails,
@@ -84,6 +85,7 @@ class MainView extends React.Component<Props, State> {
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
+                actionable={tabConfig.actionable}
               />
             );
           }
