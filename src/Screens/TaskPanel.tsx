@@ -299,6 +299,7 @@ export default class TaskPanel extends React.Component<Props, State> {
               task={this.state.tasks[selectedTaskIndex]}
               changes={this.state.changes[selectedTaskIndex]}
               actionable={this.props.actionable}
+              key={this.state.tasks[selectedTaskIndex].id}
             />
           )}
         </div>
