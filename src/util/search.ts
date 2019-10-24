@@ -17,23 +17,21 @@ export const containsSearchTerm = (
   let searchKey;
   if (searchPhrase.includes(":")) {
     const searchArr = searchPhrase.split(":");
-    searchKey = searchArr[0].trim().toLowerCase();
+    searchKey = searchArr[0].trim();
     searchPhrase = searchArr[1];
   }
-  searchPhrase = searchPhrase.trim().toLowerCase();
+  searchPhrase = searchPhrase.trim();
   if (searchPhrase.length === 0) {
     return false;
   }
   for (let i = 0; i < keys.length; i++) {
     const value = entry[keys[i]];
     if (
-      ((!!searchKey && keys[i].toLowerCase().includes(searchKey)) ||
-        !searchKey) &&
+      ((!!searchKey && keys[i].includes(searchKey)) || !searchKey) &&
       (!!value &&
         value
           .toString()
           .trim()
-          .toLowerCase()
           .includes(searchPhrase))
     ) {
       return true;

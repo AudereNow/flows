@@ -22,6 +22,7 @@ type Props = {
   actionable?: boolean;
   notesux: ReactNode;
   notes: string;
+  searchTermGlobal?: string;
 };
 type State = {
   focusedInput: FocusedInputShape | null;
@@ -91,6 +92,7 @@ export class AuditorDetails extends React.Component<Props, State> {
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
     const { searchTermDetails } = this.state;
+    const { searchTermGlobal } = this.props;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -112,13 +114,16 @@ export class AuditorDetails extends React.Component<Props, State> {
 
     return (
       <LabelWrapper key={entry.patientID + patient}>
-        <TextItem data={{ Date: date }} />
+        <TextItem data={{ Date: date }} searchTermGlobal={searchTermGlobal} />
         <TextItem
-          data={{
-            Patient: patient
-          }}
+          data={{ Patient: patient }}
+          searchTermGlobal={searchTermGlobal}
         />
-        <ImageRow images={this._extractImages(entry)} />
+
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          images={this._extractImages(entry)}
+        />
       </LabelWrapper>
     );
   };
@@ -135,16 +140,23 @@ export class AuditorDetails extends React.Component<Props, State> {
   };
 
   render() {
-    const { showAllEntries } = this.state;
-    const { notesux, task } = this.props;
+    const showAllEntries =
+      !!this.props.searchTermGlobal || this.state.showAllEntries;
+    const { task, searchTermGlobal, notesux } = this.props;
+
     const samples = task.entries.slice(0, this._numSamples());
     const remaining = task.entries.length - this._numSamples();
     const actionable =
       this.props.actionable !== undefined ? this.props.actionable : true;
+
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <div className="mainview_spaced_row">
-          <TextItem data={{ Pharmacy: task.site.name }} />
+          <TextItem
+            data={{ Pharmacy: task.site.name }}
+            searchTermGlobal={searchTermGlobal}
+          />
+
           <input
             type="text"
             onChange={this._handleSearchTermDetailsChange}

@@ -1,8 +1,10 @@
 .textitem_container {
+  display: flex;
   flex-direction: "row";
   margin: 5px;
 }
 
 .textitem_key {
   font-weight: bold;
+  margin-right: 5px;
 }

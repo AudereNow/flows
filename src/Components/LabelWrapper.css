@@ -34,6 +34,7 @@
   cursor: pointer;
   height: 24px;
   width: 24px;
+  margin: 3px;
 }
 
 .labelwrapper_labelitems_container {

@@ -18,6 +18,7 @@ type Props = {
   task: Task;
   notesux: ReactNode;
   notes: string;
+  searchTermGlobal?: string;
 };
 
 type State = {
@@ -100,7 +101,7 @@ export class PayorDetails extends React.Component<Props, State> {
 
   render() {
     const { paying, realPayments } = this.state;
-    const { notesux, task } = this.props;
+    const { notesux, task, searchTermGlobal } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
     const payLabel = realPayments
       ? paying
@@ -122,8 +123,14 @@ export class PayorDetails extends React.Component<Props, State> {
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: task.site.name }} />
-        {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
+        {!!task.site.phone && (
+          <TextItem
+            data={{ Phone: task.site.phone }}
+            searchTermGlobal={searchTermGlobal}
+          />
+        )}
         <TextItem
+          searchTermGlobal={searchTermGlobal}
           data={{
             "Total Reimbursement": formatCurrency(claimsTotal)
           }}

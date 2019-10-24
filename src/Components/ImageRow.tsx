@@ -1,9 +1,11 @@
 import React from "react";
+import HighlightText from "./HighlightText";
 import "./ImageRow.css";
 import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
+  searchTermGlobal?: string;
 }
 
 interface ImageData {
@@ -22,7 +24,13 @@ const ImageRow = (props: Props) => {
           return (
             <div key={url + index} className="imagerow_item">
               <ZoomableImage src={url} alt={url} />
-              {!!label && <span className="imagerow_label">{label}</span>}
+              {!!label && (
+                <HighlightText
+                  className="imagerow_label"
+                  text={label}
+                  searchTerm={props.searchTermGlobal}
+                />
+              )}
             </div>
           );
         })}

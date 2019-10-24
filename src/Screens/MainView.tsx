@@ -1,17 +1,17 @@
 import React, { ReactNode } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
+import { ListItem } from "../Components/ListItem";
+import { Task, UserRole } from "../sharedtypes";
+import { defaultConfig, isCustomPanel } from "../store/config";
 import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
+import { AuditorDetails } from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
-import { AuditorDetails } from "./AuditorPanel";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
-import { ListItem } from "../Components/ListItem";
-import { isCustomPanel, defaultConfig } from "../store/config";
-import TaskPanel from "./TaskPanel";
-import { UserRole, Task } from "../sharedtypes";
+import { default as Filters, default as TaskPanel } from "./TaskPanel";
 
 type Props = {};
 type State = {
@@ -36,6 +36,8 @@ const DetailsComponents: {
     actionable?: boolean;
     notesux: ReactNode;
     notes: string;
+    searchTermGlobal?: string;
+    filters: Filters;
   }>;
 } = {
   AuditTask: AuditorDetails,

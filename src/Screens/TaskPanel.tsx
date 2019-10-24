@@ -7,12 +7,20 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
-import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
-import { subscribeToTasks, getChanges } from "../store/corestore";
+import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
+import { defaultConfig, TaskConfig } from "../store/config";
+import { getChanges, subscribeToTasks } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
-import { TaskConfig, defaultConfig } from "../store/config";
 import "./MainView.css";
+
+export interface Filters {
+  patient?: boolean;
+  name?: boolean;
+  id?: boolean;
+  phone?: boolean;
+  item?: boolean;
+}
 
 type Props = {
   taskState: TaskState;
@@ -23,6 +31,8 @@ type Props = {
     actionable?: boolean;
     notesux: ReactNode;
     notes: string;
+    searchTermGlobal?: string;
+    filters: Filters;
   }>;
   actionable?: boolean;
 };
@@ -308,7 +318,12 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const { notes, selectedTaskIndex, showSearch } = this.state;
+    const {
+      selectedTaskIndex,
+      showSearch,
+      searchTermGlobal,
+      notes
+    } = this.state;
     const actionable =
       this.props.actionable !== undefined ? this.props.actionable : true;
     const notesux =
@@ -320,6 +335,7 @@ export default class TaskPanel extends React.Component<Props, State> {
           onNotesChanged={this._onNotesChanged}
         />
       ) : null;
+
     return (
       <div className="mainview_content">
         <LabelWrapper
@@ -344,6 +360,7 @@ export default class TaskPanel extends React.Component<Props, State> {
               notesux={notesux}
               notes={notes}
               key={this.state.tasks[selectedTaskIndex].id}
+              searchTermGlobal={searchTermGlobal}
             />
           )}
         </div>
