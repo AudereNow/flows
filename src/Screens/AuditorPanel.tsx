@@ -1,7 +1,5 @@
-import { json2csv } from "json-2-csv";
-import { Moment } from "moment";
 import React from "react";
-import { DateRangePicker, FocusedInputShape } from "react-dates";
+import { FocusedInputShape } from "react-dates";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
@@ -15,7 +13,7 @@ import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import { changeTaskState, formatCurrency } from "../store/corestore";
 import debounce from "../util/debounce";
-import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
+import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
 
 const MIN_SAMPLE_FRACTION = 0.2;
@@ -27,18 +25,11 @@ type Props = {
   actionable?: boolean;
 };
 type State = {
-  tasks: Task[];
-  changes: TaskChangeRecord[][];
-  selectedTaskIndex: number;
-  allTasks: Task[];
   notes: string;
   numSamples: number;
   focusedInput: FocusedInputShape | null;
-  searchTermGlobal: string;
   searchTermDetails: string;
   showAllEntries: boolean;
-  searchDates: DateRange;
-  showSearch: boolean;
 };
 
 export class AuditorItem extends React.Component<{
@@ -69,17 +60,10 @@ export class AuditorItem extends React.Component<{
 
 export class AuditorDetails extends React.Component<Props, State> {
   state: State = {
-    tasks: [],
-    changes: [],
-    selectedTaskIndex: -1,
-    allTasks: [],
     notes: "",
     numSamples: 0,
-    searchTermGlobal: "",
     searchTermDetails: "",
     showAllEntries: false,
-    searchDates: { startDate: null, endDate: null },
-    showSearch: false,
     focusedInput: null
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -93,7 +77,7 @@ export class AuditorDetails extends React.Component<Props, State> {
   };
 
   _onApprove = async () => {
-    const task = this.state.tasks[this.state.selectedTaskIndex];
+    const { task } = this.props;
     task.entries = task.entries.map((entry, index) => {
       if (index < this.state.numSamples) {
         return {
@@ -105,38 +89,12 @@ export class AuditorDetails extends React.Component<Props, State> {
     });
 
     await changeTaskState(task, TaskState.PAY, this.state.notes);
-    this._removeSelectedTask();
   };
 
   _onDecline = async () => {
-    const task = this.state.tasks[this.state.selectedTaskIndex];
+    const { task } = this.props;
     await changeTaskState(task, TaskState.FOLLOWUP, this.state.notes);
-    this._removeSelectedTask();
   };
-
-  _removeSelectedTask() {
-    const {
-      allTasks,
-      searchDates,
-      searchTermGlobal,
-      selectedTaskIndex,
-      tasks
-    } = this.state;
-    const selectedTaskId = tasks[selectedTaskIndex].id;
-    const indexInMaster = allTasks.findIndex(task => {
-      return task.id === selectedTaskId;
-    });
-    const tasksCopy = allTasks.slice(0);
-    tasksCopy.splice(indexInMaster, 1);
-    this.setState({ allTasks: tasksCopy }, () => {
-      const tasks = this._computeFilteredTasks(searchTermGlobal, searchDates);
-      const newIndex =
-        selectedTaskIndex >= tasks.length
-          ? tasks.length - 1
-          : selectedTaskIndex;
-      this.setState({ tasks, selectedTaskIndex: newIndex });
-    });
-  }
 
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
@@ -258,176 +216,19 @@ export class AuditorDetails extends React.Component<Props, State> {
   }
 
   _onTaskSelect = (index: number) => {
+    const { task } = this.props;
     const numSamples = Math.max(
-      Math.ceil(this.state.tasks[index].entries.length * MIN_SAMPLE_FRACTION),
+      Math.ceil(task.entries.length * MIN_SAMPLE_FRACTION),
       MIN_SAMPLES
     );
     this.setState({
-      selectedTaskIndex: index,
       numSamples,
       showAllEntries: false,
       notes: ""
     });
   };
 
-  _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
-    return this.state.allTasks.filter(task => {
-      return (
-        (containsSearchTerm(searchTerm, task.site) ||
-          task.entries.some(entry => {
-            return containsSearchTerm(searchTerm, entry);
-          })) &&
-        task.entries.some(entry => {
-          return withinDateRange(dateRange, entry);
-        })
-      );
-    });
-  };
-
-  _handleSearchTermGlobalChange = debounce((searchTerm: string) => {
-    const { selectedTaskIndex, tasks } = this.state;
-    const selectedId =
-      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
-    const filteredTasks = this._computeFilteredTasks(
-      searchTerm,
-      this.state.searchDates
-    );
-    const selectedIndex = filteredTasks.findIndex(task => {
-      return task.id === selectedId;
-    });
-    this.setState(
-      {
-        tasks: filteredTasks,
-        searchTermGlobal: searchTerm,
-        selectedTaskIndex: selectedIndex
-      },
-      () => {
-        if (selectedIndex === -1 && filteredTasks.length > 0) {
-          this._onTaskSelect(0);
-        }
-      }
-    );
-  }, 500);
-
-  _handleSearchDatesChange = (searchDates: DateRange) => {
-    const { selectedTaskIndex, tasks } = this.state;
-    const selectedId =
-      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
-    const filteredTasks = this._computeFilteredTasks(
-      this.state.searchTermGlobal,
-      searchDates
-    );
-    const selectedIndex = filteredTasks.findIndex(task => {
-      return task.id === selectedId;
-    });
-
-    this.setState({
-      searchDates,
-      tasks: filteredTasks,
-      selectedTaskIndex: selectedIndex
-    });
-  };
-
-  _clearSearch = () => {
-    const { allTasks } = this.state;
-    this._inputRef.current!.value = "";
-    this.setState({
-      searchDates: { startDate: null, endDate: null },
-      tasks: allTasks
-    });
-  };
-
-  _onSearchClick = () => {
-    this.setState({ showSearch: !this.state.showSearch });
-  };
-
   _onFocusChange = (focusedInput: FocusedInputShape | null) => {
     this.setState({ focusedInput });
-  };
-
-  _onDatesChange = ({
-    startDate,
-    endDate
-  }: {
-    startDate: Moment | null;
-    endDate: Moment | null;
-  }) => {
-    this._handleSearchDatesChange({ startDate, endDate });
-  };
-
-  _onSearchTermChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let input = event.target.value;
-    this._handleSearchTermGlobalChange(input);
-  };
-
-  _downloadCSV = () => {
-    const { tasks } = this.state;
-
-    if (tasks.length === 0) {
-      alert("There are no tasks to download! Please adjust your search.");
-    }
-    const fileName = tasks[0].site.name + "-" + tasks[0].id;
-    let rows: any[] = [];
-    const json2csvOptions = { checkSchemaDifferences: true };
-    tasks.forEach(task => {
-      task.entries.forEach(entry => {
-        let entryCopy = Object.assign(
-          { id: task.id, siteName: task.site.name },
-          entry
-        );
-
-        rows.push(entryCopy);
-      });
-    });
-
-    json2csv(
-      rows,
-      (err, csv) => {
-        if (!csv || err) {
-          alert("Something went wrong when trying to download your csv");
-        }
-
-        const dataString = "data:text/csv;charset=utf-8," + csv;
-        const encodedURI = encodeURI(dataString);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedURI);
-        link.setAttribute("download", `${fileName}.csv`);
-        link.click();
-      },
-      json2csvOptions
-    );
-  };
-
-  _renderSearchPanel = () => {
-    const { focusedInput, searchDates } = this.state;
-    return (
-      <div className="mainview_search_container">
-        <DateRangePicker
-          startDate={searchDates.startDate}
-          startDateId={"startDate"}
-          endDate={searchDates.endDate}
-          endDateId={"endDate"}
-          onDatesChange={this._onDatesChange}
-          focusedInput={focusedInput}
-          onFocusChange={this._onFocusChange}
-          isOutsideRange={() => false}
-          regular={true}
-        />
-        <div className="labelwrapper_row">
-          <input
-            ref={this._inputRef}
-            type="text"
-            onChange={this._onSearchTermChange}
-            placeholder="Search"
-          />
-          <Button
-            className="mainview_clear_search_button"
-            label="Clear Search"
-            onClick={this._clearSearch}
-          />
-          <Button label={"Download CSV"} onClick={this._downloadCSV} />
-        </div>
-      </div>
-    );
   };
 }
