@@ -1,10 +1,8 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
-import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
-import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import { formatCurrency, changeTaskState } from "../store/corestore";
@@ -12,37 +10,21 @@ import "./MainView.css";
 
 type Props = {
   task: Task;
-  changes: TaskChangeRecord[];
-};
-type State = {
+  notesux: ReactNode;
   notes: string;
 };
 
-export class OperatorDetails extends React.Component<Props, State> {
-  state: State = {
-    notes: ""
-  };
-
-  componentDidUpdate(nextProps: Props) {
-    if (nextProps.task !== this.props.task) {
-      this.setState({ notes: "" });
-    }
-  }
-
-  _onNotesChanged = (notes: string) => {
-    this.setState({ notes });
-  };
-
+export class OperatorDetails extends React.Component<Props> {
   _onReject = async () => {
     await changeTaskState(
       this.props.task,
       TaskState.REJECTED,
-      this.state.notes
+      this.props.notes
     );
   };
 
   _onApprove = async () => {
-    await changeTaskState(this.props.task, TaskState.PAY, this.state.notes);
+    await changeTaskState(this.props.task, TaskState.PAY, this.props.notes);
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -93,15 +75,7 @@ export class OperatorDetails extends React.Component<Props, State> {
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem data={{ Pharmacy: this.props.task.site.name }} />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
-        <div className="mainview_actions_so_far_header">Actions so far:</div>
-        {this.props.changes.map((change, index) => {
-          return <NotesAudit key={change.timestamp + index} change={change} />;
-        })}
-        <LabelTextInput
-          onTextChange={this._onNotesChanged}
-          label={"Notes"}
-          value={this.state.notes}
-        />
+        {this.props.notesux}
         <div className="mainview_button_row">
           <Button label="Reject" onClick={this._onReject} />
           <Button label="Approve for Payment" onClick={this._onApprove} />

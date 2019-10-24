@@ -12,7 +12,7 @@
 }
 
 .mainview_tasklist {
-  width: 300px;
+  width: 25vw;
   display: flex;
   flex-direction: column;
 }

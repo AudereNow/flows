@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { FocusedInputShape } from "react-dates";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
@@ -6,9 +6,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import "../Components/DateRangePickerOverride.css";
 import ImageRow from "../Components/ImageRow";
-import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
-import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import { changeTaskState, formatCurrency } from "../store/corestore";
@@ -21,11 +19,11 @@ const MIN_SAMPLES = 1;
 
 type Props = {
   task: Task;
-  changes: TaskChangeRecord[];
   actionable?: boolean;
+  notesux: ReactNode;
+  notes: string;
 };
 type State = {
-  notes: string;
   focusedInput: FocusedInputShape | null;
   searchTermDetails: string;
   showAllEntries: boolean;
@@ -59,19 +57,13 @@ export class AuditorItem extends React.Component<{
 
 export class AuditorDetails extends React.Component<Props, State> {
   state: State = {
-    notes: "",
     searchTermDetails: "",
     showAllEntries: false,
     focusedInput: null
   };
-  _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
-  };
-
-  _onNotesChanged = (notes: string) => {
-    this.setState({ notes });
   };
 
   _numSamples = () => {
@@ -95,12 +87,12 @@ export class AuditorDetails extends React.Component<Props, State> {
       return entry;
     });
 
-    await changeTaskState(task, TaskState.PAY, this.state.notes);
+    await changeTaskState(task, TaskState.PAY, this.props.notes);
   };
 
   _onDecline = async () => {
     const { task } = this.props;
-    await changeTaskState(task, TaskState.FOLLOWUP, this.state.notes);
+    await changeTaskState(task, TaskState.FOLLOWUP, this.props.notes);
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -170,7 +162,7 @@ export class AuditorDetails extends React.Component<Props, State> {
 
   render() {
     const { showAllEntries } = this.state;
-    const { task, changes } = this.props;
+    const { notesux, task } = this.props;
     const samples = task.entries.slice(0, this._numSamples());
     const remaining = task.entries.length - this._numSamples();
     const actionable =
@@ -201,17 +193,7 @@ export class AuditorDetails extends React.Component<Props, State> {
           task.entries
             .slice(this._numSamples(), task.entries.length)
             .map(this._renderClaimEntryDetails)}
-        <div className="mainview_actions_so_far_header">Actions so far:</div>
-        {changes.map((change, index) => {
-          return <NotesAudit key={change.by + index} change={change} />;
-        })}
-        {actionable && (
-          <LabelTextInput
-            onTextChange={this._onNotesChanged}
-            label={"Notes"}
-            value={this.state.notes}
-          />
-        )}
+        {notesux}
         {actionable && (
           <div className="mainview_button_row">
             <Button label="Decline" onClick={this._onDecline} />

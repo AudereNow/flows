@@ -1,10 +1,8 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
-import LabelTextInput from "../Components/LabelTextInput";
 import LabelWrapper from "../Components/LabelWrapper";
-import NotesAudit from "../Components/NotesAudit";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import {
@@ -18,36 +16,25 @@ import "./MainView.css";
 
 type Props = {
   task: Task;
-  changes: TaskChangeRecord[];
+  notesux: ReactNode;
+  notes: string;
 };
 
 type State = {
   realPayments: boolean;
-  notes: string;
   paying: boolean;
 };
 
 export class PayorDetails extends React.Component<Props, State> {
   state = {
     realPayments: false,
-    notes: "",
     paying: false
   };
-
-  componentDidUpdate(nextProps: Props) {
-    if (nextProps.task !== this.props.task) {
-      this.setState({ notes: "" });
-    }
-  }
 
   async componentDidMount() {
     const realPayments = await getConfig("enableRealPayments");
     this.setState({ realPayments });
   }
-
-  _onNotesChanged = (notes: string) => {
-    this.setState({ notes });
-  };
 
   async _issuePayment(): Promise<boolean> {
     const { task } = this.props;
@@ -96,7 +83,7 @@ export class PayorDetails extends React.Component<Props, State> {
         await changeTaskState(
           this.props.task,
           TaskState.COMPLETED,
-          this.state.notes
+          this.props.notes
         );
       }
     } catch (e) {
@@ -108,12 +95,12 @@ export class PayorDetails extends React.Component<Props, State> {
 
   _onDecline = async () => {
     const { task } = this.props;
-    await changeTaskState(task, TaskState.FOLLOWUP, this.state.notes);
+    await changeTaskState(task, TaskState.FOLLOWUP, this.props.notes);
   };
 
   render() {
     const { paying, realPayments } = this.state;
-    const { task } = this.props;
+    const { notesux, task } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
     const payLabel = realPayments
       ? paying
@@ -142,15 +129,7 @@ export class PayorDetails extends React.Component<Props, State> {
           }}
         />
         <DataTable data={cleanedData} />
-        <div className="mainview_actions_so_far_header">Actions so far:</div>
-        {this.props.changes.map((change, index) => {
-          return <NotesAudit key={change.timestamp + index} change={change} />;
-        })}
-        <LabelTextInput
-          onTextChange={this._onNotesChanged}
-          label="Notes"
-          value={this.state.notes}
-        />
+        {notesux}
         <div className="mainview_button_row">
           <Button
             disabled={paying}

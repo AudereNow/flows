@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { userRoles } from "../store/corestore";
@@ -34,8 +34,9 @@ const ItemComponents: {
 const DetailsComponents: {
   [key: string]: React.ComponentClass<{
     task: Task;
-    changes: TaskChangeRecord[];
     actionable?: boolean;
+    notesux: ReactNode;
+    notes: string;
   }>;
 } = {
   AuditTask: AuditorDetails,

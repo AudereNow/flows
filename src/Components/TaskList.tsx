@@ -16,7 +16,7 @@ type Props = {
   tasks: Task[];
   renderItem: (task: Task, isSelected: boolean) => JSX.Element;
   className?: string;
-  onSelect?: (index: number) => void;
+  onSelect?: (index: number) => boolean;
   selectedItem?: number;
 };
 
@@ -66,14 +66,17 @@ class TaskList extends React.Component<Props, State> {
     if (isNaN(index)) {
       return;
     }
+    let okToSelect = true;
     if (!!this.props.onSelect) {
-      this.props.onSelect(index);
+      okToSelect = this.props.onSelect(index);
     }
 
-    // Let this drift by without await because nothing after it depends on it
-    logActiveTaskView(this.props.tasks[index].id);
+    if (okToSelect) {
+      // Let this drift by without await because nothing after it depends on it
+      logActiveTaskView(this.props.tasks[index].id);
 
-    this.setState({ selectedIndex: index });
+      this.setState({ selectedIndex: index });
+    }
   };
 
   _isActiveTask(task: Task) {

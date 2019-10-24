@@ -1,10 +1,11 @@
 import { json2csv } from "json-2-csv";
 import moment, { Moment } from "moment";
-import React, { Fragment } from "react";
+import React, { Fragment, ReactNode } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
+import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import { subscribeToTasks, getChanges } from "../store/corestore";
@@ -19,8 +20,9 @@ type Props = {
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
   detailsComponent: React.ComponentClass<{
     task: Task;
-    changes: TaskChangeRecord[];
     actionable?: boolean;
+    notesux: ReactNode;
+    notes: string;
   }>;
   actionable?: boolean;
 };
@@ -35,6 +37,7 @@ type State = {
   searchDates: DateRange;
   searchTermGlobal: string;
   showSearch: boolean;
+  notes: string;
 };
 
 export default class TaskPanel extends React.Component<Props, State> {
@@ -46,7 +49,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     focusedInput: null,
     searchDates: { startDate: null, endDate: null },
     searchTermGlobal: "",
-    showSearch: false
+    showSearch: false,
+    notes: ""
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -95,10 +99,20 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _onTaskSelect = (index: number) => {
-    this.setState({
-      selectedTaskIndex: index,
-      selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id
-    });
+    let result = true;
+    if (this.state.notes.length > 0) {
+      result = window.confirm(
+        "You have some unsaved information for this item. OK to discard it?"
+      );
+    }
+    if (result) {
+      this.setState({
+        selectedTaskIndex: index,
+        selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id,
+        notes: ""
+      });
+    }
+    return result;
   };
 
   _renderTaskListItem = (task: Task, isSelected: boolean) => {
@@ -289,8 +303,23 @@ export default class TaskPanel extends React.Component<Props, State> {
     );
   };
 
+  _onNotesChanged = (notes: string) => {
+    this.setState({ notes });
+  };
+
   render() {
-    const { selectedTaskIndex, showSearch } = this.state;
+    const { notes, selectedTaskIndex, showSearch } = this.state;
+    const actionable =
+      this.props.actionable !== undefined ? this.props.actionable : true;
+    const notesux =
+      selectedTaskIndex >= 0 ? (
+        <Notes
+          changes={this.state.changes[selectedTaskIndex]}
+          actionable={actionable}
+          notes={notes}
+          onNotesChanged={this._onNotesChanged}
+        />
+      ) : null;
     return (
       <div className="mainview_content">
         <LabelWrapper
@@ -311,8 +340,9 @@ export default class TaskPanel extends React.Component<Props, State> {
           {selectedTaskIndex >= 0 && (
             <this.props.detailsComponent
               task={this.state.tasks[selectedTaskIndex]}
-              changes={this.state.changes[selectedTaskIndex]}
-              actionable={this.props.actionable}
+              actionable={actionable}
+              notesux={notesux}
+              notes={notes}
               key={this.state.tasks[selectedTaskIndex].id}
             />
           )}

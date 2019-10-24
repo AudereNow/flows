@@ -15,25 +15,29 @@ const Image = posed.img({
     bottom: 0,
     right: 0,
     transition,
-    flip: true
+    flip: true,
+    zIndex: 1
   },
   zoomedOut: {
     position: "static",
     width: "auto",
     height: "auto",
     transition,
-    flip: true
+    flip: true,
+    zIndex: 0
   }
 });
 
 const Frame = posed.div({
   zoomedIn: {
     applyAtStart: { display: "block" },
-    opacity: 0.7
+    opacity: 0.7,
+    zIndex: 1
   },
   zoomedOut: {
     applyAtEnd: { display: "none" },
-    opacity: 0
+    opacity: 0,
+    zIndex: 0
   }
 });
 
