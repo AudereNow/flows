@@ -122,7 +122,10 @@ export class PayorDetails extends React.Component<Props, State> {
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem data={{ Pharmacy: task.site.name }} />
+        <TextItem
+          searchTermGlobal={searchTermGlobal}
+          data={{ Pharmacy: task.site.name }}
+        />
         {!!task.site.phone && (
           <TextItem
             data={{ Phone: task.site.phone }}

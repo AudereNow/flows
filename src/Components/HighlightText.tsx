@@ -4,29 +4,22 @@ import "./HighlightText.css";
 function highlight(text: string, searchTerm: string) {
   let res = [];
 
-  let right = 0;
-  let left = 0;
-  while (right <= text.length - searchTerm.length) {
-    const currTerm = text.substring(right, right + searchTerm.length);
-    if (currTerm === searchTerm) {
-      if (left !== right) {
-        res.push(text.substring(left, right));
-      }
+  let divided = text.split(searchTerm);
+
+  for (let i = 0; i < divided.length; i++) {
+    const piece = divided[i];
+    if (piece.length > 0) {
+      res.push(piece);
+    }
+
+    if (i < divided.length - 1) {
       res.push(
-        <span key={left} className="highlight">
+        <span key={piece} className="highlight">
           {searchTerm}
         </span>
       );
-      right += searchTerm.length;
-      left = right;
     }
-    right += 1;
   }
-
-  if (left < text.length) {
-    res.push(text.substring(left));
-  }
-
   return res;
 }
 

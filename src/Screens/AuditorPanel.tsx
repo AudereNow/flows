@@ -164,7 +164,7 @@ export class AuditorDetails extends React.Component<Props, State> {
           />
         </div>
         {samples.map(this._renderClaimEntryDetails)}
-        {remaining > 0 && (
+        {remaining > 0 && !showAllEntries && (
           <div className="mainview_button_row">
             <Button
               label={
