@@ -8,18 +8,22 @@ import Dropdown from "../Components/Dropdown";
 import { userRoles, uploadCSV } from "../store/corestore";
 import "./TopBar.css";
 import { UserRole } from "../sharedtypes";
+// @ts-ignore
+import LoadingOverlay from "react-loading-overlay"; // no available type data
 
 type State = {
   roles: UserRole[];
   showFileSelector: boolean;
   selectingFile: boolean;
+  uploading: boolean;
 };
 
-class TopBar extends React.Component {
+class TopBar extends React.Component<{}, State> {
   state: State = {
     roles: [],
     showFileSelector: false,
-    selectingFile: false
+    selectingFile: false,
+    uploading: false
   };
 
   async componentDidMount() {
@@ -48,6 +52,8 @@ class TopBar extends React.Component {
       return;
     }
 
+    this.setState({ selectingFile: false, uploading: true });
+
     const reader = new FileReader();
     const file = event.target.files[0];
 
@@ -64,6 +70,9 @@ class TopBar extends React.Component {
       return;
     }
     const result = await uploadCSV(e.target.result);
+
+    this.setState({ uploading: false });
+
     if (!result.data || !(result.data.result || result.data.error)) {
       alert("Encountered unknown error processing CSV");
       return;
@@ -76,7 +85,7 @@ class TopBar extends React.Component {
   };
 
   render() {
-    const { roles, showFileSelector } = this.state;
+    const { roles, showFileSelector, uploading } = this.state;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
         <div className="topbar_row" onClick={this._onUploadIconClick}>
@@ -94,6 +103,16 @@ class TopBar extends React.Component {
         onChange={this._onFileSelected}
       />
     ) : null;
+    const overlay = uploading ? (
+      <LoadingOverlay
+        className="mainview_loading_fullscreen"
+        active={uploading}
+        spinner
+        text="Loading..."
+      />
+    ) : (
+      undefined
+    );
 
     return (
       <div className="topbar_main">
@@ -105,6 +124,7 @@ class TopBar extends React.Component {
         <div className="topbar_row">
           <Dropdown pinned={this.state.selectingFile}>
             <Fragment>
+              {overlay}
               {uploadButton}
               {uploader}
             </Fragment>
