@@ -8,10 +8,8 @@ import Dropdown from "../Components/Dropdown";
 import { userRoles, uploadCSV } from "../store/corestore";
 import "./TopBar.css";
 import { UserRole } from "../sharedtypes";
-
-type Props = {
-  onLoadingChanged: (loading: boolean) => void;
-};
+// @ts-ignore
+import LoadingOverlay from "react-loading-overlay"; // no available type data
 
 type State = {
   roles: UserRole[];
@@ -20,7 +18,7 @@ type State = {
   uploading: boolean;
 };
 
-class TopBar extends React.Component<Props, State> {
+class TopBar extends React.Component<{}, State> {
   state: State = {
     roles: [],
     showFileSelector: false,
@@ -55,7 +53,6 @@ class TopBar extends React.Component<Props, State> {
     }
 
     this.setState({ selectingFile: false, uploading: true });
-    this.props.onLoadingChanged(true);
 
     const reader = new FileReader();
     const file = event.target.files[0];
@@ -75,7 +72,6 @@ class TopBar extends React.Component<Props, State> {
     const result = await uploadCSV(e.target.result);
 
     this.setState({ uploading: false });
-    this.props.onLoadingChanged(false);
 
     if (!result.data || !(result.data.result || result.data.error)) {
       alert("Encountered unknown error processing CSV");
@@ -107,6 +103,16 @@ class TopBar extends React.Component<Props, State> {
         onChange={this._onFileSelected}
       />
     ) : null;
+    const overlay = uploading ? (
+      <LoadingOverlay
+        className="mainview_loading_fullscreen"
+        active={uploading}
+        spinner
+        text="Loading..."
+      />
+    ) : (
+      undefined
+    );
 
     return (
       <div className="topbar_main">
@@ -118,6 +124,7 @@ class TopBar extends React.Component<Props, State> {
         <div className="topbar_row">
           <Dropdown pinned={this.state.selectingFile}>
             <Fragment>
+              {overlay}
               {uploadButton}
               {uploader}
             </Fragment>
