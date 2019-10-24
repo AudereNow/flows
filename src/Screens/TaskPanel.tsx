@@ -212,7 +212,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     }
     const fileName = tasks[0].site.name + "-" + tasks[0].id;
     let rows: any[] = [];
-    const json2csvOptions = { checkSchemaDifferences: true };
+    const json2csvOptions = { checkSchemaDifferences: false };
     tasks.forEach(task => {
       task.entries.forEach(entry => {
         let entryCopy = Object.assign(
