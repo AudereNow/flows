@@ -26,7 +26,6 @@ type Props = {
 };
 type State = {
   notes: string;
-  numSamples: number;
   focusedInput: FocusedInputShape | null;
   searchTermDetails: string;
   showAllEntries: boolean;
@@ -61,7 +60,6 @@ export class AuditorItem extends React.Component<{
 export class AuditorDetails extends React.Component<Props, State> {
   state: State = {
     notes: "",
-    numSamples: 0,
     searchTermDetails: "",
     showAllEntries: false,
     focusedInput: null
@@ -76,10 +74,19 @@ export class AuditorDetails extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
+  _numSamples = () => {
+    return this.state.showAllEntries
+      ? this.props.task.entries.length
+      : Math.max(
+          Math.ceil(this.props.task.entries.length * MIN_SAMPLE_FRACTION),
+          MIN_SAMPLES
+        );
+  };
+
   _onApprove = async () => {
     const { task } = this.props;
     task.entries = task.entries.map((entry, index) => {
-      if (index < this.state.numSamples) {
+      if (index < this._numSamples()) {
         return {
           ...entry,
           reviewed: true
@@ -164,8 +171,8 @@ export class AuditorDetails extends React.Component<Props, State> {
   render() {
     const { showAllEntries } = this.state;
     const { task, changes } = this.props;
-    const samples = task.entries.slice(0, this.state.numSamples);
-    const remaining = task.entries.length - this.state.numSamples;
+    const samples = task.entries.slice(0, this._numSamples());
+    const remaining = task.entries.length - this._numSamples();
     const actionable =
       this.props.actionable !== undefined ? this.props.actionable : true;
     return (
@@ -192,7 +199,7 @@ export class AuditorDetails extends React.Component<Props, State> {
         {remaining > 0 &&
           showAllEntries &&
           task.entries
-            .slice(this.state.numSamples, task.entries.length)
+            .slice(this._numSamples(), task.entries.length)
             .map(this._renderClaimEntryDetails)}
         <div className="mainview_actions_so_far_header">Actions so far:</div>
         {changes.map((change, index) => {
@@ -214,21 +221,4 @@ export class AuditorDetails extends React.Component<Props, State> {
       </LabelWrapper>
     );
   }
-
-  _onTaskSelect = (index: number) => {
-    const { task } = this.props;
-    const numSamples = Math.max(
-      Math.ceil(task.entries.length * MIN_SAMPLE_FRACTION),
-      MIN_SAMPLES
-    );
-    this.setState({
-      numSamples,
-      showAllEntries: false,
-      notes: ""
-    });
-  };
-
-  _onFocusChange = (focusedInput: FocusedInputShape | null) => {
-    this.setState({ focusedInput });
-  };
 }
