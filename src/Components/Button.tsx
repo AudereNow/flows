@@ -1,18 +1,36 @@
 import React from "react";
 import "./Button.css";
 
-interface Props {
+interface BaseProps {
   label: string;
   className?: string;
   disabled?: boolean;
   name?: string;
-  onClick?: () => void;
+}
+
+interface KeyedCallback extends BaseProps {
+  onClick: (key: string) => void;
+  callbackKey: string;
+}
+
+interface UnkeyedCallback extends BaseProps {
+  onClick: () => void;
+}
+
+type Props = KeyedCallback | UnkeyedCallback;
+
+function hasKeyedCallback(props: Props): props is KeyedCallback {
+  return (props as KeyedCallback).callbackKey !== undefined;
 }
 
 class Button extends React.PureComponent<Props> {
   _onClick = () => {
     if (!this.props.disabled && this.props.onClick) {
-      this.props.onClick();
+      if (hasKeyedCallback(this.props)) {
+        this.props.onClick(this.props.callbackKey);
+      } else {
+        this.props.onClick();
+      }
     }
   };
 

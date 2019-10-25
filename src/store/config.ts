@@ -8,12 +8,17 @@ interface CustomPanelConfig extends TabConfig {
   panelComponent: string;
 }
 
+export interface ActionConfig {
+  label: string;
+  nextTaskState: TaskState;
+}
+
 export interface TaskConfig extends TabConfig {
   taskState: TaskState;
   taskListComponent: string;
   detailsComponent: string;
   listLabel: string;
-  actionable?: boolean;
+  actions: { [key: string]: ActionConfig };
 }
 
 export interface AppConfig {
@@ -33,6 +38,7 @@ export const defaultConfig: AppConfig = {
       taskListComponent: "AuditTask",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
+      actions: {},
       roles: [UserRole.AUDITOR]
     },
     Payor: {
@@ -40,21 +46,32 @@ export const defaultConfig: AppConfig = {
       taskListComponent: "PayorTask",
       detailsComponent: "PayorTask",
       listLabel: "ITEMS TO REVIEW",
-      roles: [UserRole.PAYOR]
+      roles: [UserRole.PAYOR],
+      actions: {
+        decline: {
+          label: "Decline Payent",
+          nextTaskState: TaskState.FOLLOWUP
+        },
+        accept: {
+          label: "Issue Payment",
+          nextTaskState: TaskState.COMPLETED
+        }
+      }
     },
     Operator: {
       taskState: TaskState.FOLLOWUP,
       taskListComponent: "OperatorTask",
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
-      roles: [UserRole.OPERATOR]
+      roles: [UserRole.OPERATOR],
+      actions: {}
     },
     Rejected: {
       taskState: TaskState.REJECTED,
       taskListComponent: "AuditTask",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
-      actionable: false,
+      actions: {},
       roles: [UserRole.AUDITOR]
     },
     Complete: {
@@ -62,7 +79,7 @@ export const defaultConfig: AppConfig = {
       taskListComponent: "AuditTask",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
-      actionable: false,
+      actions: {},
       roles: [UserRole.AUDITOR]
     },
     Admin: {

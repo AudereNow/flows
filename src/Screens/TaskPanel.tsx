@@ -8,23 +8,34 @@ import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
-import { subscribeToTasks, getChanges } from "../store/corestore";
+import {
+  changeTaskState,
+  subscribeToTasks,
+  getChanges
+} from "../store/corestore";
+import { ActionConfig } from "../store/config";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import { TaskConfig, defaultConfig } from "../store/config";
 import "./MainView.css";
 
+export interface DetailsComponentProps {
+  task: Task;
+  notesux: ReactNode;
+  notes: string;
+  actionable?: boolean;
+  registerActionCallback: (
+    key: string,
+    callback: () => Promise<boolean>
+  ) => void;
+}
+
 type Props = {
   taskState: TaskState;
   listLabel: string;
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
-  detailsComponent: React.ComponentClass<{
-    task: Task;
-    actionable?: boolean;
-    notesux: ReactNode;
-    notes: string;
-  }>;
-  actionable?: boolean;
+  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  actions: { [key: string]: ActionConfig };
 };
 
 type State = {
@@ -309,8 +320,7 @@ export default class TaskPanel extends React.Component<Props, State> {
 
   render() {
     const { notes, selectedTaskIndex, showSearch } = this.state;
-    const actionable =
-      this.props.actionable !== undefined ? this.props.actionable : true;
+    const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
         <Notes
@@ -338,16 +348,94 @@ export default class TaskPanel extends React.Component<Props, State> {
         </LabelWrapper>
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 && (
-            <this.props.detailsComponent
+            <DetailsWrapper
               task={this.state.tasks[selectedTaskIndex]}
-              actionable={actionable}
               notesux={notesux}
               notes={notes}
+              detailsComponent={this.props.detailsComponent}
+              actions={this.props.actions}
               key={this.state.tasks[selectedTaskIndex].id}
             />
           )}
         </div>
       </div>
+    );
+  }
+}
+
+interface DetailWrapperProps {
+  task: Task;
+  notes: string;
+  notesux: ReactNode;
+  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  actions: { [key: string]: ActionConfig };
+}
+
+interface DetailsWrapperState {
+  buttonsBusy: { [key: string]: boolean };
+}
+
+class DetailsWrapper extends React.Component<
+  DetailWrapperProps,
+  DetailsWrapperState
+> {
+  state: DetailsWrapperState = {
+    buttonsBusy: {}
+  };
+
+  _actionCallbacks: { [key: string]: () => Promise<boolean> } = [] as any;
+
+  _registerActionCallback = (key: string, callback: () => Promise<boolean>) => {
+    this._actionCallbacks[key] = callback;
+  };
+
+  _onActionClick = async (key: string) => {
+    this.setState(state => ({
+      buttonsBusy: {
+        ...state.buttonsBusy,
+        [key]: true
+      }
+    }));
+    if (this._actionCallbacks[key]) {
+      const result = await this._actionCallbacks[key]();
+      if (!result) {
+        return;
+      }
+    }
+    await changeTaskState(
+      this.props.task,
+      this.props.actions[key].nextTaskState,
+      ""
+    );
+    this.setState(state => ({
+      buttonsBusy: {
+        ...state.buttonsBusy,
+        [key]: false
+      }
+    }));
+  };
+
+  render() {
+    return (
+      <this.props.detailsComponent
+        task={this.props.task}
+        notes={this.props.notes}
+        notesux={this.props.notesux}
+        key={this.props.task.id}
+        registerActionCallback={this._registerActionCallback}
+      >
+        <div className="mainview_button_row">
+          {Object.entries(this.props.actions).map(([key, actionConfig]) => (
+            <Button
+              disabled={this.state.buttonsBusy[key]}
+              label={actionConfig.label}
+              onClick={this._onActionClick}
+              callbackKey={key}
+              key={key}
+            />
+          ))}
+        </div>
+      </this.props.detailsComponent>
     );
   }
 }

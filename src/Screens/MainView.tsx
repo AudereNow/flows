@@ -37,6 +37,10 @@ const DetailsComponents: {
     actionable?: boolean;
     notesux: ReactNode;
     notes: string;
+    registerActionCallback: (
+      key: string,
+      callback: () => Promise<boolean>
+    ) => void;
   }>;
 } = {
   AuditTask: AuditorDetails,
@@ -86,7 +90,7 @@ class MainView extends React.Component<Props, State> {
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
-                actionable={tabConfig.actionable}
+                actions={tabConfig.actions}
               />
             );
           }

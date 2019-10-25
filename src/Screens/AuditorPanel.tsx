@@ -22,6 +22,10 @@ type Props = {
   actionable?: boolean;
   notesux: ReactNode;
   notes: string;
+  registerActionCallback: (
+    key: string,
+    callback: () => Promise<boolean>
+  ) => void;
 };
 type State = {
   focusedInput: FocusedInputShape | null;

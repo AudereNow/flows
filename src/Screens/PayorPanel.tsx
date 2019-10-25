@@ -1,6 +1,5 @@
 import React, { ReactNode } from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
@@ -12,31 +11,34 @@ import {
   issuePayments
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
+import { DetailsComponentProps } from "./TaskPanel";
 import "./MainView.css";
-
-type Props = {
-  task: Task;
-  notesux: ReactNode;
-  notes: string;
-};
 
 type State = {
   realPayments: boolean;
   paying: boolean;
 };
 
-export class PayorDetails extends React.Component<Props, State> {
+export class PayorDetails extends React.Component<
+  DetailsComponentProps,
+  State
+> {
   state = {
     realPayments: false,
     paying: false
   };
 
   async componentDidMount() {
+    this.props.registerActionCallback("accept", this._issuePayment);
     const realPayments = await getConfig("enableRealPayments");
     this.setState({ realPayments });
   }
 
-  async _issuePayment(): Promise<boolean> {
+  _issuePayment = async () => {
+    if (!this.state.realPayments) {
+      await new Promise(res => setTimeout(res, 1000));
+      return true;
+    }
     const { task } = this.props;
     const reimburseAmount = _getReimbursementTotal(task);
 
@@ -44,7 +46,6 @@ export class PayorDetails extends React.Component<Props, State> {
       alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
       return false;
     }
-
     const result = await issuePayments([
       {
         name: task.site.name,
@@ -68,7 +69,7 @@ export class PayorDetails extends React.Component<Props, State> {
     }
 
     return true;
-  }
+  };
 
   _onIssuePayment = async () => {
     try {
@@ -93,20 +94,10 @@ export class PayorDetails extends React.Component<Props, State> {
     }
   };
 
-  _onDecline = async () => {
-    const { task } = this.props;
-    await changeTaskState(task, TaskState.FOLLOWUP, this.props.notes);
-  };
-
   render() {
     const { paying, realPayments } = this.state;
     const { notesux, task } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
-    const payLabel = realPayments
-      ? paying
-        ? "Issuing Payment..."
-        : "Issue Payment"
-      : "Mark Paid";
 
     let cleanedData: any[] = [];
     task.entries.sort((a, b) => a.timestamp - b.timestamp);
@@ -130,18 +121,7 @@ export class PayorDetails extends React.Component<Props, State> {
         />
         <DataTable data={cleanedData} />
         {notesux}
-        <div className="mainview_button_row">
-          <Button
-            disabled={paying}
-            label={"Decline Payment"}
-            onClick={this._onDecline}
-          />
-          <Button
-            disabled={paying}
-            label={payLabel}
-            onClick={this._onIssuePayment}
-          />
-        </div>
+        {this.props.children}
       </LabelWrapper>
     );
   }

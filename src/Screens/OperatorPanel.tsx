@@ -10,7 +10,14 @@ import "./MainView.css";
 
 type Props = {
   task: Task;
+  notes: string;
   notesux: ReactNode;
+  registerActionCallback: (
+    key: string,
+    callback: () => Promise<boolean>
+  ) => void;
+};
+type State = {
   notes: string;
 };
 
