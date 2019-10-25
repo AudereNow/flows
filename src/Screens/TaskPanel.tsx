@@ -1,5 +1,5 @@
 import { json2csv } from "json-2-csv";
-import { Moment } from "moment";
+import moment, { Moment } from "moment";
 import React, { Fragment } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import "react-tabs/style/react-tabs.css";
@@ -10,6 +10,7 @@ import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
 import { subscribeToTasks, getChanges } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
+import { TaskConfig, defaultConfig } from "../store/config";
 import "./MainView.css";
 
 type Props = {
@@ -204,13 +205,26 @@ export default class TaskPanel extends React.Component<Props, State> {
     });
   };
 
+  _getDownloadFilename = () => {
+    let currentTab = "unknown";
+    const { tabs } = defaultConfig;
+    for (const tab in tabs) {
+      if (this.props.taskState === (tabs[tab] as TaskConfig).taskState) {
+        currentTab = tab;
+        break;
+      }
+    }
+    const timestamp = moment().format("YYYYMMDD_HHmmss");
+    return `${currentTab}_${timestamp}`;
+  };
+
   _downloadCSV = () => {
     const { tasks } = this.state;
 
     if (tasks.length === 0) {
       alert("There are no tasks to download! Please adjust your search.");
     }
-    const fileName = tasks[0].site.name + "-" + tasks[0].id;
+    const fileName = this._getDownloadFilename();
     let rows: any[] = [];
     const json2csvOptions = { checkSchemaDifferences: false };
     tasks.forEach(task => {

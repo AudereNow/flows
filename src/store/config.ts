@@ -8,7 +8,7 @@ interface CustomPanelConfig extends TabConfig {
   panelComponent: string;
 }
 
-interface TaskConfig extends TabConfig {
+export interface TaskConfig extends TabConfig {
   taskState: TaskState;
   taskListComponent: string;
   detailsComponent: string;
