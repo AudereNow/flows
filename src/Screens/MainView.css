@@ -34,8 +34,8 @@
 }
 
 .mainview_input_label {
+  color: white;
   font-size: small;
-  font-weight: bold;
 }
 
 .mainview_button_disabled {
