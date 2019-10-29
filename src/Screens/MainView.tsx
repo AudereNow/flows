@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { userRoles } from "../store/corestore";
@@ -10,7 +10,7 @@ import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
 import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
-import { UserRole, Task, TaskChangeRecord } from "../sharedtypes";
+import { UserRole, Task } from "../sharedtypes";
 
 type Props = {};
 type State = {

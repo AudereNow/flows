@@ -1,17 +1,12 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState } from "../sharedtypes";
-import { formatCurrency, changeTaskState } from "../store/corestore";
+import { ClaimEntry, Task } from "../sharedtypes";
+import { formatCurrency } from "../store/corestore";
 import { DetailsComponentProps } from "./TaskPanel";
 import "./MainView.css";
-
-type State = {
-  notes: string;
-};
 
 export class OperatorDetails extends React.Component<DetailsComponentProps> {
   _extractImages = (claim: ClaimEntry) => {

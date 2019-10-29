@@ -22,7 +22,6 @@ import "./MainView.css";
 export interface DetailsComponentProps {
   task: Task;
   notesux: ReactNode;
-  notes: string;
   actionable?: boolean;
   registerActionCallback: (
     key: string,
@@ -431,7 +430,6 @@ class DetailsWrapper extends React.Component<
     return (
       <this.props.detailsComponent
         task={this.props.task}
-        notes={this.props.notes}
         notesux={this.props.notesux}
         key={this.props.task.id}
         registerActionCallback={this._registerActionCallback}
