@@ -162,11 +162,10 @@ exports.uploadCSV = functions.https.onCall(
           },
           async () => {
             try {
-              await completeCSVProcessing(cache, user);
+              res(await completeCSVProcessing(cache, user));
             } catch (e) {
               rej({ error: e.err || e.message || e });
             }
-            res({ result: `Successfully processed ${cache.length} records` });
           }
         )
     );
@@ -286,29 +285,39 @@ async function findDuplicateRecords(cache: any[]): Promise<string[]> {
   return dupeSnaps.map(d => d.id);
 }
 
-async function completeCSVProcessing(cache: any[], user: User) {
+async function completeCSVProcessing(
+  cache: any[],
+  user: User
+): Promise<CallResult> {
   let dedupedCache = cache;
   console.log(`Full CSV parsed with ${cache.length} lines`);
+  let result = "";
 
   const allowDupes = await getConfig("allowDuplicateUploads");
   if (!allowDupes) {
     const dupes = await findDuplicateRecords(cache);
 
     if (dupes.length > 0) {
-      await LogAdminEvent(
-        user,
-        `Duplicate CSV records ignored: ${JSON.stringify(dupes)}`
-      );
+      result = `Ignored ${dupes.length} duplicate CSV records: ${JSON.stringify(
+        dupes
+      )}\n\n`;
+      await LogAdminEvent(user, result);
 
       dedupedCache = cache.filter(c => !dupes.includes(c[RECORD_ID_FIELD]));
     }
   }
 
-  const batchID = new Date().toISOString();
-  await Promise.all([
-    logUploadedRecords(dedupedCache, batchID, user),
-    createAuditorTasks(dedupedCache, batchID, user)
-  ]);
+  if (dedupedCache.length > 0) {
+    const batchID = new Date().toISOString();
+    await Promise.all([
+      logUploadedRecords(dedupedCache, batchID, user),
+      createAuditorTasks(dedupedCache, batchID, user)
+    ]);
+    result += `Successfully imported ${dedupedCache.length} records`;
+  } else {
+    result += `This file was previously uploaded`;
+  }
+  return { result };
 }
 
 // Copied and modified from the main app because we didn't want to inherit
