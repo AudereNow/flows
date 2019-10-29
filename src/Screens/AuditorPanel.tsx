@@ -13,6 +13,7 @@ import { changeTaskState } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
+import { Filters } from "./TaskPanel";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -23,6 +24,7 @@ type Props = {
   notesux: ReactNode;
   notes: string;
   searchTermGlobal?: string;
+  filters: Filters;
 };
 type State = {
   focusedInput: FocusedInputShape | null;
@@ -92,7 +94,7 @@ export class AuditorDetails extends React.Component<Props, State> {
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
     const { searchTermDetails } = this.state;
-    const { searchTermGlobal } = this.props;
+    const { filters, searchTermGlobal } = this.props;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -113,14 +115,34 @@ export class AuditorDetails extends React.Component<Props, State> {
     }
 
     return (
-      <LabelWrapper key={entry.patientID + patient}>
-        <TextItem data={{ Date: date }} searchTermGlobal={searchTermGlobal} />
+      <LabelWrapper key={JSON.stringify(entry)}>
         <TextItem
-          data={{ Patient: patient }}
+          data={{ displayKey: "Date", searchKey: "date", value: date }}
+          filters={filters}
           searchTermGlobal={searchTermGlobal}
         />
-
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <TextItem
+            data={{
+              displayKey: "Patient",
+              searchKey: "patient",
+              value: patient
+            }}
+            filters={filters}
+            searchTermGlobal={searchTermGlobal}
+          />
+        </div>
+        <TextItem
+          data={{
+            displayKey: "ID",
+            searchKey: "patientID",
+            value: entry.patientID || ""
+          }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
+        />
         <ImageRow
+          filters={filters}
           searchTermGlobal={searchTermGlobal}
           images={this._extractImages(entry)}
         />
@@ -150,10 +172,19 @@ export class AuditorDetails extends React.Component<Props, State> {
       this.props.actionable !== undefined ? this.props.actionable : true;
 
     return (
-      <LabelWrapper className="mainview_details" label="DETAILS">
+      <LabelWrapper
+        key={searchTermGlobal}
+        className="mainview_details"
+        label="DETAILS"
+      >
         <div className="mainview_spaced_row">
           <TextItem
-            data={{ Pharmacy: task.site.name }}
+            data={{
+              displayKey: "Pharmacy",
+              searchKey: "name",
+              value: task.site.name
+            }}
+            filters={this.props.filters}
             searchTermGlobal={searchTermGlobal}
           />
 

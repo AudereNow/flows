@@ -7,7 +7,7 @@ import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import { changeTaskState } from "../store/corestore";
 import "./MainView.css";
-import Filters from "./TaskPanel";
+import { Filters } from "./TaskPanel";
 
 type Props = {
   task: Task;
@@ -58,6 +58,7 @@ export class OperatorDetails extends React.Component<Props> {
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
     const { searchTermGlobal, filters } = this.props;
+
     return (
       <LabelWrapper key={patientInfo}>
         <TextItem
@@ -78,6 +79,12 @@ export class OperatorDetails extends React.Component<Props> {
           filters={filters}
           searchTermGlobal={searchTermGlobal}
         />
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          filters={filters}
+          images={this._extractImages(entry)}
+        />
+
         <ImageRow
           searchTermGlobal={searchTermGlobal}
           filters={filters}

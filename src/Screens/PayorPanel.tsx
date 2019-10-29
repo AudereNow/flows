@@ -13,11 +13,13 @@ import {
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
+import { Filters } from "./TaskPanel";
 
 type Props = {
   task: Task;
   notesux: ReactNode;
   notes: string;
+  filters: Filters;
   searchTermGlobal?: string;
 };
 
@@ -101,7 +103,7 @@ export class PayorDetails extends React.Component<Props, State> {
 
   render() {
     const { paying, realPayments } = this.state;
-    const { notesux, task, searchTermGlobal } = this.props;
+    const { filters, searchTermGlobal, task, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
     const payLabel = realPayments
       ? paying
@@ -124,19 +126,32 @@ export class PayorDetails extends React.Component<Props, State> {
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem
           searchTermGlobal={searchTermGlobal}
-          data={{ Pharmacy: task.site.name }}
+          data={{
+            displayKey: "Pharmacy",
+            searchKey: "name",
+            value: task.site.name
+          }}
+          filters={filters}
         />
         {!!task.site.phone && (
           <TextItem
-            data={{ Phone: task.site.phone }}
+            data={{
+              displayKey: "Phone",
+              searchKey: "phone",
+              value: task.site.phone
+            }}
+            filters={filters}
             searchTermGlobal={searchTermGlobal}
           />
         )}
         <TextItem
           searchTermGlobal={searchTermGlobal}
           data={{
-            "Total Reimbursement": formatCurrency(claimsTotal)
+            displayKey: "Total Reimbursement",
+            searchKey: "reimbursement",
+            value: formatCurrency(claimsTotal)
           }}
+          filters={filters}
         />
         <DataTable data={cleanedData} />
         {notesux}

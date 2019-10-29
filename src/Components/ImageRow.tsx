@@ -1,11 +1,13 @@
 import React from "react";
-import HighlightText from "./HighlightText";
+import { Filters } from "../Screens/TaskPanel";
 import "./ImageRow.css";
+import TextItem from "./TextItem";
 import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
   searchTermGlobal?: string;
+  filters: Filters;
 }
 
 interface ImageData {
@@ -25,10 +27,12 @@ const ImageRow = (props: Props) => {
             <div key={url + index} className="imagerow_item">
               <ZoomableImage src={url} alt={url} />
               {!!label && (
-                <HighlightText
+                <TextItem
                   className="imagerow_label"
-                  text={label}
-                  searchTerm={props.searchTermGlobal}
+                  data={{ searchKey: "item", value: label }}
+                  filters={props.filters}
+                  searchTermGlobal={props.searchTermGlobal}
+                  valueOnly={true}
                 />
               )}
             </div>

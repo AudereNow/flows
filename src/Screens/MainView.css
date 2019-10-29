@@ -29,6 +29,10 @@
   margin: 5px;
 }
 
+.mainview_checkbox {
+  margin-right: 5px;
+}
+
 .mainview_button_disabled {
   background-color: #cccccc;
 }
@@ -41,6 +45,18 @@
 .mainview_clear_search_button {
   width: 100px;
   height: 20px;
+}
+
+.mainview_search_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.mainview_search_input {
+  display: flex;
+  flex: 1;
+  height: 18px;
 }
 
 .mainview_details {

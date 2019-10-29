@@ -11,7 +11,7 @@ import MainChrome from "./MainChrome";
 import "./MainView.css";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
-import { default as Filters, default as TaskPanel } from "./TaskPanel";
+import TaskPanel, { Filters } from "./TaskPanel";
 
 type Props = {};
 type State = {
