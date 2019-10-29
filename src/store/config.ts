@@ -38,8 +38,17 @@ export const defaultConfig: AppConfig = {
       taskListComponent: "AuditTask",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
-      actions: {},
-      roles: [UserRole.AUDITOR]
+      roles: [UserRole.AUDITOR],
+      actions: {
+        decline: {
+          label: "Decline",
+          nextTaskState: TaskState.FOLLOWUP
+        },
+        approve: {
+          label: "Approve",
+          nextTaskState: TaskState.PAY
+        }
+      }
     },
     Payor: {
       taskState: TaskState.PAY,

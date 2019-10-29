@@ -26,7 +26,7 @@ export interface DetailsComponentProps {
   actionable?: boolean;
   registerActionCallback: (
     key: string,
-    callback: () => Promise<boolean>
+    callback: () => Promise<ActionCallbackResult>
   ) => void;
 }
 
@@ -375,6 +375,11 @@ interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
 }
 
+interface ActionCallbackResult {
+  success: boolean;
+  task?: Task;
+}
+
 class DetailsWrapper extends React.Component<
   DetailWrapperProps,
   DetailsWrapperState
@@ -383,9 +388,14 @@ class DetailsWrapper extends React.Component<
     buttonsBusy: {}
   };
 
-  _actionCallbacks: { [key: string]: () => Promise<boolean> } = [] as any;
+  _actionCallbacks: {
+    [key: string]: () => Promise<ActionCallbackResult>;
+  } = [] as any;
 
-  _registerActionCallback = (key: string, callback: () => Promise<boolean>) => {
+  _registerActionCallback = (
+    key: string,
+    callback: () => Promise<ActionCallbackResult>
+  ) => {
     this._actionCallbacks[key] = callback;
   };
 
@@ -396,23 +406,25 @@ class DetailsWrapper extends React.Component<
         [key]: true
       }
     }));
+    let task: Task = this.props.task;
     if (this._actionCallbacks[key]) {
       const result = await this._actionCallbacks[key]();
-      if (!result) {
+      if (!result.success) {
+        this.setState(state => ({
+          buttonsBusy: {
+            ...state.buttonsBusy,
+            [key]: false
+          }
+        }));
         return;
       }
+      task = result.task || task;
     }
     await changeTaskState(
-      this.props.task,
+      task,
       this.props.actions[key].nextTaskState,
-      ""
+      this.props.notes
     );
-    this.setState(state => ({
-      buttonsBusy: {
-        ...state.buttonsBusy,
-        [key]: false
-      }
-    }));
   };
 
   render() {

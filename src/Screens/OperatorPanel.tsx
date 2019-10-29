@@ -6,22 +6,14 @@ import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import { formatCurrency, changeTaskState } from "../store/corestore";
+import { DetailsComponentProps } from "./TaskPanel";
 import "./MainView.css";
 
-type Props = {
-  task: Task;
-  notes: string;
-  notesux: ReactNode;
-  registerActionCallback: (
-    key: string,
-    callback: () => Promise<boolean>
-  ) => void;
-};
 type State = {
   notes: string;
 };
 
-export class OperatorDetails extends React.Component<Props> {
+export class OperatorDetails extends React.Component<DetailsComponentProps> {
   _onReject = async () => {
     await changeTaskState(
       this.props.task,

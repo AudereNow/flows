@@ -1,11 +1,10 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import "react-tabs/style/react-tabs.css";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState } from "../sharedtypes";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
-  changeTaskState,
   formatCurrency,
   getBestUserName,
   issuePayments
@@ -37,14 +36,14 @@ export class PayorDetails extends React.Component<
   _issuePayment = async () => {
     if (!this.state.realPayments) {
       await new Promise(res => setTimeout(res, 1000));
-      return true;
+      return { success: true };
     }
     const { task } = this.props;
     const reimburseAmount = _getReimbursementTotal(task);
 
     if (reimburseAmount <= 0) {
       alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
-      return false;
+      return { success: false };
     }
     const result = await issuePayments([
       {
@@ -65,37 +64,13 @@ export class PayorDetails extends React.Component<
     // numQueued should be exactly 1 if the payment was successful
     if (result.data.numQueued === 0) {
       alert(result.data.entries[0].errorMessage);
-      return false;
+      return { success: false };
     }
 
-    return true;
-  };
-
-  _onIssuePayment = async () => {
-    try {
-      let paid = true;
-
-      this.setState({ paying: true });
-
-      if (this.state.realPayments) {
-        paid = await this._issuePayment();
-      }
-      if (paid) {
-        await changeTaskState(
-          this.props.task,
-          TaskState.COMPLETED,
-          this.props.notes
-        );
-      }
-    } catch (e) {
-      alert(`Error: ${(e && e.message) || e}`);
-    } finally {
-      this.setState({ paying: false });
-    }
+    return { success: true };
   };
 
   render() {
-    const { paying, realPayments } = this.state;
     const { notesux, task } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
 

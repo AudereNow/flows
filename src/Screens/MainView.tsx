@@ -9,7 +9,7 @@ import { AuditorItem, AuditorDetails } from "./AuditorPanel";
 import { OperatorItem, OperatorDetails } from "./OperatorPanel";
 import { PayorItem, PayorDetails } from "./PayorPanel";
 import { isCustomPanel, defaultConfig } from "../store/config";
-import TaskPanel from "./TaskPanel";
+import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
 import { UserRole, Task, TaskChangeRecord } from "../sharedtypes";
 
 type Props = {};
@@ -32,16 +32,7 @@ const ItemComponents: {
 };
 
 const DetailsComponents: {
-  [key: string]: React.ComponentClass<{
-    task: Task;
-    actionable?: boolean;
-    notesux: ReactNode;
-    notes: string;
-    registerActionCallback: (
-      key: string,
-      callback: () => Promise<boolean>
-    ) => void;
-  }>;
+  [key: string]: React.ComponentClass<DetailsComponentProps>;
 } = {
   AuditTask: AuditorDetails,
   PayorTask: PayorDetails,

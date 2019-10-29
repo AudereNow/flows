@@ -1,5 +1,4 @@
-import React, { ReactNode } from "react";
-import { FocusedInputShape } from "react-dates";
+import React from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
@@ -8,6 +7,7 @@ import "../Components/DateRangePickerOverride.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
+import { DetailsComponentProps } from "./TaskPanel";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import { changeTaskState, formatCurrency } from "../store/corestore";
 import debounce from "../util/debounce";
@@ -17,18 +17,7 @@ import "./MainView.css";
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 
-type Props = {
-  task: Task;
-  actionable?: boolean;
-  notesux: ReactNode;
-  notes: string;
-  registerActionCallback: (
-    key: string,
-    callback: () => Promise<boolean>
-  ) => void;
-};
 type State = {
-  focusedInput: FocusedInputShape | null;
   searchTermDetails: string;
   showAllEntries: boolean;
 };
@@ -59,12 +48,18 @@ export class AuditorItem extends React.Component<{
   }
 }
 
-export class AuditorDetails extends React.Component<Props, State> {
+export class AuditorDetails extends React.Component<
+  DetailsComponentProps,
+  State
+> {
   state: State = {
     searchTermDetails: "",
-    showAllEntries: false,
-    focusedInput: null
+    showAllEntries: false
   };
+
+  componentDidMount() {
+    this.props.registerActionCallback("approve", this._onApprove);
+  }
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
@@ -80,23 +75,19 @@ export class AuditorDetails extends React.Component<Props, State> {
   };
 
   _onApprove = async () => {
-    const { task } = this.props;
-    task.entries = task.entries.map((entry, index) => {
-      if (index < this._numSamples()) {
-        return {
-          ...entry,
-          reviewed: true
-        };
-      }
-      return entry;
-    });
-
-    await changeTaskState(task, TaskState.PAY, this.props.notes);
-  };
-
-  _onDecline = async () => {
-    const { task } = this.props;
-    await changeTaskState(task, TaskState.FOLLOWUP, this.props.notes);
+    const task = {
+      ...this.props.task,
+      entries: this.props.task.entries.map((entry, index) => {
+        if (index < this._numSamples()) {
+          return {
+            ...entry,
+            reviewed: true
+          };
+        }
+        return entry;
+      })
+    };
+    return { success: true, task };
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -169,8 +160,6 @@ export class AuditorDetails extends React.Component<Props, State> {
     const { notesux, task } = this.props;
     const samples = task.entries.slice(0, this._numSamples());
     const remaining = task.entries.length - this._numSamples();
-    const actionable =
-      this.props.actionable !== undefined ? this.props.actionable : true;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <div className="mainview_spaced_row">
@@ -198,12 +187,7 @@ export class AuditorDetails extends React.Component<Props, State> {
             .slice(this._numSamples(), task.entries.length)
             .map(this._renderClaimEntryDetails)}
         {notesux}
-        {actionable && (
-          <div className="mainview_button_row">
-            <Button label="Decline" onClick={this._onDecline} />
-            <Button label="Approve" onClick={this._onApprove} />
-          </div>
-        )}
+        {this.props.children}
       </LabelWrapper>
     );
   }
