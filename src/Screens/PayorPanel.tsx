@@ -28,7 +28,7 @@ export class PayorDetails extends React.Component<
   };
 
   async componentDidMount() {
-    this.props.registerActionCallback("accept", this._issuePayment);
+    this.props.registerActionCallback("approve", this._issuePayment);
     const realPayments = await getConfig("enableRealPayments");
     this.setState({ realPayments });
   }

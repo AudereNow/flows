@@ -61,7 +61,7 @@ export const defaultConfig: AppConfig = {
           label: "Decline Payent",
           nextTaskState: TaskState.FOLLOWUP
         },
-        accept: {
+        approve: {
           label: "Issue Payment",
           nextTaskState: TaskState.COMPLETED
         }
@@ -78,7 +78,7 @@ export const defaultConfig: AppConfig = {
           label: "Reject",
           nextTaskState: TaskState.REJECTED
         },
-        accept: {
+        approve: {
           label: "Approve for Payment",
           nextTaskState: TaskState.PAY
         }
