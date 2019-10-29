@@ -73,7 +73,16 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR],
-      actions: {}
+      actions: {
+        decline: {
+          label: "Reject",
+          nextTaskState: TaskState.REJECTED
+        },
+        accept: {
+          label: "Approve for Payment",
+          nextTaskState: TaskState.PAY
+        }
+      }
     },
     Rejected: {
       taskState: TaskState.REJECTED,
