@@ -12,7 +12,7 @@ function highlight(text: SearchText, searchTerm: string, filters: Filters) {
   const { searchKey, value } = text;
 
   if (!(filters as any)[searchKey]) {
-    return [text.value];
+    return [value];
   }
 
   const divided = value.split(searchTerm);
