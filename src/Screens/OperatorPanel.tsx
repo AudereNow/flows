@@ -7,10 +7,13 @@ import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import { changeTaskState } from "../store/corestore";
 import "./MainView.css";
+import { Filters } from "./TaskPanel";
 
 type Props = {
   task: Task;
+  filters: Filters;
   notesux: ReactNode;
+  searchTermGlobal?: string;
   notes: string;
 };
 
@@ -54,26 +57,56 @@ export class OperatorDetails extends React.Component<Props> {
       patientProps.push(entry.patientSex);
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
+    const { searchTermGlobal, filters } = this.props;
 
     return (
       <LabelWrapper key={patientInfo}>
         <TextItem
-          data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
+          data={{
+            displayKey: "Date",
+            searchKey: "date",
+            value: new Date(entry.timestamp).toLocaleDateString()
+          }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
         />
         <TextItem
           data={{
-            Patient: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
+            displayKey: "Patient",
+            searchKey: "patient",
+            value: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
           }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
         />
-        <ImageRow images={this._extractImages(entry)} />
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          filters={filters}
+          images={this._extractImages(entry)}
+        />
+
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          filters={filters}
+          images={this._extractImages(entry)}
+        />
       </LabelWrapper>
     );
   };
 
   render() {
+    const { filters, searchTermGlobal } = this.props;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem data={{ Pharmacy: this.props.task.site.name }} />
+        <TextItem
+          data={{
+            displayKey: "Pharmacy",
+            searchKey: "name",
+            value: this.props.task.site.name
+          }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
+        />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
         <div className="mainview_button_row">

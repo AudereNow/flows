@@ -1,19 +1,38 @@
 import React from "react";
+import { Filters } from "../Screens/TaskPanel";
+import HighlightText from "./HighlightText";
 import "./TextItem.css";
 
 interface Data {
-  [key: string]: string;
+  displayKey?: string;
+  searchKey: string;
+  value: string;
 }
 
 interface Props {
   data: Data;
+  searchTermGlobal?: string;
+  valueOnly?: boolean;
+  className?: string;
+  filters?: Filters;
 }
 
 const TextItem = (props: Props) => {
+  const { searchKey, displayKey } = props.data;
   return (
     <div className="textitem_container">
-      <span className="textitem_key">{Object.keys(props.data)[0] + ": "}</span>
-      <span>{Object.values(props.data)[0]}</span>
+      {!props.valueOnly && (
+        <span className="textitem_key">
+          {(!!displayKey ? displayKey : searchKey) + ":"}
+        </span>
+      )}
+
+      <HighlightText
+        className={props.className}
+        filters={props.filters}
+        text={props.data}
+        searchTerm={props.searchTermGlobal}
+      />
     </div>
   );
 };

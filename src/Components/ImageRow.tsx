@@ -1,9 +1,13 @@
 import React from "react";
+import { Filters } from "../Screens/TaskPanel";
 import "./ImageRow.css";
+import TextItem from "./TextItem";
 import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
+  searchTermGlobal?: string;
+  filters: Filters;
 }
 
 interface ImageData {
@@ -22,7 +26,15 @@ const ImageRow = (props: Props) => {
           return (
             <div key={url + index} className="imagerow_item">
               <ZoomableImage src={url} alt={url} />
-              {!!label && <span className="imagerow_label">{label}</span>}
+              {!!label && (
+                <TextItem
+                  className="imagerow_label"
+                  data={{ searchKey: "item", value: label }}
+                  filters={props.filters}
+                  searchTermGlobal={props.searchTermGlobal}
+                  valueOnly={true}
+                />
+              )}
             </div>
           );
         })}

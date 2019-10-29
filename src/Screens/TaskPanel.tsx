@@ -7,12 +7,20 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
-import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
-import { subscribeToTasks, getChanges } from "../store/corestore";
+import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
+import { defaultConfig, TaskConfig } from "../store/config";
+import { getChanges, subscribeToTasks } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
-import { TaskConfig, defaultConfig } from "../store/config";
 import "./MainView.css";
+
+export interface Filters {
+  patient?: boolean;
+  name?: boolean;
+  id?: boolean;
+  phone?: boolean;
+  item?: boolean;
+}
 
 type Props = {
   taskState: TaskState;
@@ -23,6 +31,8 @@ type Props = {
     actionable?: boolean;
     notesux: ReactNode;
     notes: string;
+    searchTermGlobal?: string;
+    filters: Filters;
   }>;
   actionable?: boolean;
 };
@@ -38,6 +48,7 @@ type State = {
   searchTermGlobal: string;
   showSearch: boolean;
   notes: string;
+  filters: Filters;
 };
 
 export default class TaskPanel extends React.Component<Props, State> {
@@ -50,7 +61,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     searchDates: { startDate: null, endDate: null },
     searchTermGlobal: "",
     showSearch: false,
-    notes: ""
+    notes: "",
+    filters: {}
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -153,15 +165,17 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
+    const { filters } = this.state;
+
     return this.state.allTasks.filter(task => {
       return (
-        (containsSearchTerm(searchTerm, task.site) ||
+        containsSearchTerm(searchTerm, task.site, filters) ||
+        (task.entries.some(entry => {
+          return containsSearchTerm(searchTerm, entry, filters);
+        }) &&
           task.entries.some(entry => {
-            return containsSearchTerm(searchTerm, entry);
-          })) &&
-        task.entries.some(entry => {
-          return withinDateRange(dateRange, entry);
-        })
+            return withinDateRange(dateRange, entry);
+          }))
       );
     });
   };
@@ -215,7 +229,9 @@ export default class TaskPanel extends React.Component<Props, State> {
     this._inputRef.current!.value = "";
     this.setState({
       searchDates: { startDate: null, endDate: null },
-      tasks: allTasks
+      tasks: allTasks,
+      filters: {},
+      selectedTaskIndex: 0
     });
   };
 
@@ -270,34 +286,72 @@ export default class TaskPanel extends React.Component<Props, State> {
     );
   };
 
+  _onCheckBoxSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.name;
+    const checked = event.target.checked;
+    let filters = this.state.filters;
+    (filters as any)[name] = checked;
+    this.setState({ filters });
+  };
+
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
+    const patientKeyMap: any = {
+      patient: "Patient",
+      patientID: "ID",
+      name: "Pharmacy",
+      item: "Item"
+    };
+
     return (
       <div className="mainview_search_container">
-        <DateRangePicker
-          startDate={searchDates.startDate}
-          startDateId={"startDate"}
-          endDate={searchDates.endDate}
-          endDateId={"endDate"}
-          onDatesChange={this._onDatesChange}
-          focusedInput={focusedInput}
-          onFocusChange={this._onFocusChange}
-          isOutsideRange={() => false}
-          regular={true}
-        />
         <div className="labelwrapper_row">
-          <input
-            ref={this._inputRef}
-            type="text"
-            onChange={this._onSearchTermChange}
-            placeholder="Search"
-          />
-          <Button
-            className="mainview_clear_search_button"
-            label="Clear Search"
-            onClick={this._clearSearch}
-          />
-          <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          <div className="mainview_search_row">
+            <input
+              className="mainview_search_input"
+              ref={this._inputRef}
+              type="text"
+              onChange={this._onSearchTermChange}
+              placeholder="Search"
+            />
+            <Button
+              className="mainview_clear_search_button"
+              label="Clear Search"
+              onClick={this._clearSearch}
+            />
+          </div>
+          <div className="mainview_spaced_row">
+            {Object.keys(patientKeyMap).map((key, index) => {
+              return (
+                <div className="mainview_input_container" key={key + index}>
+                  <input
+                    type="checkbox"
+                    name={key}
+                    onChange={this._onCheckBoxSelect}
+                    checked={(this.state.filters as any)[key] || false}
+                  />
+                  <span className="mainview_input_label">
+                    {patientKeyMap[key]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mainview_spaced_row">
+            <DateRangePicker
+              startDate={searchDates.startDate}
+              startDateId={"startDate"}
+              endDate={searchDates.endDate}
+              endDateId={"endDate"}
+              onDatesChange={this._onDatesChange}
+              focusedInput={focusedInput}
+              onFocusChange={this._onFocusChange}
+              isOutsideRange={() => false}
+              small={true}
+              block={true}
+            />
+            <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          </div>
         </div>
       </div>
     );
@@ -308,7 +362,12 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const { notes, selectedTaskIndex, showSearch } = this.state;
+    const {
+      selectedTaskIndex,
+      showSearch,
+      searchTermGlobal,
+      notes
+    } = this.state;
     const actionable =
       this.props.actionable !== undefined ? this.props.actionable : true;
     const notesux =
@@ -320,6 +379,7 @@ export default class TaskPanel extends React.Component<Props, State> {
           onNotesChanged={this._onNotesChanged}
         />
       ) : null;
+
     return (
       <div className="mainview_content">
         <LabelWrapper
@@ -343,7 +403,9 @@ export default class TaskPanel extends React.Component<Props, State> {
               actionable={actionable}
               notesux={notesux}
               notes={notes}
+              filters={this.state.filters}
               key={this.state.tasks[selectedTaskIndex].id}
+              searchTermGlobal={searchTermGlobal}
             />
           )}
         </div>

@@ -13,6 +13,7 @@ import { changeTaskState } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
+import { Filters } from "./TaskPanel";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -22,6 +23,8 @@ type Props = {
   actionable?: boolean;
   notesux: ReactNode;
   notes: string;
+  searchTermGlobal?: string;
+  filters: Filters;
 };
 type State = {
   focusedInput: FocusedInputShape | null;
@@ -91,6 +94,7 @@ export class AuditorDetails extends React.Component<Props, State> {
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
     const { searchTermDetails } = this.state;
+    const { filters, searchTermGlobal } = this.props;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -111,14 +115,37 @@ export class AuditorDetails extends React.Component<Props, State> {
     }
 
     return (
-      <LabelWrapper key={entry.patientID + patient}>
-        <TextItem data={{ Date: date }} />
+      <LabelWrapper key={JSON.stringify(entry)}>
+        <TextItem
+          data={{ displayKey: "Date", searchKey: "date", value: date }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
+        />
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <TextItem
+            data={{
+              displayKey: "Patient",
+              searchKey: "patient",
+              value: patient
+            }}
+            filters={filters}
+            searchTermGlobal={searchTermGlobal}
+          />
+        </div>
         <TextItem
           data={{
-            Patient: patient
+            displayKey: "ID",
+            searchKey: "patientID",
+            value: entry.patientID || ""
           }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
         />
-        <ImageRow images={this._extractImages(entry)} />
+        <ImageRow
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
+          images={this._extractImages(entry)}
+        />
       </LabelWrapper>
     );
   };
@@ -135,16 +162,32 @@ export class AuditorDetails extends React.Component<Props, State> {
   };
 
   render() {
-    const { showAllEntries } = this.state;
-    const { notesux, task } = this.props;
+    const showAllEntries =
+      !!this.props.searchTermGlobal || this.state.showAllEntries;
+    const { task, searchTermGlobal, notesux } = this.props;
+
     const samples = task.entries.slice(0, this._numSamples());
     const remaining = task.entries.length - this._numSamples();
     const actionable =
       this.props.actionable !== undefined ? this.props.actionable : true;
+
     return (
-      <LabelWrapper className="mainview_details" label="DETAILS">
+      <LabelWrapper
+        key={searchTermGlobal}
+        className="mainview_details"
+        label="DETAILS"
+      >
         <div className="mainview_spaced_row">
-          <TextItem data={{ Pharmacy: task.site.name }} />
+          <TextItem
+            data={{
+              displayKey: "Pharmacy",
+              searchKey: "name",
+              value: task.site.name
+            }}
+            filters={this.props.filters}
+            searchTermGlobal={searchTermGlobal}
+          />
+
           <input
             type="text"
             onChange={this._handleSearchTermDetailsChange}
@@ -152,7 +195,7 @@ export class AuditorDetails extends React.Component<Props, State> {
           />
         </div>
         {samples.map(this._renderClaimEntryDetails)}
-        {remaining > 0 && (
+        {remaining > 0 && !showAllEntries && (
           <div className="mainview_button_row">
             <Button
               label={

@@ -1,6 +1,7 @@
+import firebase from "firebase";
 import React from "react";
-import { setRoles } from "../store/corestore";
 import { UserRole } from "../sharedtypes";
+import { setRoles } from "../store/corestore";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -26,6 +27,8 @@ class AdminPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
+    const adminLogs = await this._getAdminLogs();
+    console.log(adminLogs);
     this.setState({ roleMap: NO_ROLES_MAP });
   }
 
@@ -63,6 +66,16 @@ class AdminPanel extends React.Component<Props, State> {
     await setRoles(this.state.email, roles);
   };
 
+  _getAdminLogs = async () => {
+    const snap = await firebase
+      .firestore()
+      .collection("admin_log_event")
+      .orderBy("timestamp")
+      .get();
+
+    return snap.docs.map(doc => doc.data());
+  };
+
   _renderRoles() {
     const roleBoxes = Object.keys(this.state.roleMap).map(role => (
       <div key={role}>
@@ -84,18 +97,27 @@ class AdminPanel extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
-        <h3>Set User Roles</h3>
-        <form onSubmit={this._setUserRoles}>
-          <input
-            type="text"
-            name="email"
-            placeholder="email of user"
-            onChange={this._onEmailChange}
-          />
-          {this._renderRoles()}
-          <input type="submit" value="Submit" />
-        </form>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          flex: 1
+        }}
+      >
+        <div>
+          <h3>Set User Roles</h3>
+          <form onSubmit={this._setUserRoles}>
+            <input
+              type="text"
+              name="email"
+              placeholder="email of user"
+              onChange={this._onEmailChange}
+            />
+            {this._renderRoles()}
+            <input type="submit" value="Submit" />
+          </form>
+        </div>
+        <div style={{ display: "flex", flex: 1 }}></div>
       </div>
     );
   }
