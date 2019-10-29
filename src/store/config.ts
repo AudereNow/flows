@@ -58,7 +58,7 @@ export const defaultConfig: AppConfig = {
       roles: [UserRole.PAYOR],
       actions: {
         decline: {
-          label: "Decline Payent",
+          label: "Decline Payment",
           nextTaskState: TaskState.FOLLOWUP
         },
         approve: {
