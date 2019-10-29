@@ -5,7 +5,7 @@ import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
-import { formatCurrency, changeTaskState } from "../store/corestore";
+import { changeTaskState } from "../store/corestore";
 import "./MainView.css";
 
 type Props = {
@@ -81,31 +81,6 @@ export class OperatorDetails extends React.Component<Props> {
           <Button label="Approve for Payment" onClick={this._onApprove} />
         </div>
       </LabelWrapper>
-    );
-  }
-}
-
-export class OperatorItem extends React.Component<{
-  task: Task;
-  isSelected: boolean;
-}> {
-  render() {
-    const previewName =
-      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
-    const claimAmounts = this.props.task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{this.props.task.site.name}</span>
-          <span>{this.props.task.entries.length} Claims</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
     );
   }
 }

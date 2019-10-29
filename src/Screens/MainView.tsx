@@ -5,12 +5,13 @@ import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
-import { AuditorItem, AuditorDetails } from "./AuditorPanel";
-import { OperatorItem, OperatorDetails } from "./OperatorPanel";
-import { PayorItem, PayorDetails } from "./PayorPanel";
+import { AuditorDetails } from "./AuditorPanel";
+import { OperatorDetails } from "./OperatorPanel";
+import { PayorDetails } from "./PayorPanel";
+import { ListItem } from "../Components/ListItem";
 import { isCustomPanel, defaultConfig } from "../store/config";
 import TaskPanel from "./TaskPanel";
-import { UserRole, Task, TaskChangeRecord } from "../sharedtypes";
+import { UserRole, Task } from "../sharedtypes";
 
 type Props = {};
 type State = {
@@ -26,9 +27,7 @@ const PanelComponents: {
 const ItemComponents: {
   [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
 } = {
-  AuditTask: AuditorItem,
-  PayorTask: PayorItem,
-  OperatorTask: OperatorItem
+  default: ListItem
 };
 
 const DetailsComponents: {

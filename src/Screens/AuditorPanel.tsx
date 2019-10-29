@@ -9,7 +9,7 @@ import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
-import { changeTaskState, formatCurrency } from "../store/corestore";
+import { changeTaskState } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
@@ -28,32 +28,6 @@ type State = {
   searchTermDetails: string;
   showAllEntries: boolean;
 };
-
-export class AuditorItem extends React.Component<{
-  task: Task;
-  isSelected: boolean;
-}> {
-  render() {
-    const { task, isSelected } = this.props;
-    const previewName =
-      "mainview_task_preview" + (isSelected ? " selected" : "");
-    const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{task.site.name}</span>
-          <span>{task.entries.length} Claims</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
-    );
-  }
-}
 
 export class AuditorDetails extends React.Component<Props, State> {
   state: State = {

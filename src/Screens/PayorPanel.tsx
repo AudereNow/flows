@@ -147,30 +147,6 @@ export class PayorDetails extends React.Component<Props, State> {
   }
 }
 
-export class PayorItem extends React.Component<{
-  task: Task;
-  isSelected: boolean;
-}> {
-  render() {
-    const previewName =
-      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
-    const claimAmounts = this.props.task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{this.props.task.site.name}</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
-    );
-  }
-}
-
 function _getReimbursementTotal(task: Task): number {
   const claimAmounts = task.entries.map(entry => {
     return entry.claimedCost;
