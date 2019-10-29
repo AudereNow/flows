@@ -11,6 +11,8 @@ interface CustomPanelConfig extends TabConfig {
 export interface ActionConfig {
   label: string;
   nextTaskState: TaskState;
+  enableOnConfig?: string;
+  disableOnConfig?: string;
 }
 
 export interface TaskConfig extends TabConfig {
@@ -63,7 +65,13 @@ export const defaultConfig: AppConfig = {
         },
         approve: {
           label: "Issue Payment",
-          nextTaskState: TaskState.COMPLETED
+          nextTaskState: TaskState.COMPLETED,
+          enableOnConfig: "enableRealPayments"
+        },
+        markApprove: {
+          label: "Mark Paid",
+          nextTaskState: TaskState.COMPLETED,
+          disableOnConfig: "enableRealPayments"
         }
       }
     },

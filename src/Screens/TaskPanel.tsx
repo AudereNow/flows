@@ -17,6 +17,7 @@ import { ActionConfig } from "../store/config";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import { TaskConfig, defaultConfig } from "../store/config";
+import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
 
 export interface DetailsComponentProps {
@@ -372,6 +373,7 @@ interface DetailWrapperProps {
 
 interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
+  configValues: { [key: string]: boolean };
 }
 
 interface ActionCallbackResult {
@@ -384,8 +386,28 @@ class DetailsWrapper extends React.Component<
   DetailsWrapperState
 > {
   state: DetailsWrapperState = {
-    buttonsBusy: {}
+    buttonsBusy: {},
+    configValues: {}
   };
+
+  async componentWillReceiveProps(props: DetailWrapperProps) {
+    const configValues: { [key: string]: boolean } = {};
+    await Promise.all(
+      Object.values(props.actions).map(async action => {
+        if (action.disableOnConfig) {
+          configValues[action.disableOnConfig] = await getConfig(
+            action.disableOnConfig
+          );
+        }
+        if (action.enableOnConfig) {
+          configValues[action.enableOnConfig] = await getConfig(
+            action.enableOnConfig
+          );
+        }
+      })
+    );
+    this.setState({ configValues });
+  }
 
   _actionCallbacks: {
     [key: string]: () => Promise<ActionCallbackResult>;
@@ -427,6 +449,17 @@ class DetailsWrapper extends React.Component<
   };
 
   render() {
+    const buttons = Object.entries(this.props.actions).filter(
+      ([key, action]) => {
+        if (action.disableOnConfig) {
+          return !this.state.configValues[action.disableOnConfig];
+        }
+        if (action.enableOnConfig) {
+          return this.state.configValues[action.enableOnConfig];
+        }
+        return true;
+      }
+    );
     return (
       <this.props.detailsComponent
         task={this.props.task}
@@ -435,7 +468,7 @@ class DetailsWrapper extends React.Component<
         registerActionCallback={this._registerActionCallback}
       >
         <div className="mainview_button_row">
-          {Object.entries(this.props.actions).map(([key, actionConfig]) => (
+          {buttons.map(([key, actionConfig]) => (
             <Button
               disabled={this.state.buttonsBusy[key]}
               label={actionConfig.label}
