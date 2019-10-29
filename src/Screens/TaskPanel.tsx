@@ -147,8 +147,12 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _onSearchClick = () => {
-    if (this.state.showSearch || this._okToSwitchAway()) {
-      this.setState({ showSearch: !this.state.showSearch, notes: "" });
+    const { notes, showSearch } = this.state;
+    if (showSearch || this._okToSwitchAway()) {
+      this.setState({
+        showSearch: !showSearch,
+        notes: showSearch ? notes : ""
+      });
     }
   };
 
