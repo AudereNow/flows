@@ -8,7 +8,7 @@ import "../Components/DateRangePickerOverride.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import { changeTaskState, formatCurrency } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";

@@ -4,7 +4,7 @@ import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import {
   changeTaskState,
   formatCurrency,
