@@ -323,30 +323,35 @@ export default class TaskPanel extends React.Component<Props, State> {
           <div className="mainview_spaced_row">
             {Object.keys(patientKeyMap).map((key, index) => {
               return (
-                <Fragment key={key + index}>
+                <div className="mainview_input_container" key={key + index}>
                   <input
                     type="checkbox"
                     name={key}
                     onChange={this._onCheckBoxSelect}
                     checked={(this.state.filters as any)[key] || false}
                   />
-                  <span>{patientKeyMap[key]}</span>
-                </Fragment>
+                  <span className="mainview_input_label">
+                    {patientKeyMap[key]}
+                  </span>
+                </div>
               );
             })}
           </div>
-          <DateRangePicker
-            startDate={searchDates.startDate}
-            startDateId={"startDate"}
-            endDate={searchDates.endDate}
-            endDateId={"endDate"}
-            onDatesChange={this._onDatesChange}
-            focusedInput={focusedInput}
-            onFocusChange={this._onFocusChange}
-            isOutsideRange={() => false}
-            regular={true}
-          />
-          <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          <div className="mainview_spaced_row">
+            <DateRangePicker
+              startDate={searchDates.startDate}
+              startDateId={"startDate"}
+              endDate={searchDates.endDate}
+              endDateId={"endDate"}
+              onDatesChange={this._onDatesChange}
+              focusedInput={focusedInput}
+              onFocusChange={this._onFocusChange}
+              isOutsideRange={() => false}
+              small={true}
+              block={true}
+            />
+            <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          </div>
         </div>
       </div>
     );
