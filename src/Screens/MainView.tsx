@@ -49,10 +49,24 @@ class MainView extends React.Component<Props, State> {
   state: State = {
     roles: []
   };
+  _onTabSelectCallback?: () => boolean;
+
   async componentDidMount() {
     const roles = await userRoles();
     this.setState({ roles });
   }
+
+  _onTabSelect = (): boolean => {
+    const result = !this._onTabSelectCallback || this._onTabSelectCallback();
+    if (result) {
+      this._onTabSelectCallback = undefined;
+    }
+    return result;
+  };
+
+  _registerForTabSelectCallback = (onTabSelect: () => boolean) => {
+    this._onTabSelectCallback = onTabSelect;
+  };
 
   _renderBody() {
     if (!this.state.roles.length) {
@@ -65,7 +79,7 @@ class MainView extends React.Component<Props, State> {
     );
 
     return (
-      <Tabs>
+      <Tabs onSelect={this._onTabSelect}>
         <TabList>
           {tabs.map(tab => (
             <Tab key={tab}>{tab}</Tab>
@@ -88,6 +102,9 @@ class MainView extends React.Component<Props, State> {
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
                 actionable={tabConfig.actionable}
+                registerForTabSelectCallback={
+                  this._registerForTabSelectCallback
+                }
               />
             );
           }

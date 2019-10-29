@@ -35,6 +35,7 @@ type Props = {
     filters: Filters;
   }>;
   actionable?: boolean;
+  registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
 };
 
 type State = {
@@ -72,6 +73,7 @@ export default class TaskPanel extends React.Component<Props, State> {
       this.props.taskState,
       this._onTasksChanged
     );
+    this.props.registerForTabSelectCallback(this._onTabSelect);
   }
 
   componentWillUnmount() {
@@ -80,15 +82,17 @@ export default class TaskPanel extends React.Component<Props, State> {
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-    let { selectedTaskIndex, selectedTaskId } = this.state;
+    let { notes, selectedTaskIndex, selectedTaskId } = this.state;
 
     if (tasks.length === 0) {
       selectedTaskIndex = -1;
       selectedTaskId = undefined;
+      notes = "";
     } else {
       if (selectedTaskIndex === -1) {
         selectedTaskIndex = 0;
         selectedTaskId = tasks[0].id;
+        notes = "";
       } else {
         selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
         if (selectedTaskIndex === -1) {
@@ -97,6 +101,7 @@ export default class TaskPanel extends React.Component<Props, State> {
             tasks.length - 1
           );
           selectedTaskId = tasks[selectedTaskIndex].id;
+          notes = "";
         }
       }
     }
@@ -106,17 +111,27 @@ export default class TaskPanel extends React.Component<Props, State> {
       tasks,
       changes,
       selectedTaskIndex,
-      selectedTaskId
+      selectedTaskId,
+      notes
     });
   };
 
-  _onTaskSelect = (index: number) => {
+  _onTabSelect = (): boolean => {
+    return this._okToSwitchAway();
+  };
+
+  _okToSwitchAway = (): boolean => {
     let result = true;
     if (this.state.notes.length > 0) {
       result = window.confirm(
         "You have some unsaved information for this item. OK to discard it?"
       );
     }
+    return result;
+  };
+
+  _onTaskSelect = (index: number) => {
+    const result = this._okToSwitchAway();
     if (result) {
       this.setState({
         selectedTaskIndex: index,
@@ -132,7 +147,9 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _onSearchClick = () => {
-    this.setState({ showSearch: !this.state.showSearch });
+    if (this.state.showSearch || this._okToSwitchAway()) {
+      this.setState({ showSearch: !this.state.showSearch, notes: "" });
+    }
   };
 
   _renderLabelItems = () => {
@@ -195,7 +212,8 @@ export default class TaskPanel extends React.Component<Props, State> {
       {
         tasks: filteredTasks,
         searchTermGlobal: searchTerm,
-        selectedTaskIndex: selectedIndex
+        selectedTaskIndex: selectedIndex,
+        notes: ""
       },
       () => {
         if (selectedIndex === -1 && filteredTasks.length > 0) {
@@ -220,7 +238,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates,
       tasks: filteredTasks,
-      selectedTaskIndex: selectedIndex
+      selectedTaskIndex: selectedIndex,
+      notes: ""
     });
   };
 
