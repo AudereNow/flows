@@ -175,7 +175,7 @@ exports.uploadCSV = functions.https.onCall(
 );
 
 async function LogAdminEvent(user: User, desc: string) {
-  const dateString = `${new Date().toUTCString()} ${Math.random()}`;
+  const dateString = `${new Date().toISOString()} ${Math.random()}`;
   const event: AdminLogEvent = {
     timestamp: Date.now(),
     user,
