@@ -72,7 +72,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     showSearch: false,
     notes: "",
-    filters: { patient: true, name: true, patientID: true, item: true }
+    filters: { patient: false, name: false, patientID: false, item: false }
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
