@@ -1,16 +1,17 @@
 import React from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
+import { ListItem } from "../Components/ListItem";
+import { Task, UserRole } from "../sharedtypes";
+import { defaultConfig, isCustomPanel } from "../store/config";
 import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
+import { AuditorDetails } from "./AuditorPanel";
 import MainChrome from "./MainChrome";
 import "./MainView.css";
-import { AuditorItem, AuditorDetails } from "./AuditorPanel";
-import { OperatorItem, OperatorDetails } from "./OperatorPanel";
-import { PayorItem, PayorDetails } from "./PayorPanel";
-import { isCustomPanel, defaultConfig } from "../store/config";
+import { OperatorDetails } from "./OperatorPanel";
+import { PayorDetails } from "./PayorPanel";
 import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
-import { UserRole, Task } from "../sharedtypes";
 
 type Props = {};
 type State = {
@@ -26,9 +27,7 @@ const PanelComponents: {
 const ItemComponents: {
   [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
 } = {
-  AuditTask: AuditorItem,
-  PayorTask: PayorItem,
-  OperatorTask: OperatorItem
+  default: ListItem
 };
 
 const DetailsComponents: {
@@ -43,10 +42,24 @@ class MainView extends React.Component<Props, State> {
   state: State = {
     roles: []
   };
+  _onTabSelectCallback?: () => boolean;
+
   async componentDidMount() {
     const roles = await userRoles();
     this.setState({ roles });
   }
+
+  _onTabSelect = (): boolean => {
+    const result = !this._onTabSelectCallback || this._onTabSelectCallback();
+    if (result) {
+      this._onTabSelectCallback = undefined;
+    }
+    return result;
+  };
+
+  _registerForTabSelectCallback = (onTabSelect: () => boolean) => {
+    this._onTabSelectCallback = onTabSelect;
+  };
 
   _renderBody() {
     if (!this.state.roles.length) {
@@ -59,7 +72,7 @@ class MainView extends React.Component<Props, State> {
     );
 
     return (
-      <Tabs>
+      <Tabs onSelect={this._onTabSelect}>
         <TabList>
           {tabs.map(tab => (
             <Tab key={tab}>{tab}</Tab>
@@ -82,6 +95,9 @@ class MainView extends React.Component<Props, State> {
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
                 actions={tabConfig.actions}
+                registerForTabSelectCallback={
+                  this._registerForTabSelectCallback
+                }
               />
             );
           }

@@ -37,7 +37,7 @@ export const defaultConfig: AppConfig = {
   tabs: {
     Auditor: {
       taskState: TaskState.AUDIT,
-      taskListComponent: "AuditTask",
+      taskListComponent: "default",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR],
@@ -54,7 +54,7 @@ export const defaultConfig: AppConfig = {
     },
     Payor: {
       taskState: TaskState.PAY,
-      taskListComponent: "PayorTask",
+      taskListComponent: "default",
       detailsComponent: "PayorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.PAYOR],
@@ -77,7 +77,7 @@ export const defaultConfig: AppConfig = {
     },
     Operator: {
       taskState: TaskState.FOLLOWUP,
-      taskListComponent: "OperatorTask",
+      taskListComponent: "default",
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR],
@@ -94,7 +94,7 @@ export const defaultConfig: AppConfig = {
     },
     Rejected: {
       taskState: TaskState.REJECTED,
-      taskListComponent: "AuditTask",
+      taskListComponent: "default",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
       actions: {},
@@ -102,7 +102,7 @@ export const defaultConfig: AppConfig = {
     },
     Complete: {
       taskState: TaskState.COMPLETED,
-      taskListComponent: "AuditTask",
+      taskListComponent: "default",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
       actions: {},

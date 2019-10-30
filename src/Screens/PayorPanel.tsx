@@ -71,7 +71,7 @@ export class PayorDetails extends React.Component<
   };
 
   render() {
-    const { notesux, task } = this.props;
+    const { filters, searchTermGlobal, task, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
 
     let cleanedData: any[] = [];
@@ -87,41 +87,39 @@ export class PayorDetails extends React.Component<
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem data={{ Pharmacy: task.site.name }} />
-        {!!task.site.phone && <TextItem data={{ Phone: task.site.phone }} />}
         <TextItem
+          searchTermGlobal={searchTermGlobal}
           data={{
-            "Total Reimbursement": formatCurrency(claimsTotal)
+            displayKey: "Pharmacy",
+            searchKey: "name",
+            value: task.site.name
           }}
+          filters={filters}
+        />
+        {!!task.site.phone && (
+          <TextItem
+            data={{
+              displayKey: "Phone",
+              searchKey: "phone",
+              value: task.site.phone
+            }}
+            filters={filters}
+            searchTermGlobal={searchTermGlobal}
+          />
+        )}
+        <TextItem
+          searchTermGlobal={searchTermGlobal}
+          data={{
+            displayKey: "Total Reimbursement",
+            searchKey: "reimbursement",
+            value: formatCurrency(claimsTotal)
+          }}
+          filters={filters}
         />
         <DataTable data={cleanedData} />
         {notesux}
         {this.props.children}
       </LabelWrapper>
-    );
-  }
-}
-
-export class PayorItem extends React.Component<{
-  task: Task;
-  isSelected: boolean;
-}> {
-  render() {
-    const previewName =
-      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
-    const claimAmounts = this.props.task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{this.props.task.site.name}</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
     );
   }
 }

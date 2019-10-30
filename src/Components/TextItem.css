@@ -1,8 +1,12 @@
 .textitem_container {
-  flex-direction: "row";
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
   margin: 5px;
 }
 
 .textitem_key {
   font-weight: bold;
+  margin-right: 5px;
 }

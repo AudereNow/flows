@@ -17,28 +17,6 @@
   flex-direction: column;
 }
 
-.mainview_task_preview {
-  border: 1px solid #888888;
-  border-top: 0;
-  padding: 10px;
-  cursor: pointer;
-}
-
-.mainview_task_preview:hover {
-  background-color: #888888;
-}
-
-.mainview_task_preview.selected {
-  background-color: #cccccc;
-}
-
-.mainview_preview_header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
 .mainview_button_row {
   display: flex;
   flex-direction: row;
@@ -49,6 +27,15 @@
   display: flex;
   justify-content: space-between;
   margin: 5px;
+}
+
+.mainview_checkbox {
+  margin-right: 5px;
+}
+
+.mainview_input_label {
+  color: white;
+  font-size: small;
 }
 
 .mainview_button_disabled {
@@ -65,6 +52,18 @@
   height: 20px;
 }
 
+.mainview_search_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.mainview_search_input {
+  display: flex;
+  flex: 1;
+  height: 18px;
+}
+
 .mainview_details {
   display: flex;
   flex-direction: column;
@@ -73,7 +72,7 @@
 
 .mainview_actions_so_far_header {
   margin-top: 12px;
-  margin: 5px;
+  margin: 10px;
   font-weight: bold;
 }
 

@@ -15,7 +15,7 @@
 }
 
 .labelwrapper_inner {
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: scroll;
 }
 
@@ -34,6 +34,7 @@
   cursor: pointer;
   height: 24px;
   width: 24px;
+  margin: 3px;
 }
 
 .labelwrapper_labelitems_container {

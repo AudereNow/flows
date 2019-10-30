@@ -28,6 +28,16 @@ export interface DetailsComponentProps {
     key: string,
     callback: () => Promise<ActionCallbackResult>
   ) => void;
+  searchTermGlobal?: string;
+  filters: Filters;
+}
+
+export interface Filters {
+  patient?: boolean;
+  name?: boolean;
+  id?: boolean;
+  phone?: boolean;
+  item?: boolean;
 }
 
 type Props = {
@@ -36,6 +46,7 @@ type Props = {
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
   detailsComponent: React.ComponentClass<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
+  registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
 };
 
 type State = {
@@ -49,6 +60,7 @@ type State = {
   searchTermGlobal: string;
   showSearch: boolean;
   notes: string;
+  filters: Filters;
 };
 
 export default class TaskPanel extends React.Component<Props, State> {
@@ -61,7 +73,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     searchDates: { startDate: null, endDate: null },
     searchTermGlobal: "",
     showSearch: false,
-    notes: ""
+    notes: "",
+    filters: {}
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -71,6 +84,7 @@ export default class TaskPanel extends React.Component<Props, State> {
       this.props.taskState,
       this._onTasksChanged
     );
+    this.props.registerForTabSelectCallback(this._onTabSelect);
   }
 
   componentWillUnmount() {
@@ -79,15 +93,17 @@ export default class TaskPanel extends React.Component<Props, State> {
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-    let { selectedTaskIndex, selectedTaskId } = this.state;
+    let { notes, selectedTaskIndex, selectedTaskId } = this.state;
 
     if (tasks.length === 0) {
       selectedTaskIndex = -1;
       selectedTaskId = undefined;
+      notes = "";
     } else {
       if (selectedTaskIndex === -1) {
         selectedTaskIndex = 0;
         selectedTaskId = tasks[0].id;
+        notes = "";
       } else {
         selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
         if (selectedTaskIndex === -1) {
@@ -96,6 +112,7 @@ export default class TaskPanel extends React.Component<Props, State> {
             tasks.length - 1
           );
           selectedTaskId = tasks[selectedTaskIndex].id;
+          notes = "";
         }
       }
     }
@@ -105,17 +122,27 @@ export default class TaskPanel extends React.Component<Props, State> {
       tasks,
       changes,
       selectedTaskIndex,
-      selectedTaskId
+      selectedTaskId,
+      notes
     });
   };
 
-  _onTaskSelect = (index: number) => {
+  _onTabSelect = (): boolean => {
+    return this._okToSwitchAway();
+  };
+
+  _okToSwitchAway = (): boolean => {
     let result = true;
     if (this.state.notes.length > 0) {
       result = window.confirm(
         "You have some unsaved information for this item. OK to discard it?"
       );
     }
+    return result;
+  };
+
+  _onTaskSelect = (index: number) => {
+    const result = this._okToSwitchAway();
     if (result) {
       this.setState({
         selectedTaskIndex: index,
@@ -131,7 +158,13 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _onSearchClick = () => {
-    this.setState({ showSearch: !this.state.showSearch });
+    const { notes, showSearch } = this.state;
+    if (showSearch || this._okToSwitchAway()) {
+      this.setState({
+        showSearch: !showSearch,
+        notes: showSearch ? notes : ""
+      });
+    }
   };
 
   _renderLabelItems = () => {
@@ -164,15 +197,17 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
+    const { filters } = this.state;
+
     return this.state.allTasks.filter(task => {
       return (
-        (containsSearchTerm(searchTerm, task.site) ||
+        containsSearchTerm(searchTerm, task.site, filters) ||
+        (task.entries.some(entry => {
+          return containsSearchTerm(searchTerm, entry, filters);
+        }) &&
           task.entries.some(entry => {
-            return containsSearchTerm(searchTerm, entry);
-          })) &&
-        task.entries.some(entry => {
-          return withinDateRange(dateRange, entry);
-        })
+            return withinDateRange(dateRange, entry);
+          }))
       );
     });
   };
@@ -192,7 +227,8 @@ export default class TaskPanel extends React.Component<Props, State> {
       {
         tasks: filteredTasks,
         searchTermGlobal: searchTerm,
-        selectedTaskIndex: selectedIndex
+        selectedTaskIndex: selectedIndex,
+        notes: ""
       },
       () => {
         if (selectedIndex === -1 && filteredTasks.length > 0) {
@@ -217,7 +253,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates,
       tasks: filteredTasks,
-      selectedTaskIndex: selectedIndex
+      selectedTaskIndex: selectedIndex,
+      notes: ""
     });
   };
 
@@ -226,7 +263,9 @@ export default class TaskPanel extends React.Component<Props, State> {
     this._inputRef.current!.value = "";
     this.setState({
       searchDates: { startDate: null, endDate: null },
-      tasks: allTasks
+      tasks: allTasks,
+      filters: {},
+      selectedTaskIndex: 0
     });
   };
 
@@ -281,34 +320,72 @@ export default class TaskPanel extends React.Component<Props, State> {
     );
   };
 
+  _onCheckBoxSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.name;
+    const checked = event.target.checked;
+    let filters = this.state.filters;
+    (filters as any)[name] = checked;
+    this.setState({ filters });
+  };
+
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
+    const patientKeyMap: any = {
+      patient: "Patient",
+      patientID: "ID",
+      name: "Pharmacy",
+      item: "Item"
+    };
+
     return (
       <div className="mainview_search_container">
-        <DateRangePicker
-          startDate={searchDates.startDate}
-          startDateId={"startDate"}
-          endDate={searchDates.endDate}
-          endDateId={"endDate"}
-          onDatesChange={this._onDatesChange}
-          focusedInput={focusedInput}
-          onFocusChange={this._onFocusChange}
-          isOutsideRange={() => false}
-          regular={true}
-        />
         <div className="labelwrapper_row">
-          <input
-            ref={this._inputRef}
-            type="text"
-            onChange={this._onSearchTermChange}
-            placeholder="Search"
-          />
-          <Button
-            className="mainview_clear_search_button"
-            label="Clear Search"
-            onClick={this._clearSearch}
-          />
-          <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          <div className="mainview_search_row">
+            <input
+              className="mainview_search_input"
+              ref={this._inputRef}
+              type="text"
+              onChange={this._onSearchTermChange}
+              placeholder="Search"
+            />
+            <Button
+              className="mainview_clear_search_button"
+              label="Clear Search"
+              onClick={this._clearSearch}
+            />
+          </div>
+          <div className="mainview_spaced_row">
+            {Object.keys(patientKeyMap).map((key, index) => {
+              return (
+                <div className="mainview_input_container" key={key + index}>
+                  <input
+                    type="checkbox"
+                    name={key}
+                    onChange={this._onCheckBoxSelect}
+                    checked={(this.state.filters as any)[key] || false}
+                  />
+                  <span className="mainview_input_label">
+                    {patientKeyMap[key]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mainview_spaced_row">
+            <DateRangePicker
+              startDate={searchDates.startDate}
+              startDateId={"startDate"}
+              endDate={searchDates.endDate}
+              endDateId={"endDate"}
+              onDatesChange={this._onDatesChange}
+              focusedInput={focusedInput}
+              onFocusChange={this._onFocusChange}
+              isOutsideRange={() => false}
+              small={true}
+              block={true}
+            />
+            <Button label={"Download CSV"} onClick={this._downloadCSV} />
+          </div>
         </div>
       </div>
     );
@@ -319,7 +396,12 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const { notes, selectedTaskIndex, showSearch } = this.state;
+    const {
+      selectedTaskIndex,
+      showSearch,
+      searchTermGlobal,
+      notes
+    } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -330,6 +412,7 @@ export default class TaskPanel extends React.Component<Props, State> {
           onNotesChanged={this._onNotesChanged}
         />
       ) : null;
+
     return (
       <div className="mainview_content">
         <LabelWrapper
@@ -354,7 +437,9 @@ export default class TaskPanel extends React.Component<Props, State> {
               notes={notes}
               detailsComponent={this.props.detailsComponent}
               actions={this.props.actions}
+              filters={this.state.filters}
               key={this.state.tasks[selectedTaskIndex].id}
+              searchTermGlobal={searchTermGlobal}
             />
           )}
         </div>
@@ -369,6 +454,8 @@ interface DetailWrapperProps {
   notesux: ReactNode;
   detailsComponent: React.ComponentClass<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
+  filters: Filters;
+  searchTermGlobal: string;
 }
 
 interface DetailsWrapperState {
@@ -466,6 +553,8 @@ class DetailsWrapper extends React.Component<
         notesux={this.props.notesux}
         key={this.props.task.id}
         registerActionCallback={this._registerActionCallback}
+        filters={this.props.filters}
+        searchTermGlobal={this.props.searchTermGlobal}
       >
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (

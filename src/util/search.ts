@@ -1,4 +1,5 @@
 import moment, { Moment } from "moment";
+import { Filters } from "../Screens/TaskPanel";
 
 export interface DateRange {
   startDate: Moment | null;
@@ -7,36 +8,49 @@ export interface DateRange {
 
 export const containsSearchTerm = (
   searchPhrase: string,
-  entry: any
+  entry: any,
+  filters?: Filters
 ): boolean => {
   if (searchPhrase === "") {
     return true;
   }
-  const keys = Object.keys(entry);
 
-  let searchKey;
-  if (searchPhrase.includes(":")) {
-    const searchArr = searchPhrase.split(":");
-    searchKey = searchArr[0].trim().toLowerCase();
-    searchPhrase = searchArr[1];
-  }
-  searchPhrase = searchPhrase.trim().toLowerCase();
-  if (searchPhrase.length === 0) {
-    return false;
-  }
-  for (let i = 0; i < keys.length; i++) {
-    const value = entry[keys[i]];
-    if (
-      ((!!searchKey && keys[i].toLowerCase().includes(searchKey)) ||
-        !searchKey) &&
-      (!!value &&
-        value
-          .toString()
-          .trim()
-          .toLowerCase()
-          .includes(searchPhrase))
-    ) {
+  let entryCopy = Object.assign({}, entry);
+  entryCopy.patient = `${entry.patientFirstName} ${entry.patientLastName} ${entry.patientAge} ${entry.patientSex}`;
+  const entryKeys = Object.keys(entry);
+  const filterKeys = Object.keys(filters as any);
+
+  if (!!filters && Object.values(filters).some(value => !!value)) {
+    for (let i = 0; i < filterKeys.length; i++) {
+      const filterValue = (filters as any)[filterKeys[i]];
+      const filterKey = filterKeys[i];
+
+      if (
+        !!filterValue &&
+        !!entryCopy[filterKey] &&
+        entryCopy[filterKey].includes(searchPhrase)
+      ) {
+        return true;
+      }
+    }
+  } else {
+    let searchKey;
+    searchPhrase = searchPhrase.trim();
+    if (searchPhrase.length === 0) {
       return true;
+    }
+    for (let i = 0; i < entryKeys.length; i++) {
+      const value = entryCopy[entryKeys[i]];
+      if (
+        ((!!searchKey && entryKeys[i].includes(searchKey)) || !searchKey) &&
+        (!!value &&
+          value
+            .toString()
+            .trim()
+            .includes(searchPhrase))
+      ) {
+        return true;
+      }
     }
   }
 

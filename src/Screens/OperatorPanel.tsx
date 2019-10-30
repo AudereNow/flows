@@ -3,9 +3,8 @@ import "react-tabs/style/react-tabs.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
-import { formatCurrency } from "../store/corestore";
 import { DetailsComponentProps } from "./TaskPanel";
+import { ClaimEntry } from "../sharedtypes";
 import "./MainView.css";
 
 export class OperatorDetails extends React.Component<DetailsComponentProps> {
@@ -36,55 +35,60 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
       patientProps.push(entry.patientSex);
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
+    const { searchTermGlobal, filters } = this.props;
 
     return (
       <LabelWrapper key={patientInfo}>
         <TextItem
-          data={{ Date: new Date(entry.timestamp).toLocaleDateString() }}
+          data={{
+            displayKey: "Date",
+            searchKey: "date",
+            value: new Date(entry.timestamp).toLocaleDateString()
+          }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
         />
         <TextItem
           data={{
-            Patient: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
+            displayKey: "Patient",
+            searchKey: "patient",
+            value: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
           }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
         />
-        <ImageRow images={this._extractImages(entry)} />
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          filters={filters}
+          images={this._extractImages(entry)}
+        />
+
+        <ImageRow
+          searchTermGlobal={searchTermGlobal}
+          filters={filters}
+          images={this._extractImages(entry)}
+        />
       </LabelWrapper>
     );
   };
 
   render() {
+    const { filters, searchTermGlobal } = this.props;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem data={{ Pharmacy: this.props.task.site.name }} />
+        <TextItem
+          data={{
+            displayKey: "Pharmacy",
+            searchKey: "name",
+            value: this.props.task.site.name
+          }}
+          filters={filters}
+          searchTermGlobal={searchTermGlobal}
+        />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>
-    );
-  }
-}
-
-export class OperatorItem extends React.Component<{
-  task: Task;
-  isSelected: boolean;
-}> {
-  render() {
-    const previewName =
-      "mainview_task_preview" + (this.props.isSelected ? " selected" : "");
-    const claimAmounts = this.props.task.entries.map(entry => {
-      return entry.claimedCost;
-    });
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    return (
-      <div className={previewName}>
-        <div className="mainview_preview_header">
-          <span>{this.props.task.site.name}</span>
-          <span>{this.props.task.entries.length} Claims</span>
-        </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
-      </div>
     );
   }
 }
