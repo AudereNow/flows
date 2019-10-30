@@ -190,13 +190,13 @@ export default class TaskPanel extends React.Component<Props, State> {
 
     return this.state.allTasks.filter(task => {
       return (
-        containsSearchTerm(searchTerm, task.site, filters) ||
-        (task.entries.some(entry => {
-          return containsSearchTerm(searchTerm, entry, filters);
-        }) &&
+        (containsSearchTerm(searchTerm, task.site, filters) ||
           task.entries.some(entry => {
-            return withinDateRange(dateRange, entry);
-          }))
+            return containsSearchTerm(searchTerm, entry, filters);
+          })) &&
+        task.entries.some(entry => {
+          return withinDateRange(dateRange, entry);
+        })
       );
     });
   };
