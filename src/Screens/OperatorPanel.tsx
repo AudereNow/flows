@@ -1,35 +1,13 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState } from "../sharedtypes";
-import { changeTaskState } from "../store/corestore";
+import { DetailsComponentProps } from "./TaskPanel";
+import { ClaimEntry } from "../sharedtypes";
 import "./MainView.css";
-import { Filters } from "./TaskPanel";
 
-type Props = {
-  task: Task;
-  filters: Filters;
-  notesux: ReactNode;
-  searchTermGlobal?: string;
-  notes: string;
-};
-
-export class OperatorDetails extends React.Component<Props> {
-  _onReject = async () => {
-    await changeTaskState(
-      this.props.task,
-      TaskState.REJECTED,
-      this.props.notes
-    );
-  };
-
-  _onApprove = async () => {
-    await changeTaskState(this.props.task, TaskState.PAY, this.props.notes);
-  };
-
+export class OperatorDetails extends React.Component<DetailsComponentProps> {
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
     if (!!claim.photoMedUri) {
@@ -109,10 +87,7 @@ export class OperatorDetails extends React.Component<Props> {
         />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
-        <div className="mainview_button_row">
-          <Button label="Reject" onClick={this._onReject} />
-          <Button label="Approve for Payment" onClick={this._onApprove} />
-        </div>
+        {this.props.children}
       </LabelWrapper>
     );
   }

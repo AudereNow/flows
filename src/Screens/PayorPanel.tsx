@@ -1,53 +1,50 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState } from "../sharedtypes";
+import { ClaimEntry, Task } from "../sharedtypes";
 import {
-  changeTaskState,
   formatCurrency,
   getBestUserName,
   issuePayments
 } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
+import { DetailsComponentProps } from "./TaskPanel";
 import "./MainView.css";
-import { Filters } from "./TaskPanel";
-
-type Props = {
-  task: Task;
-  notesux: ReactNode;
-  notes: string;
-  filters: Filters;
-  searchTermGlobal?: string;
-};
 
 type State = {
   realPayments: boolean;
   paying: boolean;
 };
 
-export class PayorDetails extends React.Component<Props, State> {
+export class PayorDetails extends React.Component<
+  DetailsComponentProps,
+  State
+> {
   state = {
     realPayments: false,
     paying: false
   };
 
   async componentDidMount() {
+    this.props.registerActionCallback("approve", this._issuePayment);
     const realPayments = await getConfig("enableRealPayments");
     this.setState({ realPayments });
   }
 
-  async _issuePayment(): Promise<boolean> {
+  _issuePayment = async () => {
+    if (!this.state.realPayments) {
+      await new Promise(res => setTimeout(res, 1000));
+      return { success: true };
+    }
     const { task } = this.props;
     const reimburseAmount = _getReimbursementTotal(task);
 
     if (reimburseAmount <= 0) {
       alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
-      return false;
+      return { success: false };
     }
-
     const result = await issuePayments([
       {
         name: task.site.name,
@@ -67,49 +64,15 @@ export class PayorDetails extends React.Component<Props, State> {
     // numQueued should be exactly 1 if the payment was successful
     if (result.data.numQueued === 0) {
       alert(result.data.entries[0].errorMessage);
-      return false;
+      return { success: false };
     }
 
-    return true;
-  }
-
-  _onIssuePayment = async () => {
-    try {
-      let paid = true;
-
-      this.setState({ paying: true });
-
-      if (this.state.realPayments) {
-        paid = await this._issuePayment();
-      }
-      if (paid) {
-        await changeTaskState(
-          this.props.task,
-          TaskState.COMPLETED,
-          this.props.notes
-        );
-      }
-    } catch (e) {
-      alert(`Error: ${(e && e.message) || e}`);
-    } finally {
-      this.setState({ paying: false });
-    }
-  };
-
-  _onDecline = async () => {
-    const { task } = this.props;
-    await changeTaskState(task, TaskState.FOLLOWUP, this.props.notes);
+    return { success: true };
   };
 
   render() {
-    const { paying, realPayments } = this.state;
     const { filters, searchTermGlobal, task, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
-    const payLabel = realPayments
-      ? paying
-        ? "Issuing Payment..."
-        : "Issue Payment"
-      : "Mark Paid";
 
     let cleanedData: any[] = [];
     task.entries.sort((a, b) => a.timestamp - b.timestamp);
@@ -155,18 +118,7 @@ export class PayorDetails extends React.Component<Props, State> {
         />
         <DataTable data={cleanedData} />
         {notesux}
-        <div className="mainview_button_row">
-          <Button
-            disabled={paying}
-            label={"Decline Payment"}
-            onClick={this._onDecline}
-          />
-          <Button
-            disabled={paying}
-            label={payLabel}
-            onClick={this._onIssuePayment}
-          />
-        </div>
+        {this.props.children}
       </LabelWrapper>
     );
   }

@@ -7,12 +7,30 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
-import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
-import { defaultConfig, TaskConfig } from "../store/config";
-import { getChanges, subscribeToTasks } from "../store/corestore";
+import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import {
+  changeTaskState,
+  subscribeToTasks,
+  getChanges
+} from "../store/corestore";
+import { ActionConfig } from "../store/config";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
+import { TaskConfig, defaultConfig } from "../store/config";
+import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
+
+export interface DetailsComponentProps {
+  task: Task;
+  notesux: ReactNode;
+  actionable?: boolean;
+  registerActionCallback: (
+    key: string,
+    callback: () => Promise<ActionCallbackResult>
+  ) => void;
+  searchTermGlobal?: string;
+  filters: Filters;
+}
 
 export interface Filters {
   patient?: boolean;
@@ -25,15 +43,8 @@ type Props = {
   taskState: TaskState;
   listLabel: string;
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
-  detailsComponent: React.ComponentClass<{
-    task: Task;
-    actionable?: boolean;
-    notesux: ReactNode;
-    notes: string;
-    searchTermGlobal?: string;
-    filters: Filters;
-  }>;
-  actionable?: boolean;
+  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
 };
 
@@ -399,8 +410,7 @@ export default class TaskPanel extends React.Component<Props, State> {
       searchTermGlobal,
       notes
     } = this.state;
-    const actionable =
-      this.props.actionable !== undefined ? this.props.actionable : true;
+    const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
         <Notes
@@ -429,11 +439,12 @@ export default class TaskPanel extends React.Component<Props, State> {
         </LabelWrapper>
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 && (
-            <this.props.detailsComponent
+            <DetailsWrapper
               task={this.state.tasks[selectedTaskIndex]}
-              actionable={actionable}
               notesux={notesux}
               notes={notes}
+              detailsComponent={this.props.detailsComponent}
+              actions={this.props.actions}
               filters={this.state.filters}
               key={this.state.tasks[selectedTaskIndex].id}
               searchTermGlobal={searchTermGlobal}
@@ -441,6 +452,130 @@ export default class TaskPanel extends React.Component<Props, State> {
           )}
         </div>
       </div>
+    );
+  }
+}
+
+interface DetailWrapperProps {
+  task: Task;
+  notes: string;
+  notesux: ReactNode;
+  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  actions: { [key: string]: ActionConfig };
+  filters: Filters;
+  searchTermGlobal: string;
+}
+
+interface DetailsWrapperState {
+  buttonsBusy: { [key: string]: boolean };
+  configValues: { [key: string]: boolean };
+}
+
+interface ActionCallbackResult {
+  success: boolean;
+  task?: Task;
+}
+
+class DetailsWrapper extends React.Component<
+  DetailWrapperProps,
+  DetailsWrapperState
+> {
+  state: DetailsWrapperState = {
+    buttonsBusy: {},
+    configValues: {}
+  };
+
+  async componentWillReceiveProps(props: DetailWrapperProps) {
+    const configValues: { [key: string]: boolean } = {};
+    await Promise.all(
+      Object.values(props.actions).map(async action => {
+        if (action.disableOnConfig) {
+          configValues[action.disableOnConfig] = await getConfig(
+            action.disableOnConfig
+          );
+        }
+        if (action.enableOnConfig) {
+          configValues[action.enableOnConfig] = await getConfig(
+            action.enableOnConfig
+          );
+        }
+      })
+    );
+    this.setState({ configValues });
+  }
+
+  _actionCallbacks: {
+    [key: string]: () => Promise<ActionCallbackResult>;
+  } = [] as any;
+
+  _registerActionCallback = (
+    key: string,
+    callback: () => Promise<ActionCallbackResult>
+  ) => {
+    this._actionCallbacks[key] = callback;
+  };
+
+  _onActionClick = async (key: string) => {
+    this.setState(state => ({
+      buttonsBusy: {
+        ...state.buttonsBusy,
+        [key]: true
+      }
+    }));
+    let task: Task = this.props.task;
+    if (this._actionCallbacks[key]) {
+      const result = await this._actionCallbacks[key]();
+      if (!result.success) {
+        this.setState(state => ({
+          buttonsBusy: {
+            ...state.buttonsBusy,
+            [key]: false
+          }
+        }));
+        return;
+      }
+      task = result.task || task;
+    }
+    await changeTaskState(
+      task,
+      this.props.actions[key].nextTaskState,
+      this.props.notes
+    );
+  };
+
+  render() {
+    const buttons = Object.entries(this.props.actions).filter(
+      ([key, action]) => {
+        if (action.disableOnConfig) {
+          return !this.state.configValues[action.disableOnConfig];
+        }
+        if (action.enableOnConfig) {
+          return this.state.configValues[action.enableOnConfig];
+        }
+        return true;
+      }
+    );
+    return (
+      <this.props.detailsComponent
+        task={this.props.task}
+        notesux={this.props.notesux}
+        key={this.props.task.id}
+        registerActionCallback={this._registerActionCallback}
+        filters={this.props.filters}
+        searchTermGlobal={this.props.searchTermGlobal}
+      >
+        <div className="mainview_button_row">
+          {buttons.map(([key, actionConfig]) => (
+            <Button
+              disabled={this.state.buttonsBusy[key]}
+              label={actionConfig.label}
+              onClick={this._onActionClick}
+              callbackKey={key}
+              key={key}
+            />
+          ))}
+        </div>
+      </this.props.detailsComponent>
     );
   }
 }

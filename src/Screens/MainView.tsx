@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { ListItem } from "../Components/ListItem";
@@ -11,7 +11,7 @@ import MainChrome from "./MainChrome";
 import "./MainView.css";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
-import TaskPanel, { Filters } from "./TaskPanel";
+import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
 
 type Props = {};
 type State = {
@@ -31,14 +31,7 @@ const ItemComponents: {
 };
 
 const DetailsComponents: {
-  [key: string]: React.ComponentClass<{
-    task: Task;
-    actionable?: boolean;
-    notesux: ReactNode;
-    notes: string;
-    searchTermGlobal?: string;
-    filters: Filters;
-  }>;
+  [key: string]: React.ComponentClass<DetailsComponentProps>;
 } = {
   AuditTask: AuditorDetails,
   PayorTask: PayorDetails,
@@ -101,7 +94,7 @@ class MainView extends React.Component<Props, State> {
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
-                actionable={tabConfig.actionable}
+                actions={tabConfig.actions}
                 registerForTabSelectCallback={
                   this._registerForTabSelectCallback
                 }
