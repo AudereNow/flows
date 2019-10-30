@@ -421,6 +421,8 @@ export default class TaskPanel extends React.Component<Props, State> {
         />
       ) : null;
 
+    const renderSearchFn = !!showSearch ? this._renderSearchPanel : undefined;
+
     return (
       <div className="mainview_content">
         <LabelWrapper
@@ -428,8 +430,8 @@ export default class TaskPanel extends React.Component<Props, State> {
           className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
         >
-          {!!showSearch && <div>{this._renderSearchPanel()}</div>}
           <TaskList
+            renderSearchPanel={renderSearchFn}
             onSelect={this._onTaskSelect}
             tasks={this.state.tasks}
             renderItem={this._renderTaskListItem}

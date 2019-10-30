@@ -62,12 +62,6 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
           filters={filters}
           images={this._extractImages(entry)}
         />
-
-        <ImageRow
-          searchTermGlobal={searchTermGlobal}
-          filters={filters}
-          images={this._extractImages(entry)}
-        />
       </LabelWrapper>
     );
   };

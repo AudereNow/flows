@@ -1,5 +1,6 @@
 import React from "react";
 import ReactTooltip from "react-tooltip";
+import { Task } from "../sharedtypes";
 import {
   ActiveTask,
   dateFromServerTimestamp,
@@ -8,7 +9,6 @@ import {
   subscribeActiveTasks
 } from "../store/corestore";
 import "./TaskList.css";
-import { Task } from "../sharedtypes";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 
@@ -18,6 +18,7 @@ type Props = {
   className?: string;
   onSelect?: (index: number) => boolean;
   selectedItem?: number;
+  renderSearchPanel?: () => React.ReactElement;
 };
 
 type State = {
@@ -94,6 +95,11 @@ class TaskList extends React.Component<Props, State> {
   render() {
     return (
       <div className={this.props.className}>
+        {!!this.props.renderSearchPanel && (
+          <div className="tasklist_search_panel">
+            {this.props.renderSearchPanel()}
+          </div>
+        )}
         {this.props.tasks.map((task, index) => {
           const activeTask = this._isActiveTask(task);
           const activeClass = activeTask ? "tasklist_active" : undefined;
