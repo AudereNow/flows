@@ -26,11 +26,10 @@ export const containsSearchTerm = (
   for (let i = 0; i < filterKeys.length; i++) {
     const filterValue = (filters as any)[filterKeys[i]];
     const filterKey = filterKeys[i];
-
     if (
       !!filterValue &&
       !!entryCopy[filterKey] &&
-      entryCopy[filterKey].includes(searchPhrase)
+      entryCopy[filterKey].toLowerCase().includes(searchPhrase.toLowerCase())
     ) {
       return true;
     }

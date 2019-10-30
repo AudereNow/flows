@@ -262,7 +262,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
-      filters: { patient: true, name: true, patientID: true, item: true },
+      filters: { patient: false, name: false, patientID: false, item: false },
       selectedTaskIndex: 0
     });
   };
@@ -330,7 +330,7 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _renderSearchPanel = () => {
-    const { focusedInput, searchDates, showSearch } = this.state;
+    const { focusedInput, searchDates } = this.state;
     const patientKeyMap: any = {
       patient: "Patient",
       patientID: "ID",
@@ -421,6 +421,10 @@ export default class TaskPanel extends React.Component<Props, State> {
       ) : null;
 
     const searchPanel = !!showSearch ? this._renderSearchPanel() : undefined;
+    // let filters = this.state.filters;
+    // if (!Object.values(filters).some(value => !!value)) {
+    //   filters = { patient: true, name: true, patientID: true, item: true };
+    // }
 
     return (
       <div className="mainview_content">
