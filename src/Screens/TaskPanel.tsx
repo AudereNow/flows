@@ -17,8 +17,7 @@ import "./MainView.css";
 export interface Filters {
   patient?: boolean;
   name?: boolean;
-  id?: boolean;
-  phone?: boolean;
+  patientID?: boolean;
   item?: boolean;
 }
 
@@ -63,7 +62,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     showSearch: false,
     notes: "",
-    filters: {}
+    filters: { patient: true, name: true, patientID: true, item: true }
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -253,7 +252,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
-      filters: {},
+      filters: { patient: true, name: true, patientID: true, item: true },
       selectedTaskIndex: 0
     });
   };
@@ -309,12 +308,15 @@ export default class TaskPanel extends React.Component<Props, State> {
     );
   };
 
-  _onCheckBoxSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const name = event.target.name;
-    const checked = event.target.checked;
+  _onCheckBoxSelect = (event: React.MouseEvent<HTMLDivElement>) => {
+    const name = event.currentTarget.attributes.getNamedItem("data-value")!
+      .value;
+
     let filters = this.state.filters;
-    (filters as any)[name] = checked;
-    this.setState({ filters });
+    (filters as any)[name] = !(filters as any)[name];
+    this.setState({ filters }, () => {
+      this._handleSearchTermGlobalChange(this.state.searchTermGlobal);
+    });
   };
 
   _renderSearchPanel = () => {
@@ -346,11 +348,17 @@ export default class TaskPanel extends React.Component<Props, State> {
           <div className="mainview_spaced_row">
             {Object.keys(patientKeyMap).map((key, index) => {
               return (
-                <div className="mainview_input_container" key={key + index}>
+                <div
+                  className="mainview_input_container"
+                  key={key + index}
+                  data-value={key}
+                  onClick={this._onCheckBoxSelect}
+                >
                   <input
+                    className="mainview_input_label"
                     type="checkbox"
                     name={key}
-                    onChange={this._onCheckBoxSelect}
+                    readOnly
                     checked={(this.state.filters as any)[key] || false}
                   />
                   <span className="mainview_input_label">

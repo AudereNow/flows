@@ -21,7 +21,7 @@ export class ListItem extends React.Component<{
         <div className="listitem_header">
           <span>{task.site.name}</span>
           <span>
-            {task.entries.length} Claim{task.entries.length != 1 ? "s" : ""}
+            {task.entries.length} Claim{task.entries.length !== 1 ? "s" : ""}
           </span>
         </div>
         <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
