@@ -7,17 +7,16 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
-import { Task, TaskState, TaskChangeRecord } from "../sharedtypes";
+import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
+import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
   changeTaskState,
-  subscribeToTasks,
-  getChanges
+  getChanges,
+  subscribeToTasks
 } from "../store/corestore";
-import { ActionConfig } from "../store/config";
+import { getConfig } from "../store/remoteconfig";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
-import { TaskConfig, defaultConfig } from "../store/config";
-import { getConfig } from "../store/remoteconfig";
 import "./MainView.css";
 
 export interface DetailsComponentProps {
@@ -331,7 +330,7 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _renderSearchPanel = () => {
-    const { focusedInput, searchDates } = this.state;
+    const { focusedInput, searchDates, showSearch } = this.state;
     const patientKeyMap: any = {
       patient: "Patient",
       patientID: "ID",
@@ -421,7 +420,7 @@ export default class TaskPanel extends React.Component<Props, State> {
         />
       ) : null;
 
-    const renderSearchFn = !!showSearch ? this._renderSearchPanel : undefined;
+    const searchPanel = !!showSearch ? this._renderSearchPanel() : undefined;
 
     return (
       <div className="mainview_content">
@@ -431,7 +430,7 @@ export default class TaskPanel extends React.Component<Props, State> {
           renderLabelItems={this._renderLabelItems}
         >
           <TaskList
-            renderSearchPanel={renderSearchFn}
+            searchPanel={searchPanel}
             onSelect={this._onTaskSelect}
             tasks={this.state.tasks}
             renderItem={this._renderTaskListItem}

@@ -18,7 +18,7 @@ type Props = {
   className?: string;
   onSelect?: (index: number) => boolean;
   selectedItem?: number;
-  renderSearchPanel?: () => React.ReactElement;
+  searchPanel?: React.ReactElement;
 };
 
 type State = {
@@ -93,14 +93,13 @@ class TaskList extends React.Component<Props, State> {
   }
 
   render() {
+    const { renderItem, searchPanel, tasks } = this.props;
     return (
       <div className={this.props.className}>
-        {!!this.props.renderSearchPanel && (
-          <div className="tasklist_search_panel">
-            {this.props.renderSearchPanel()}
-          </div>
+        {!!searchPanel && (
+          <div className="tasklist_search_panel">{this.props.searchPanel}</div>
         )}
-        {this.props.tasks.map((task, index) => {
+        {tasks.map((task, index) => {
           const activeTask = this._isActiveTask(task);
           const activeClass = activeTask ? "tasklist_active" : undefined;
           const activeDataTip = activeTask
@@ -115,7 +114,7 @@ class TaskList extends React.Component<Props, State> {
               data-name={index}
               onClick={this._onItemPressed}
             >
-              {this.props.renderItem(task, index === this.state.selectedIndex)}
+              {renderItem(task, index === this.state.selectedIndex)}
               <ReactTooltip key={activeDataTip} />
             </div>
           );
