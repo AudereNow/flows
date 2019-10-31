@@ -111,6 +111,15 @@ export async function getChanges(taskID: string) {
   return changes.docs.map(d => d.data() as TaskChangeRecord);
 }
 
+export async function getAllChanges() {
+  const changes = await firebase
+    .firestore()
+    .collection(TASK_CHANGE_COLLECTION)
+    .orderBy("timestamp")
+    .get();
+  return changes.docs.map(d => d.data() as TaskChangeRecord);
+}
+
 export async function loadTasks(taskState: TaskState): Promise<Task[]> {
   const taskSnapshot = await firebase
     .firestore()
