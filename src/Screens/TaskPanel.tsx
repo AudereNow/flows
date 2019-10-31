@@ -9,11 +9,7 @@ import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
-import {
-  changeTaskState,
-  getChanges,
-  subscribeToTasks
-} from "../store/corestore";
+import { changeTaskState, getChanges, subscribeToTasks } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
@@ -262,7 +258,7 @@ export default class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
-      filters: { patient: true, name: true, patientID: true, item: true },
+      filters: { patient: false, name: false, patientID: false, item: false },
       selectedTaskIndex: 0
     });
   };
@@ -330,7 +326,7 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
 
   _renderSearchPanel = () => {
-    const { focusedInput, searchDates, showSearch } = this.state;
+    const { focusedInput, searchDates } = this.state;
     const patientKeyMap: any = {
       patient: "Patient",
       patientID: "ID",

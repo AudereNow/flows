@@ -8,30 +8,25 @@ export interface SearchText {
 }
 
 function highlight(text: SearchText, searchTerm: string, filters: Filters) {
-  let res = [];
   const { searchKey, value } = text;
 
   if (!(filters as any)[searchKey]) {
     return [value];
   }
 
-  const divided = value.split(searchTerm);
+  const regexp = new RegExp("(" + searchTerm + ")", "gi");
+  const divided = value.split(regexp);
 
-  for (let i = 0; i < divided.length; i++) {
-    const piece = divided[i];
-    if (piece.length > 0) {
-      res.push(piece);
-    }
-
-    if (i < divided.length - 1) {
-      res.push(
-        <span key={piece} className="highlight">
-          {searchTerm}
+  return divided.map((phrase: string) => {
+    if (phrase.toLowerCase() === searchTerm.toLowerCase()) {
+      return (
+        <span key={phrase} className="highlight">
+          {phrase}
         </span>
       );
     }
-  }
-  return res;
+    return phrase;
+  });
 }
 
 interface Props {

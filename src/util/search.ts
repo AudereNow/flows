@@ -22,15 +22,15 @@ export const containsSearchTerm = (
   let entryCopy = Object.assign({}, entry);
   entryCopy.patient = `${entry.patientFirstName} ${entry.patientLastName} ${entry.patientAge} ${entry.patientSex}`;
   const filterKeys = Object.keys(filters as any);
+  const lowerPhrase = searchPhrase.toLowerCase();
 
   for (let i = 0; i < filterKeys.length; i++) {
     const filterValue = (filters as any)[filterKeys[i]];
     const filterKey = filterKeys[i];
-
     if (
       !!filterValue &&
       !!entryCopy[filterKey] &&
-      entryCopy[filterKey].includes(searchPhrase)
+      entryCopy[filterKey].toLowerCase().includes(lowerPhrase)
     ) {
       return true;
     }
