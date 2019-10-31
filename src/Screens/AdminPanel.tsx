@@ -2,6 +2,7 @@ import firebase from "firebase";
 import React from "react";
 import { UserRole } from "../sharedtypes";
 import { setRoles } from "../store/corestore";
+import ChangeHistory from "../Components/ChangeHistory";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -27,8 +28,8 @@ class AdminPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    const adminLogs = await this._getAdminLogs();
-    console.log(adminLogs);
+    /*    const adminLogs = await this._getAdminLogs();
+    console.log(adminLogs);*/
     this.setState({ roleMap: NO_ROLES_MAP });
   }
 
@@ -116,6 +117,8 @@ class AdminPanel extends React.Component<Props, State> {
             {this._renderRoles()}
             <input type="submit" value="Submit" />
           </form>
+          <h3>Change History</h3>
+          <ChangeHistory />
         </div>
         <div style={{ display: "flex", flex: 1 }}></div>
       </div>
