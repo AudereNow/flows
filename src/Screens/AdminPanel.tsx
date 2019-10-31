@@ -1,8 +1,7 @@
-import firebase from "firebase";
 import React from "react";
 import { UserRole } from "../sharedtypes";
-import { setRoles } from "../store/corestore";
 import ChangeHistory from "../Components/ChangeHistory";
+import { setRoles, getAdminLogs } from "../store/corestore";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -28,8 +27,8 @@ class AdminPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    /*    const adminLogs = await this._getAdminLogs();
-    console.log(adminLogs);*/
+    const adminLogs = await getAdminLogs();
+    console.log(adminLogs);
     this.setState({ roleMap: NO_ROLES_MAP });
   }
 
@@ -68,16 +67,6 @@ class AdminPanel extends React.Component<Props, State> {
 
     alert(result);
     this.setState({ email: "", roleMap: NO_ROLES_MAP });
-  };
-
-  _getAdminLogs = async () => {
-    const snap = await firebase
-      .firestore()
-      .collection("admin_log_event")
-      .orderBy("timestamp")
-      .get();
-
-    return snap.docs.map(doc => doc.data());
   };
 
   _renderRoles() {
