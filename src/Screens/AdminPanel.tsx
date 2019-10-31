@@ -63,7 +63,10 @@ class AdminPanel extends React.Component<Props, State> {
       }
     });
 
-    await setRoles(this.state.email, roles);
+    const result = await setRoles(this.state.email, roles);
+
+    alert(result);
+    this.setState({ email: "", roleMap: NO_ROLES_MAP });
   };
 
   _getAdminLogs = async () => {

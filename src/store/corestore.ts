@@ -120,19 +120,23 @@ export async function loadTasks(taskState: TaskState): Promise<Task[]> {
   return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
 }
 
-export async function setRoles(email: string, roles: UserRole[]) {
+export async function setRoles(
+  email: string,
+  roles: UserRole[]
+): Promise<string> {
   const serverSetRoles = firebase.functions().httpsCallable("setRoles");
   const result = await serverSetRoles({ email, roles });
 
   if (!result.data) {
-    console.log("Unexpected empty result from setRoles on server");
+    return "Unexpected empty result from setRoles on server";
   }
   if (result.data.error) {
-    console.log(`Error from server setRole: ${result.data.error}`);
+    return `Error from server setRole: ${result.data.error}`;
   }
   if (result.data.result) {
-    console.log(`Server setRole successful: ${result.data.result}`);
+    return result.data.result;
   }
+  return "Unexpected error from server while setting roles";
 }
 
 export async function issuePayments(recipients: PaymentRecipient[]) {
