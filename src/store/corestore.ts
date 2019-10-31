@@ -113,6 +113,16 @@ export async function getChanges(taskID: string) {
   return changes.docs.map(d => d.data() as TaskChangeRecord);
 }
 
+export async function getAllChanges(): Promise<TaskChangeRecord[]> {
+  const snap = await firebase
+    .firestore()
+    .collection(TASK_CHANGE_COLLECTION)
+    .orderBy("timestamp")
+    .get();
+
+  return snap.docs.map(doc => doc.data() as TaskChangeRecord);
+}
+
 export async function getAdminLogs(): Promise<AdminLogEvent[]> {
   const snap = await firebase
     .firestore()
