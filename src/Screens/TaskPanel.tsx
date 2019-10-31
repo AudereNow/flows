@@ -9,11 +9,7 @@ import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
-import {
-  changeTaskState,
-  getChanges,
-  subscribeToTasks
-} from "../store/corestore";
+import { changeTaskState, getChanges, subscribeToTasks } from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
@@ -421,10 +417,6 @@ export default class TaskPanel extends React.Component<Props, State> {
       ) : null;
 
     const searchPanel = !!showSearch ? this._renderSearchPanel() : undefined;
-    // let filters = this.state.filters;
-    // if (!Object.values(filters).some(value => !!value)) {
-    //   filters = { patient: true, name: true, patientID: true, item: true };
-    // }
 
     return (
       <div className="mainview_content">
