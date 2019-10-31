@@ -80,16 +80,17 @@ class TaskList extends React.Component<Props, State> {
     }
   };
 
-  _isActiveTask(task: Task) {
-    const activeTask = this.state.activeTasks.find(t => t.id === task.id);
-    const recentlyActive =
-      activeTask &&
-      Date.now() - dateFromServerTimestamp(activeTask.since).getTime() <=
-        MAX_ACTIVE_MSEC;
-    if (recentlyActive && activeTask!.name !== getBestUserName()) {
-      return activeTask;
-    }
-    return null;
+  _getActiveViewers(task: Task) {
+    const now = Date.now();
+    const activeViewers = this.state.activeTasks
+      .filter(
+        t =>
+          t.id === task.id &&
+          now - dateFromServerTimestamp(t.since).getTime() <= MAX_ACTIVE_MSEC &&
+          t.name !== getBestUserName()
+      )
+      .map(t => t.name);
+    return activeViewers;
   }
 
   render() {
@@ -100,11 +101,14 @@ class TaskList extends React.Component<Props, State> {
           <div className="tasklist_search_panel">{this.props.searchPanel}</div>
         )}
         {tasks.map((task, index) => {
-          const activeTask = this._isActiveTask(task);
-          const activeClass = activeTask ? "tasklist_active" : undefined;
-          const activeDataTip = activeTask
-            ? `${activeTask!.name} also working on this task`
-            : undefined;
+          let activeClass, activeDataTip;
+          const activeViewers = this._getActiveViewers(task);
+          if (activeViewers.length > 0) {
+            activeClass = "tasklist_active";
+            activeDataTip = `${activeViewers.join(", ")} ${
+              index === this.state.selectedIndex ? " also" : ""
+            } working on this task`;
+          }
 
           return (
             <div
