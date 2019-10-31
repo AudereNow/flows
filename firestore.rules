@@ -12,6 +12,9 @@ service cloud.firestore {
     match /task_changes/{docId} {
       allow read, write: if true
     }
+    match /admin_log_event/{docId} {
+      allow read, write: if request.auth.token.roles.hasAny(['Admin'])
+    }
     match /metadata/remoteConfig {
       allow read: if true;
     }

@@ -11,7 +11,9 @@ import {
   removeEmptyFieldsInPlace,
   TASK_CHANGE_COLLECTION,
   TaskChangeRecord,
-  TASKS_COLLECTION
+  TASKS_COLLECTION,
+  ADMIN_LOG_EVENT_COLLECTION,
+  AdminLogEvent
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -111,13 +113,14 @@ export async function getChanges(taskID: string) {
   return changes.docs.map(d => d.data() as TaskChangeRecord);
 }
 
-export async function getAllChanges() {
-  const changes = await firebase
+export async function getAdminLogs(): Promise<AdminLogEvent[]> {
+  const snap = await firebase
     .firestore()
-    .collection(TASK_CHANGE_COLLECTION)
+    .collection(ADMIN_LOG_EVENT_COLLECTION)
     .orderBy("timestamp")
     .get();
-  return changes.docs.map(d => d.data() as TaskChangeRecord);
+
+  return snap.docs.map(doc => doc.data() as AdminLogEvent);
 }
 
 export async function loadTasks(taskState: TaskState): Promise<Task[]> {
