@@ -13,9 +13,16 @@ import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
 import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
 
-type Props = {};
+type Props = {
+  // To simplify our implementation, you should change MainView's key if you
+  // change either of these props.
+  selectedTaskID?: string;
+  startingTab?: string;
+};
+
 type State = {
   roles: UserRole[];
+  selectedTabIndex: number;
 };
 
 const PanelComponents: {
@@ -40,20 +47,30 @@ const DetailsComponents: {
 
 class MainView extends React.Component<Props, State> {
   state: State = {
-    roles: []
+    roles: [],
+    selectedTabIndex: 0
   };
   _onTabSelectCallback?: () => boolean;
 
   async componentDidMount() {
     const roles = await userRoles();
-    this.setState({ roles });
+    let selectedTabIndex = 0;
+
+    if (!!this.props.startingTab) {
+      selectedTabIndex = Object.keys(defaultConfig.tabs).findIndex(
+        tabName => tabName.toLowerCase() === this.props.startingTab
+      );
+    }
+
+    this.setState({ roles, selectedTabIndex });
   }
 
-  _onTabSelect = (): boolean => {
+  _onTabSelect = (index: number): boolean => {
     const result = !this._onTabSelectCallback || this._onTabSelectCallback();
     if (result) {
       this._onTabSelectCallback = undefined;
     }
+    this.setState({ selectedTabIndex: index });
     return result;
   };
 
@@ -72,7 +89,10 @@ class MainView extends React.Component<Props, State> {
     );
 
     return (
-      <Tabs onSelect={this._onTabSelect}>
+      <Tabs
+        onSelect={this._onTabSelect}
+        selectedIndex={this.state.selectedTabIndex}
+      >
         <TabList>
           {tabs.map(tab => (
             <Tab key={tab}>{tab}</Tab>
@@ -90,6 +110,8 @@ class MainView extends React.Component<Props, State> {
           } else {
             panelElement = (
               <TaskPanel
+                key={this.props.selectedTaskID}
+                initialSelectedTaskID={this.props.selectedTaskID}
                 taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}

@@ -9,7 +9,11 @@ import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
-import { changeTaskState, getChanges, subscribeToTasks } from "../store/corestore";
+import {
+  changeTaskState,
+  getChanges,
+  subscribeToTasks
+} from "../store/corestore";
 import { getConfig } from "../store/remoteconfig";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
@@ -35,6 +39,7 @@ export interface Filters {
 }
 
 type Props = {
+  initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
   itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
@@ -72,8 +77,10 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
+  _useInitialTaskID: boolean = false;
 
   async componentDidMount() {
+    this._useInitialTaskID = !!this.props.initialSelectedTaskID && true;
     this._unsubscribe = subscribeToTasks(
       this.props.taskState,
       this._onTasksChanged
@@ -94,12 +101,17 @@ export default class TaskPanel extends React.Component<Props, State> {
       selectedTaskId = undefined;
       notes = "";
     } else {
+      if (this._useInitialTaskID && !!this.props.initialSelectedTaskID) {
+        selectedTaskId = this.props.initialSelectedTaskID;
+        this._useInitialTaskID = false;
+      }
+
+      selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
       if (selectedTaskIndex === -1) {
         selectedTaskIndex = 0;
         selectedTaskId = tasks[0].id;
         notes = "";
       } else {
-        selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
         if (selectedTaskIndex === -1) {
           selectedTaskIndex = Math.min(
             this.state.selectedTaskIndex,
