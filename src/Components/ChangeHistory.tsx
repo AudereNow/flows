@@ -38,10 +38,10 @@ class ChangeHistory extends React.Component<Props, State> {
   async componentDidMount() {
     const changes = await getAllChanges();
 
-    this.setState({ changes: this._recordsToChangeLogs(changes) });
+    this.setState({ changes: this._recordsToChangeRows(changes) });
   }
 
-  _recordsToChangeLogs(records: TaskChangeRecord[]): ChangeRow[] {
+  _recordsToChangeRows(records: TaskChangeRecord[]): ChangeRow[] {
     return records.map(r => {
       return {
         taskID: r.taskID,
