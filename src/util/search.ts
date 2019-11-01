@@ -20,7 +20,11 @@ export const containsSearchTerm = (
   }
 
   let entryCopy = Object.assign({}, entry);
-  entryCopy.patient = `${entry.patientFirstName} ${entry.patientLastName} ${entry.patientAge} ${entry.patientSex}`;
+
+  entryCopy.patient = `${entry.patientFirstName ||
+    ""} ${entry.patientLastName || ""} ${entry.patientAge ||
+    ""} ${entry.patientSex || ""}`;
+
   const filterKeys = Object.keys(filters as any);
   const lowerPhrase = searchPhrase.toLowerCase();
 
