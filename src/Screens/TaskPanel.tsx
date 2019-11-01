@@ -400,18 +400,20 @@ class TaskPanel extends React.Component<Props, State> {
             })}
           </div>
           <div className="mainview_spaced_row">
-            <DateRangePicker
-              startDate={searchDates.startDate}
-              startDateId={"startDate"}
-              endDate={searchDates.endDate}
-              endDateId={"endDate"}
-              onDatesChange={this._onDatesChange}
-              focusedInput={focusedInput}
-              onFocusChange={this._onFocusChange}
-              isOutsideRange={() => false}
-              small={true}
-              block={true}
-            />
+            <div className="mainview_date_picker">
+              <DateRangePicker
+                startDate={searchDates.startDate}
+                startDateId={"startDate"}
+                endDate={searchDates.endDate}
+                endDateId={"endDate"}
+                onDatesChange={this._onDatesChange}
+                focusedInput={focusedInput}
+                onFocusChange={this._onFocusChange}
+                isOutsideRange={() => false}
+                small={true}
+                block={true}
+              />
+            </div>
             <Button label={"Download CSV"} onClick={this._downloadCSV} />
           </div>
         </div>

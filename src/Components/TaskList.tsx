@@ -100,7 +100,8 @@ class TaskList extends React.Component<Props, State> {
         {!!searchPanel && (
           <div className="tasklist_search_panel">{this.props.searchPanel}</div>
         )}
-        <div className={!!searchPanel ? "tasklist_search_open" : ""}>
+
+        <div className={!!searchPanel ? "tasklist_search_panel_open" : ""}>
           {tasks.map((task, index) => {
             let activeClass, activeDataTip;
             const activeViewers = this._getActiveViewers(task);

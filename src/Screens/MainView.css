@@ -66,6 +66,10 @@
   height: 18px;
 }
 
+.mainview_date_picker {
+  width: 215px;
+}
+
 .mainview_details {
   display: flex;
   flex-direction: column;
