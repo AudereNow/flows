@@ -94,13 +94,16 @@ export function subscribeToTasks(
   state: TaskState,
   callback: (tasks: Task[]) => void
 ): () => void {
-  return firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .where("state", "==", state)
-    .onSnapshot(snapshot =>
-      callback(snapshot.docs.map(doc => (doc.data() as unknown) as Task))
-    );
+  return (
+    firebase
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .where("state", "==", state)
+      //.orderBy("updatedAt", "desc")
+      .onSnapshot(snapshot =>
+        callback(snapshot.docs.map(doc => (doc.data() as unknown) as Task))
+      )
+  );
 }
 
 export async function getChanges(taskID: string) {

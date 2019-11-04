@@ -174,6 +174,20 @@ exports.uploadCSV = functions.https.onCall(
   }
 );
 
+exports.onUpdateTask = functions.firestore
+  .document(TASKS_COLLECTION + "/{taskID}")
+  .onWrite((change, context) => {
+    if (
+      change.after.exists &&
+      (!change.before.exists ||
+        change.after.data()!.updatedAt === change.before.data()!.updatedAt)
+    ) {
+      const timestamp = Date.now();
+      return change.after.ref.set({ updatedAt: timestamp }, { merge: true });
+    }
+    return null;
+  });
+
 async function LogAdminEvent(user: User, desc: string) {
   const dateString = `${new Date().toISOString()} ${Math.random()}`;
   const event: AdminLogEvent = {

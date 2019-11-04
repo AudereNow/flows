@@ -76,6 +76,7 @@ export type Task = {
   state: TaskState;
   entries: ClaimEntry[];
   site: Site;
+  updatedAt?: number; // timestamp
 };
 
 export type PaymentRecipient = {
