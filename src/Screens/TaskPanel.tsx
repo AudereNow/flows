@@ -42,8 +42,8 @@ type Props = {
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
-  itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
-  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
+  detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
 };
@@ -469,7 +469,7 @@ interface DetailWrapperProps {
   task: Task;
   notes: string;
   notesux: ReactNode;
-  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   filters: Filters;
   searchTermGlobal: string;

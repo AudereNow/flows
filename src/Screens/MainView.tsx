@@ -26,19 +26,19 @@ type State = {
 };
 
 const PanelComponents: {
-  [key: string]: React.ComponentClass<{}>;
+  [key: string]: React.ComponentType<{}>;
 } = {
   Admin: AdminPanel
 };
 
 const ItemComponents: {
-  [key: string]: React.ComponentClass<{ task: Task; isSelected: boolean }>;
+  [key: string]: React.ComponentType<{ task: Task; isSelected: boolean }>;
 } = {
   default: ListItem
 };
 
 const DetailsComponents: {
-  [key: string]: React.ComponentClass<DetailsComponentProps>;
+  [key: string]: React.ComponentType<DetailsComponentProps>;
 } = {
   AuditTask: AuditorDetails,
   PayorTask: PayorDetails,
