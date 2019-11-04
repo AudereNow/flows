@@ -39,3 +39,13 @@ export async function getConfig(key: string) {
   }
   console.error(`Didn't find key ${key} in remoteConfig!`);
 }
+
+export function subscribeToConfigs(
+  callback: (config: RemoteConfig) => void
+): () => void {
+  return firebase
+    .firestore()
+    .collection(METADATA_COLLECTION)
+    .doc(REMOTE_CONFIG_DOC)
+    .onSnapshot(snapshot => callback(snapshot.data() as RemoteConfig));
+}

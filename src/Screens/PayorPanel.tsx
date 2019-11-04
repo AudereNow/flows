@@ -9,32 +9,23 @@ import {
   getBestUserName,
   issuePayments
 } from "../store/corestore";
-import { getConfig } from "../store/remoteconfig";
 import { DetailsComponentProps } from "./TaskPanel";
+import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 
-type State = {
+interface RemoteProps {
   realPayments: boolean;
-  paying: boolean;
-};
+}
 
-export class PayorDetails extends React.Component<
-  DetailsComponentProps,
-  State
+class ConfigurablePayorDetails extends React.Component<
+  DetailsComponentProps & RemoteProps
 > {
-  state = {
-    realPayments: false,
-    paying: false
-  };
-
-  async componentDidMount() {
+  componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
-    const realPayments = await getConfig("enableRealPayments");
-    this.setState({ realPayments });
   }
 
   _issuePayment = async () => {
-    if (!this.state.realPayments) {
+    if (!this.props.realPayments) {
       await new Promise(res => setTimeout(res, 1000));
       return { success: true };
     }
@@ -123,6 +114,13 @@ export class PayorDetails extends React.Component<
     );
   }
 }
+
+export const PayorDetails = configuredComponent<
+  DetailsComponentProps,
+  RemoteProps
+>(ConfigurablePayorDetails, config => ({
+  realPayments: config.enableRealPayments
+}));
 
 function _getReimbursementTotal(task: Task): number {
   const claimAmounts = task.entries.map(entry => {

@@ -7,16 +7,21 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
-import { Task, TaskChangeRecord, TaskState } from "../sharedtypes";
+import {
+  Task,
+  TaskChangeRecord,
+  TaskState,
+  RemoteConfig
+} from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
   changeTaskState,
   getChanges,
   subscribeToTasks
 } from "../store/corestore";
-import { getConfig } from "../store/remoteconfig";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
+import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 
 export interface DetailsComponentProps {
@@ -42,8 +47,8 @@ type Props = {
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
-  itemComponent: React.ComponentClass<{ task: Task; isSelected: boolean }>;
-  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
+  detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
 };
@@ -448,7 +453,7 @@ export default class TaskPanel extends React.Component<Props, State> {
         </LabelWrapper>
         <div style={{ width: "100%" }}>
           {selectedTaskIndex >= 0 && (
-            <DetailsWrapper
+            <ConfiguredDetailsWrapper
               task={this.state.tasks[selectedTaskIndex]}
               notesux={notesux}
               notes={notes}
@@ -465,19 +470,19 @@ export default class TaskPanel extends React.Component<Props, State> {
   }
 }
 
-interface DetailWrapperProps {
+interface DetailsWrapperProps {
   task: Task;
   notes: string;
   notesux: ReactNode;
-  detailsComponent: React.ComponentClass<DetailsComponentProps>;
+  detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   filters: Filters;
   searchTermGlobal: string;
+  remoteConfig: Partial<RemoteConfig>;
 }
 
 interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
-  configValues: { [key: string]: boolean };
 }
 
 interface ActionCallbackResult {
@@ -486,32 +491,12 @@ interface ActionCallbackResult {
 }
 
 class DetailsWrapper extends React.Component<
-  DetailWrapperProps,
+  DetailsWrapperProps,
   DetailsWrapperState
 > {
   state: DetailsWrapperState = {
-    buttonsBusy: {},
-    configValues: {}
+    buttonsBusy: {}
   };
-
-  async componentWillReceiveProps(props: DetailWrapperProps) {
-    const configValues: { [key: string]: boolean } = {};
-    await Promise.all(
-      Object.values(props.actions).map(async action => {
-        if (action.disableOnConfig) {
-          configValues[action.disableOnConfig] = await getConfig(
-            action.disableOnConfig
-          );
-        }
-        if (action.enableOnConfig) {
-          configValues[action.enableOnConfig] = await getConfig(
-            action.enableOnConfig
-          );
-        }
-      })
-    );
-    this.setState({ configValues });
-  }
 
   _actionCallbacks: {
     [key: string]: () => Promise<ActionCallbackResult>;
@@ -556,10 +541,10 @@ class DetailsWrapper extends React.Component<
     const buttons = Object.entries(this.props.actions).filter(
       ([key, action]) => {
         if (action.disableOnConfig) {
-          return !this.state.configValues[action.disableOnConfig];
+          return !this.props.remoteConfig[action.disableOnConfig];
         }
         if (action.enableOnConfig) {
-          return this.state.configValues[action.enableOnConfig];
+          return this.props.remoteConfig[action.enableOnConfig];
         }
         return true;
       }
@@ -588,3 +573,18 @@ class DetailsWrapper extends React.Component<
     );
   }
 }
+
+const ConfiguredDetailsWrapper = configuredComponent<
+  Omit<DetailsWrapperProps, "remoteConfig">,
+  { remoteConfig: Partial<RemoteConfig> }
+>(DetailsWrapper, (config, props) => {
+  const configProps: Partial<RemoteConfig> = {};
+  Object.values(props.actions)
+    .map(action => action.disableOnConfig || action.enableOnConfig)
+    .forEach(configName => {
+      if (configName) {
+        configProps[configName] = config[configName];
+      }
+    });
+  return { remoteConfig: configProps };
+});
