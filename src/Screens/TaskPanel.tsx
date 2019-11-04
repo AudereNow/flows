@@ -80,7 +80,7 @@ export default class TaskPanel extends React.Component<Props, State> {
   _useInitialTaskID: boolean = false;
 
   async componentDidMount() {
-    this._useInitialTaskID = !!this.props.initialSelectedTaskID && true;
+    this._useInitialTaskID = !!this.props.initialSelectedTaskID;
     this._unsubscribe = subscribeToTasks(
       this.props.taskState,
       this._onTasksChanged
