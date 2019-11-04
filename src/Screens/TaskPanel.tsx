@@ -483,7 +483,6 @@ interface DetailsWrapperProps {
 
 interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
-  //configValues: { [key: string]: boolean };
 }
 
 interface ActionCallbackResult {

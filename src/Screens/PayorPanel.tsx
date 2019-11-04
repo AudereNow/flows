@@ -13,22 +13,13 @@ import { DetailsComponentProps } from "./TaskPanel";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 
-type State = {
-  paying: boolean;
-};
-
 interface RemoteProps {
   realPayments: boolean;
 }
 
 class ConfigurablePayorDetails extends React.Component<
-  DetailsComponentProps & RemoteProps,
-  State
+  DetailsComponentProps & RemoteProps
 > {
-  state = {
-    paying: false
-  };
-
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
   }
