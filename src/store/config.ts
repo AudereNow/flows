@@ -1,4 +1,4 @@
-import { UserRole, TaskState } from "../sharedtypes";
+import { UserRole, TaskState, RemoteConfig } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
@@ -11,8 +11,8 @@ interface CustomPanelConfig extends TabConfig {
 export interface ActionConfig {
   label: string;
   nextTaskState: TaskState;
-  enableOnConfig?: string;
-  disableOnConfig?: string;
+  enableOnConfig?: keyof RemoteConfig;
+  disableOnConfig?: keyof RemoteConfig;
 }
 
 export interface TaskConfig extends TabConfig {
