@@ -3,7 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { ListItem } from "../Components/ListItem";
 import { Task, UserRole } from "../sharedtypes";
-import { defaultConfig, isCustomPanel } from "../store/config";
+import { defaultConfig, isCustomPanel, AppConfig } from "../store/config";
 import { userRoles } from "../store/corestore";
 import AdminPanel from "./AdminPanel";
 import { AuditorDetails } from "./AuditorPanel";
@@ -12,8 +12,9 @@ import "./MainView.css";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
 import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
+import { withRouter, RouteComponentProps } from "react-router";
 
-type Props = {
+type Props = RouteComponentProps & {
   // To simplify our implementation, you should change MainView's key if you
   // change either of these props.
   selectedTaskID?: string;
@@ -71,6 +72,13 @@ class MainView extends React.Component<Props, State> {
       this._onTabSelectCallback = undefined;
     }
     this.setState({ selectedTabIndex: index });
+
+    // Set admin URL in browser if you're in the admin tab
+    const tabName = this._getTabNames(defaultConfig);
+    const tabConfig = defaultConfig.tabs[tabName[index]];
+    if (isCustomPanel(tabConfig)) {
+      this.props.history.push(tabConfig.baseUrl);
+    }
     return result;
   };
 
@@ -78,15 +86,20 @@ class MainView extends React.Component<Props, State> {
     this._onTabSelectCallback = onTabSelect;
   };
 
+  _getTabNames(config: AppConfig) {
+    const taskConfigs = config.tabs;
+    return Object.keys(taskConfigs).filter(taskName =>
+      taskConfigs[taskName].roles.some(role => this.state.roles.includes(role))
+    );
+  }
+
   _renderBody() {
     if (!this.state.roles.length) {
       return "User has no enabled roles";
     }
 
     const taskConfigs = defaultConfig.tabs;
-    const tabs = Object.keys(taskConfigs).filter(taskName =>
-      taskConfigs[taskName].roles.some(role => this.state.roles.includes(role))
-    );
+    const tabs = this._getTabNames(defaultConfig);
 
     return (
       <Tabs
@@ -110,12 +123,12 @@ class MainView extends React.Component<Props, State> {
           } else {
             panelElement = (
               <TaskPanel
-                key={this.props.selectedTaskID}
                 initialSelectedTaskID={this.props.selectedTaskID}
                 taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
+                baseUrl={tabConfig.baseUrl}
                 actions={tabConfig.actions}
                 registerForTabSelectCallback={
                   this._registerForTabSelectCallback
@@ -148,4 +161,4 @@ class MainView extends React.Component<Props, State> {
   }
 }
 
-export default MainView;
+export default withRouter(MainView);

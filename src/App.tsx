@@ -37,9 +37,7 @@ class App extends React.Component<Props, State> {
     const taskID = routeProps.match.params.id;
     const tabMatches = routeProps.location.pathname.match(/\/(.+?)\//);
     const tabName = tabMatches![1];
-    return (
-      <MainView key={taskID} selectedTaskID={taskID} startingTab={tabName} />
-    );
+    return <MainView selectedTaskID={taskID} startingTab={tabName} />;
   };
 
   render() {
@@ -48,7 +46,13 @@ class App extends React.Component<Props, State> {
         <Router>
           <Switch>
             <Route
-              path={["/auditor/:id", "/payor/:id", "/operator/:id"]}
+              path={[
+                "/auditor/:id",
+                "/payor/:id",
+                "/operator/:id",
+                "/rejected/:id",
+                "/completed/:id"
+              ]}
               render={this._renderLinkedMainView}
             />
             <Route>

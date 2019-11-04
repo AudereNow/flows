@@ -2,6 +2,7 @@ import { UserRole, TaskState, RemoteConfig } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
+  baseUrl: string;
 }
 
 interface CustomPanelConfig extends TabConfig {
@@ -41,6 +42,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR],
+      baseUrl: "/auditor",
       actions: {
         decline: {
           label: "Decline",
@@ -58,6 +60,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "PayorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.PAYOR],
+      baseUrl: "/payor",
       actions: {
         decline: {
           label: "Decline Payment",
@@ -81,6 +84,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR],
+      baseUrl: "/operator",
       actions: {
         decline: {
           label: "Reject",
@@ -98,19 +102,22 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
       actions: {},
-      roles: [UserRole.AUDITOR]
+      roles: [UserRole.AUDITOR],
+      baseUrl: "/rejected"
     },
-    Complete: {
+    Completed: {
       taskState: TaskState.COMPLETED,
       taskListComponent: "default",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS",
       actions: {},
-      roles: [UserRole.AUDITOR]
+      roles: [UserRole.AUDITOR],
+      baseUrl: "/completed"
     },
     Admin: {
       panelComponent: "Admin",
-      roles: [UserRole.ADMIN]
+      roles: [UserRole.ADMIN],
+      baseUrl: "/admin"
     }
   }
 };
