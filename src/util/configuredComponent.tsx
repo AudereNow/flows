@@ -8,7 +8,7 @@ interface ConfiguredComponentState {
 
 export function configuredComponent<Props, RemoteProps>(
   Component: React.ComponentType<Props & RemoteProps>,
-  p: (config: RemoteConfig, props: Props) => RemoteProps
+  getProps: (config: RemoteConfig, props: Props) => RemoteProps
 ): React.ComponentType<Props> {
   return class extends React.Component<Props, ConfiguredComponentState> {
     state: ConfiguredComponentState = {};
@@ -26,7 +26,7 @@ export function configuredComponent<Props, RemoteProps>(
     }
 
     render() {
-      const configProps = p(
+      const configProps = getProps(
         this.state.config || DEFAULT_REMOTE_CONFIG,
         this.props
       );
