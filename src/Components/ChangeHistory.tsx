@@ -63,6 +63,12 @@ class ChangeHistory extends React.Component<Props, State> {
             data={changes}
             columns={TABLE_COLUMNS}
             defaultPageSize={50}
+            defaultSorted={[
+              {
+                id: "timestamp",
+                desc: true
+              }
+            ]}
           />
         )}
       </div>
