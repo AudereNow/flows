@@ -19,6 +19,7 @@ const MIN_SAMPLES = 1;
 type State = {
   searchTermDetails: string;
   showAllEntries: boolean;
+  numSamples: number;
 };
 
 export class AuditorDetails extends React.Component<
@@ -27,7 +28,11 @@ export class AuditorDetails extends React.Component<
 > {
   state: State = {
     searchTermDetails: "",
-    showAllEntries: false
+    showAllEntries: false,
+    numSamples: Math.max(
+      Math.ceil(this.props.task.entries.length * MIN_SAMPLE_FRACTION),
+      MIN_SAMPLES
+    )
   };
 
   componentDidMount() {
@@ -38,20 +43,11 @@ export class AuditorDetails extends React.Component<
     this.setState({ showAllEntries: !this.state.showAllEntries });
   };
 
-  _numSamples = () => {
-    return this.state.showAllEntries
-      ? this.props.task.entries.length
-      : Math.max(
-          Math.ceil(this.props.task.entries.length * MIN_SAMPLE_FRACTION),
-          MIN_SAMPLES
-        );
-  };
-
   _onApprove = async () => {
     const task = {
       ...this.props.task,
       entries: this.props.task.entries.map((entry, index) => {
-        if (index < this._numSamples()) {
+        if (index < this.state.numSamples || this.state.showAllEntries) {
           return {
             ...entry,
             reviewed: true
@@ -157,8 +153,8 @@ export class AuditorDetails extends React.Component<
       !!this.props.searchTermGlobal || this.state.showAllEntries;
     const { task, searchTermGlobal, notesux } = this.props;
 
-    const samples = task.entries.slice(0, this._numSamples());
-    const remaining = task.entries.length - this._numSamples();
+    const samples = task.entries.slice(0, this.state.numSamples);
+    const remaining = task.entries.length - this.state.numSamples;
     return (
       <LabelWrapper
         key={searchTermGlobal}
@@ -183,7 +179,7 @@ export class AuditorDetails extends React.Component<
           />
         </div>
         {samples.map(this._renderClaimEntryDetails)}
-        {remaining > 0 && !showAllEntries && (
+        {remaining > 0 && (
           <div className="mainview_button_row">
             <Button
               label={
@@ -196,7 +192,7 @@ export class AuditorDetails extends React.Component<
         {remaining > 0 &&
           showAllEntries &&
           task.entries
-            .slice(this._numSamples(), task.entries.length)
+            .slice(this.state.numSamples, task.entries.length)
             .map(this._renderClaimEntryDetails)}
         {notesux}
         {this.props.children}
