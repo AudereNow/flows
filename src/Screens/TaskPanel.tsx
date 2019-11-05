@@ -23,6 +23,7 @@ import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
+import { withRouter, RouteComponentProps } from "react-router";
 
 export interface DetailsComponentProps {
   task: Task;
@@ -43,10 +44,11 @@ export interface Filters {
   item?: boolean;
 }
 
-type Props = {
+type Props = RouteComponentProps & {
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
+  baseUrl: string;
   itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
@@ -59,6 +61,7 @@ type State = {
   changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
   selectedTaskId?: string;
+  initialSelectedTaskID?: string;
   focusedInput: FocusedInputShape | null;
   searchDates: DateRange;
   searchTermGlobal: string;
@@ -67,12 +70,13 @@ type State = {
   filters: Filters;
 };
 
-export default class TaskPanel extends React.Component<Props, State> {
+class TaskPanel extends React.Component<Props, State> {
   state: State = {
     allTasks: [],
     tasks: [],
     changes: [],
     selectedTaskIndex: -1,
+    initialSelectedTaskID: undefined,
     focusedInput: null,
     searchDates: { startDate: null, endDate: null },
     searchTermGlobal: "",
@@ -82,10 +86,8 @@ export default class TaskPanel extends React.Component<Props, State> {
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-  _useInitialTaskID: boolean = false;
 
   async componentDidMount() {
-    this._useInitialTaskID = !!this.props.initialSelectedTaskID;
     this._unsubscribe = subscribeToTasks(
       this.props.taskState,
       this._onTasksChanged
@@ -106,9 +108,14 @@ export default class TaskPanel extends React.Component<Props, State> {
       selectedTaskId = undefined;
       notes = "";
     } else {
-      if (this._useInitialTaskID && !!this.props.initialSelectedTaskID) {
+      if (
+        !!this.props.initialSelectedTaskID &&
+        this.props.initialSelectedTaskID !== this.state.initialSelectedTaskID
+      ) {
         selectedTaskId = this.props.initialSelectedTaskID;
-        this._useInitialTaskID = false;
+        this.setState({
+          initialSelectedTaskID: this.props.initialSelectedTaskID
+        });
       }
 
       selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
@@ -126,6 +133,10 @@ export default class TaskPanel extends React.Component<Props, State> {
           notes = "";
         }
       }
+    }
+
+    if (this.state.selectedTaskId !== selectedTaskId) {
+      this._pushHistory(selectedTaskId);
     }
 
     this.setState({
@@ -155,14 +166,23 @@ export default class TaskPanel extends React.Component<Props, State> {
   _onTaskSelect = (index: number) => {
     const result = this._okToSwitchAway();
     if (result) {
+      const selectedTaskId =
+        index === -1 ? undefined : this.state.tasks[index].id;
       this.setState({
         selectedTaskIndex: index,
-        selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id,
+        selectedTaskId,
         notes: ""
       });
+      this._pushHistory(selectedTaskId);
     }
     return result;
   };
+
+  _pushHistory(selectedTaskId?: string) {
+    this.props.history.push(
+      `${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
+    );
+  }
 
   _renderTaskListItem = (task: Task, isSelected: boolean) => {
     return <this.props.itemComponent task={task} isSelected={isSelected} />;
@@ -469,6 +489,8 @@ export default class TaskPanel extends React.Component<Props, State> {
     );
   }
 }
+
+export default withRouter(TaskPanel);
 
 interface DetailsWrapperProps {
   task: Task;
