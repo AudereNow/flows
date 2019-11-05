@@ -150,18 +150,22 @@ export async function setRoles(
   roles: UserRole[]
 ): Promise<string> {
   const serverSetRoles = firebase.functions().httpsCallable("setRoles");
-  const result = await serverSetRoles({ email, roles });
+  try {
+    const result = await serverSetRoles({ email, roles });
 
-  if (!result.data) {
-    return "Unexpected empty result from setRoles on server";
+    if (!result.data) {
+      return "Unexpected empty result from setRoles on server";
+    }
+    if (result.data.error) {
+      return `Error from server setRole: ${result.data.error}`;
+    }
+    if (result.data.result) {
+      return result.data.result;
+    }
+    return "Unexpected error from server while setting roles";
+  } catch (e) {
+    return `Server error: ${e.message || e.error || JSON.stringify(e)}`;
   }
-  if (result.data.error) {
-    return `Error from server setRole: ${result.data.error}`;
-  }
-  if (result.data.result) {
-    return result.data.result;
-  }
-  return "Unexpected error from server while setting roles";
 }
 
 export async function issuePayments(recipients: PaymentRecipient[]) {
@@ -171,17 +175,33 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
     .functions()
     .httpsCallable("issuePayments", { timeout: 300000 });
 
-  return await serverIssuePayments({
-    recipients
-  });
+  try {
+    return await serverIssuePayments({
+      recipients
+    });
+  } catch (e) {
+    return {
+      data: {
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
+      }
+    };
+  }
 }
 
 export async function uploadCSV(content: any) {
   const serverUploadCSV = firebase.functions().httpsCallable("uploadCSV");
 
-  return await serverUploadCSV({
-    content
-  });
+  try {
+    return await serverUploadCSV({
+      content
+    });
+  } catch (e) {
+    return {
+      data: {
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
+      }
+    };
+  }
 }
 
 export function toServerTimestamp(date: Date): firebase.firestore.Timestamp {
