@@ -439,7 +439,6 @@ export default class TaskPanel extends React.Component<Props, State> {
       <div className="mainview_content">
         <LabelWrapper
           label={`${this.props.listLabel}: ${this.state.tasks.length}`}
-          className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
         >
           <TaskList
