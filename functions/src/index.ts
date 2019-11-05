@@ -149,28 +149,35 @@ exports.uploadCSV = functions.https.onCall(
     await LogAdminEvent(user, `Processing CSV upload from ${user.name}`);
     const cache: any[] = [];
 
-    const result: CallResult = await new Promise((res, rej) =>
-      csvtojson({ needEmitAll: true })
-        .fromString(data.content)
-        .subscribe(
-          row => {
-            cache.push(row);
-          },
-          async err => {
-            await LogAdminEvent(user, `CSV parsing error: ${err.err}`);
-            rej({ error: err.err });
-          },
-          async () => {
-            try {
-              res(await completeCSVProcessing(cache, user));
-            } catch (e) {
-              rej({ error: e.err || e.message || e });
+    try {
+      const result: CallResult = await new Promise((res, rej) =>
+        csvtojson({ needEmitAll: true })
+          .fromString(data.content)
+          .subscribe(
+            row => {
+              cache.push(row);
+            },
+            async err => {
+              await LogAdminEvent(user, `CSV parsing error: ${err.err}`);
+              rej({ error: err.err });
+            },
+            async () => {
+              try {
+                res(await completeCSVProcessing(cache, user));
+              } catch (e) {
+                rej({ error: e.err || e.message || e });
+              }
             }
-          }
-        )
-    );
-
-    return result;
+          )
+      );
+      return result;
+    } catch (e) {
+      return {
+        error: `CSV processing error: ${e.message ||
+          e.error ||
+          JSON.stringify(e)}`
+      };
+    }
   }
 );
 
