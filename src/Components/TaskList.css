@@ -14,11 +14,6 @@
   outline-width: 4px;
 }
 
-.tasklist_search_panel {
-  position: fixed;
-  width: 25vw;
-}
-
 .tasklist_search_panel_open {
   margin-top: 124px;
 }

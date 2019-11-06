@@ -451,9 +451,9 @@ class TaskPanel extends React.Component<Props, State> {
           label={`${this.props.listLabel}: ${this.state.tasks.length}`}
           className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
+          searchPanel={searchPanel}
         >
           <TaskList
-            searchPanel={searchPanel}
             onSelect={this._onTaskSelect}
             tasks={this.state.tasks}
             renderItem={this._renderTaskListItem}

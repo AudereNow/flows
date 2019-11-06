@@ -5,6 +5,7 @@ interface Props {
   label?: string;
   className?: string;
   renderLabelItems?: () => JSX.Element;
+  searchPanel?: JSX.Element;
 }
 
 class LabelWrapper extends Component<Props> {
@@ -18,6 +19,7 @@ class LabelWrapper extends Component<Props> {
             {!!this.props.renderLabelItems && this.props.renderLabelItems()}
           </div>
         </div>
+        {!!this.props.searchPanel && this.props.searchPanel}
         <div className="labelwrapper_inner">{this.props.children}</div>
       </div>
     );
