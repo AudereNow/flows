@@ -18,7 +18,6 @@ type Props = {
   className?: string;
   onSelect?: (index: number) => boolean;
   selectedItem?: number;
-  searchPanel?: React.ReactElement;
 };
 
 type State = {
@@ -94,12 +93,9 @@ class TaskList extends React.Component<Props, State> {
   }
 
   render() {
-    const { renderItem, searchPanel, tasks } = this.props;
+    const { renderItem, tasks } = this.props;
     return (
       <div className={this.props.className}>
-        {!!searchPanel && (
-          <div className="tasklist_search_panel">{this.props.searchPanel}</div>
-        )}
         {tasks.map((task, index) => {
           let activeClass, activeDataTip;
           const activeViewers = this._getActiveViewers(task);
@@ -109,7 +105,6 @@ class TaskList extends React.Component<Props, State> {
               index === this.state.selectedIndex ? " also" : ""
             } working on this task`;
           }
-
           return (
             <div
               className={activeClass}

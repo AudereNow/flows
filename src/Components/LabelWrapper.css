@@ -11,7 +11,16 @@
   text-align: center;
   height: 24px;
   line-height: 24px;
-  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+
+.labelwrapper_header_item {
+  flex: 1;
+}
+
+.labelwrapper_label {
+  align-self: center;
 }
 
 .labelwrapper_inner {
@@ -19,30 +28,9 @@
   overflow-y: scroll;
 }
 
-.labelwrapper_header_container {
-  position: relative;
-}
-
-.labelwrapper_header_icon_container {
-  position: absolute;
-  height: 100%;
-  top: 0;
-  right: 0;
-}
-
 .labelwrapper_header_icon {
   cursor: pointer;
-  height: 24px;
-  width: 24px;
-  margin: 3px;
-}
-
-.labelwrapper_labelitems_container {
-  position: absolute;
-  right: 0px;
-  top: 0px;
-  display: flex;
-  flex-direction: row;
+  text-align: right;
 }
 
 .labelwrapper_dropdown_text {

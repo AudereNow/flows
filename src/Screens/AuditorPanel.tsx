@@ -3,15 +3,14 @@ import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
-import "../Components/DateRangePickerOverride.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { DetailsComponentProps } from "./TaskPanel";
 import { ClaimEntry } from "../sharedtypes";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
+import { DetailsComponentProps } from "./TaskPanel";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;

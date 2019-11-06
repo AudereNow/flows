@@ -2,16 +2,17 @@ import { json2csv } from "json-2-csv";
 import moment, { Moment } from "moment";
 import React, { Fragment, ReactNode } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
+import { RouteComponentProps, withRouter } from "react-router";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import {
+  RemoteConfig,
   Task,
   TaskChangeRecord,
-  TaskState,
-  RemoteConfig
+  TaskState
 } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
@@ -19,11 +20,10 @@ import {
   getChanges,
   subscribeToTasks
 } from "../store/corestore";
+import { configuredComponent } from "../util/configuredComponent";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
-import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
-import { withRouter, RouteComponentProps } from "react-router";
 
 export interface DetailsComponentProps {
   task: Task;
@@ -48,7 +48,6 @@ type Props = RouteComponentProps & {
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
-  baseUrl: string;
   itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
@@ -86,6 +85,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
+  _useInitialTaskID: boolean = false;
 
   async componentDidMount() {
     this._unsubscribe = subscribeToTasks(
@@ -108,14 +108,9 @@ class TaskPanel extends React.Component<Props, State> {
       selectedTaskId = undefined;
       notes = "";
     } else {
-      if (
-        !!this.props.initialSelectedTaskID &&
-        this.props.initialSelectedTaskID !== this.state.initialSelectedTaskID
-      ) {
+      if (this._useInitialTaskID && !!this.props.initialSelectedTaskID) {
         selectedTaskId = this.props.initialSelectedTaskID;
-        this.setState({
-          initialSelectedTaskID: this.props.initialSelectedTaskID
-        });
+        this._useInitialTaskID = false;
       }
 
       selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
@@ -133,10 +128,6 @@ class TaskPanel extends React.Component<Props, State> {
           notes = "";
         }
       }
-    }
-
-    if (this.state.selectedTaskId !== selectedTaskId) {
-      this._pushHistory(selectedTaskId);
     }
 
     this.setState({
@@ -166,23 +157,14 @@ class TaskPanel extends React.Component<Props, State> {
   _onTaskSelect = (index: number) => {
     const result = this._okToSwitchAway();
     if (result) {
-      const selectedTaskId =
-        index === -1 ? undefined : this.state.tasks[index].id;
       this.setState({
         selectedTaskIndex: index,
-        selectedTaskId,
+        selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id,
         notes: ""
       });
-      this._pushHistory(selectedTaskId);
     }
     return result;
   };
-
-  _pushHistory(selectedTaskId?: string) {
-    this.props.history.push(
-      `${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
-    );
-  }
 
   _renderTaskListItem = (task: Task, isSelected: boolean) => {
     return <this.props.itemComponent task={task} isSelected={isSelected} />;
@@ -372,7 +354,11 @@ class TaskPanel extends React.Component<Props, State> {
     };
 
     return (
-      <div className="mainview_search_container">
+      <div
+        className={`mainview_search_container ${
+          !!this.state.showSearch ? "" : "mainview_hide_search"
+        }`}
+      >
         <div className="labelwrapper_row">
           <div className="mainview_search_row">
             <input
@@ -412,18 +398,20 @@ class TaskPanel extends React.Component<Props, State> {
             })}
           </div>
           <div className="mainview_spaced_row">
-            <DateRangePicker
-              startDate={searchDates.startDate}
-              startDateId={"startDate"}
-              endDate={searchDates.endDate}
-              endDateId={"endDate"}
-              onDatesChange={this._onDatesChange}
-              focusedInput={focusedInput}
-              onFocusChange={this._onFocusChange}
-              isOutsideRange={() => false}
-              small={true}
-              block={true}
-            />
+            <div className="mainview_date_picker">
+              <DateRangePicker
+                startDate={searchDates.startDate}
+                startDateId={"startDate"}
+                endDate={searchDates.endDate}
+                endDateId={"endDate"}
+                onDatesChange={this._onDatesChange}
+                focusedInput={focusedInput}
+                onFocusChange={this._onFocusChange}
+                isOutsideRange={() => false}
+                small={true}
+                block={true}
+              />
+            </div>
             <Button label={"Download CSV"} onClick={this._downloadCSV} />
           </div>
         </div>
@@ -436,12 +424,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const {
-      selectedTaskIndex,
-      showSearch,
-      searchTermGlobal,
-      notes
-    } = this.state;
+    const { selectedTaskIndex, searchTermGlobal, notes } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -453,17 +436,15 @@ class TaskPanel extends React.Component<Props, State> {
         />
       ) : null;
 
-    const searchPanel = !!showSearch ? this._renderSearchPanel() : undefined;
-
     return (
       <div className="mainview_content">
         <LabelWrapper
           label={`${this.props.listLabel}: ${this.state.tasks.length}`}
           className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
+          searchPanel={this._renderSearchPanel()}
         >
           <TaskList
-            searchPanel={searchPanel}
             onSelect={this._onTaskSelect}
             tasks={this.state.tasks}
             renderItem={this._renderTaskListItem}
@@ -563,10 +544,10 @@ class DetailsWrapper extends React.Component<
     const buttons = Object.entries(this.props.actions).filter(
       ([key, action]) => {
         if (action.disableOnConfig) {
-          return !this.props.remoteConfig[action.disableOnConfig];
+          return !(this.props.remoteConfig as any)[action.disableOnConfig];
         }
         if (action.enableOnConfig) {
-          return this.props.remoteConfig[action.enableOnConfig];
+          return (this.props.remoteConfig as any)[action.enableOnConfig];
         }
         return true;
       }
@@ -605,7 +586,7 @@ const ConfiguredDetailsWrapper = configuredComponent<
     .map(action => action.disableOnConfig || action.enableOnConfig)
     .forEach(configName => {
       if (configName) {
-        configProps[configName] = config[configName];
+        (configProps as any)[configName] = (config as any)[configName];
       }
     });
   return { remoteConfig: configProps };

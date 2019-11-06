@@ -13,10 +13,3 @@
   outline-style: solid;
   outline-width: 4px;
 }
-
-.tasklist_search_panel {
-  height: 150px;
-  position: sticky;
-  top: 0px;
-  width: 25vw;
-}

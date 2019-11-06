@@ -46,6 +46,7 @@
 .mainview_search_container {
   padding: 7px;
   background-color: #888888;
+  height: 110px;
 }
 
 .mainview_clear_search_button {
@@ -63,6 +64,14 @@
   display: flex;
   flex: 1;
   height: 18px;
+}
+
+.mainview_hide_search {
+  display: none;
+}
+
+.mainview_date_picker {
+  width: 215px;
 }
 
 .mainview_details {
