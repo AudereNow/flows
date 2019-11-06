@@ -66,6 +66,10 @@
   height: 18px;
 }
 
+.mainview_hide_search {
+  display: none;
+}
+
 .mainview_date_picker {
   width: 215px;
 }

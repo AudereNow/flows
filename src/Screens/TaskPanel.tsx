@@ -354,7 +354,11 @@ class TaskPanel extends React.Component<Props, State> {
     };
 
     return (
-      <div className="mainview_search_container">
+      <div
+        className={`mainview_search_container ${
+          !!this.state.showSearch ? "" : "mainview_hide_search"
+        }`}
+      >
         <div className="labelwrapper_row">
           <div className="mainview_search_row">
             <input
@@ -420,12 +424,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const {
-      selectedTaskIndex,
-      showSearch,
-      searchTermGlobal,
-      notes
-    } = this.state;
+    const { selectedTaskIndex, searchTermGlobal, notes } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -437,15 +436,13 @@ class TaskPanel extends React.Component<Props, State> {
         />
       ) : null;
 
-    const searchPanel = !!showSearch ? this._renderSearchPanel() : undefined;
-
     return (
       <div className="mainview_content">
         <LabelWrapper
           label={`${this.props.listLabel}: ${this.state.tasks.length}`}
           className="mainview_tasklist"
           renderLabelItems={this._renderLabelItems}
-          searchPanel={searchPanel}
+          searchPanel={this._renderSearchPanel()}
         >
           <TaskList
             onSelect={this._onTaskSelect}
