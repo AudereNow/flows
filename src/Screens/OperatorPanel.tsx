@@ -13,17 +13,24 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
     if (!!claim.photoMedUri) {
       claimImages.push({
         url: claim.photoMedUri,
-        label: claim.item
+        label: { value: claim.item, searchKey: "item" }
       });
     }
     if (!!claim.photoIDUri) {
       claimImages.push({
         url: claim.photoIDUri,
-        label: "ID: " + claim.patientID
+        label: {
+          displayKey: "ID",
+          value: claim.patientID || "",
+          searchKey: "patientID"
+        }
       });
     }
     if (!!claim.photoMedBatchUri) {
-      claimImages.push({ url: claim.photoMedBatchUri, label: "Batch" });
+      claimImages.push({
+        url: claim.photoMedBatchUri,
+        label: { value: "Batch", searchKey: "" }
+      });
     }
     return claimImages;
   };
