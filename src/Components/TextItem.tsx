@@ -11,7 +11,7 @@ export interface TextData {
 interface Props {
   data: TextData;
   searchTermGlobal?: string;
-  valueOnly?: boolean;
+  valueOnly?: boolean; // true = no display key or unstyled display key; false = styled display key
   className?: string;
   filters?: Filters;
 }
@@ -44,13 +44,11 @@ function highlight(props: Props) {
 }
 
 const TextItem = (props: Props) => {
-  const { searchKey, displayKey } = props.data;
+  const { displayKey } = props.data;
   return (
     <div className="textitem_container">
-      {!props.valueOnly && (
-        <span className="textitem_key">
-          {(!!displayKey ? displayKey : searchKey) + ":"}
-        </span>
+      {!props.valueOnly && !!displayKey && (
+        <span className="textitem_key">{displayKey + ":"}</span>
       )}
       <div className={props.className}>
         {props.valueOnly && !!displayKey && displayKey + ": "}
