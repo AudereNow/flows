@@ -116,7 +116,9 @@ class TopBar extends React.Component<{}, State> {
 
     return (
       <div className="topbar_main">
-        <img className="topbar_logo" src={logo} alt="logo" />
+        <a href="/">
+          <img className="topbar_logo" src={logo} alt="logo" />
+        </a>
         <div className="topbar_user">
           {firebase.auth().currentUser!.displayName}
         </div>
