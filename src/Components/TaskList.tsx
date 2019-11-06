@@ -100,29 +100,30 @@ class TaskList extends React.Component<Props, State> {
         {!!searchPanel && (
           <div className="tasklist_search_panel">{this.props.searchPanel}</div>
         )}
-        {tasks.map((task, index) => {
-          let activeClass, activeDataTip;
-          const activeViewers = this._getActiveViewers(task);
-          if (activeViewers.length > 0) {
-            activeClass = "tasklist_active";
-            activeDataTip = `${activeViewers.join(", ")} ${
-              index === this.state.selectedIndex ? " also" : ""
-            } working on this task`;
-          }
-
-          return (
-            <div
-              className={activeClass}
-              key={index}
-              data-tip={activeDataTip}
-              data-name={index}
-              onClick={this._onItemPressed}
-            >
-              {renderItem(task, index === this.state.selectedIndex)}
-              <ReactTooltip key={activeDataTip} />
-            </div>
-          );
-        })}
+        <div className={!!searchPanel ? "tasklist_search_open" : ""}>
+          {tasks.map((task, index) => {
+            let activeClass, activeDataTip;
+            const activeViewers = this._getActiveViewers(task);
+            if (activeViewers.length > 0) {
+              activeClass = "tasklist_active";
+              activeDataTip = `${activeViewers.join(", ")} ${
+                index === this.state.selectedIndex ? " also" : ""
+              } working on this task`;
+            }
+            return (
+              <div
+                className={activeClass}
+                key={index}
+                data-tip={activeDataTip}
+                data-name={index}
+                onClick={this._onItemPressed}
+              >
+                {renderItem(task, index === this.state.selectedIndex)}
+                <ReactTooltip key={activeDataTip} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }

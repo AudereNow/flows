@@ -15,8 +15,10 @@
 }
 
 .tasklist_search_panel {
-  height: 150px;
-  position: sticky;
-  top: 0px;
+  position: fixed;
   width: 25vw;
+}
+
+.tasklist_search_open {
+  margin-top: 123px;
 }

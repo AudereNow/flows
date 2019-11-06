@@ -46,6 +46,7 @@
 .mainview_search_container {
   padding: 7px;
   background-color: #888888;
+  height: 110px;
 }
 
 .mainview_clear_search_button {
