@@ -166,12 +166,6 @@ class TaskPanel extends React.Component<Props, State> {
     return result;
   };
 
-  // _pushHistory(selectedTaskId?: string) {
-  //   this.props.history.push(
-  //     `${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
-  //   );
-  // }
-
   _renderTaskListItem = (task: Task, isSelected: boolean) => {
     return <this.props.itemComponent task={task} isSelected={isSelected} />;
   };
