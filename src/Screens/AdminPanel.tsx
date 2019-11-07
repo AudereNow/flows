@@ -1,7 +1,7 @@
 import React from "react";
-import { UserRole } from "../sharedtypes";
 import ChangeHistory from "../Components/ChangeHistory";
-import { setRoles, getAdminLogs } from "../store/corestore";
+import { UserRole } from "../sharedtypes";
+import { setRoles } from "../store/corestore";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -27,8 +27,6 @@ class AdminPanel extends React.Component<Props, State> {
   };
 
   async componentDidMount() {
-    const adminLogs = await getAdminLogs();
-    console.log(adminLogs);
     this.setState({ roleMap: NO_ROLES_MAP });
   }
 
@@ -90,29 +88,20 @@ class AdminPanel extends React.Component<Props, State> {
 
   render() {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flex: 1
-        }}
-      >
-        <div>
-          <h3>Set User Roles</h3>
-          <form onSubmit={this._setUserRoles}>
-            <input
-              type="text"
-              name="email"
-              placeholder="email of user"
-              onChange={this._onEmailChange}
-            />
-            {this._renderRoles()}
-            <input type="submit" value="Submit" />
-          </form>
-          <h3>Change History</h3>
-          <ChangeHistory />
-        </div>
-        <div style={{ display: "flex", flex: 1 }}></div>
+      <div className="mainview_admin_panel">
+        <h3>Set User Roles</h3>
+        <form onSubmit={this._setUserRoles}>
+          <input
+            type="text"
+            name="email"
+            placeholder="email of user"
+            onChange={this._onEmailChange}
+          />
+          {this._renderRoles()}
+          <input type="submit" value="Submit" />
+        </form>
+        <h3>Change History</h3>
+        <ChangeHistory />
       </div>
     );
   }

@@ -1,29 +1,77 @@
 import moment, { Moment } from "moment";
-import { Filters } from "../Screens/TaskPanel";
+import {
+  ChangeRowFilters,
+  ClaimEntryFilters,
+  SiteFilters
+} from "../Screens/TaskPanel";
 
 export interface DateRange {
   startDate: Moment | null;
   endDate: Moment | null;
 }
 
+function isClaimEntry(entry: any) {
+  return entry.hasOwnProperty("patientFirstName");
+}
+
+function isChangeRow(entry: any) {
+  return entry.hasOwnProperty("taskID");
+}
+
+const DEFAULT_CLAIM_ENTRY_FILTERS = {
+  patient: true,
+  name: true,
+  patientID: true,
+  item: true
+};
+
+const DEFAULT_CHANGE_ROW_FILTERS = {
+  taskID: true,
+  timestamp: true,
+  description: true,
+  notes: true
+};
+
+const DEFAULT_SITE_FILTERS = {
+  name: true
+};
+
 export const containsSearchTerm = (
   searchPhrase: string,
   entry: any,
-  filters?: Filters
+  filters?: ClaimEntryFilters | ChangeRowFilters | SiteFilters
 ): boolean => {
   if (searchPhrase === "") {
     return true;
   }
 
   if (!filters || !Object.values(filters).some(value => !!value)) {
-    filters = { patient: true, name: true, patientID: true, item: true };
+    if (isClaimEntry(entry)) {
+      filters = DEFAULT_CLAIM_ENTRY_FILTERS;
+    } else if (isChangeRow(entry)) {
+      filters = DEFAULT_CHANGE_ROW_FILTERS;
+    } else {
+      filters = DEFAULT_SITE_FILTERS;
+    }
   }
 
   let entryCopy = Object.assign({}, entry);
 
-  entryCopy.patient = `${entry.patientFirstName ||
-    ""} ${entry.patientLastName || ""} ${entry.patientAge ||
-    ""} ${entry.patientSex || ""}`;
+  if (entry.hasOwnProperty("patientFirstName")) {
+    entryCopy.patient = `${entry.patientFirstName ||
+      ""} ${entry.patientLastName || ""} ${entry.patientAge ||
+      ""} ${entry.patientSex || ""}`;
+  }
+
+  if (
+    entry.hasOwnProperty("timestamp") &&
+    filters.hasOwnProperty("timestamp")
+  ) {
+    const dateString = moment(entry.timestamp).fromNow();
+    if (dateString.toLowerCase().includes(searchPhrase.toLowerCase())) {
+      return true;
+    }
+  }
 
   const filterKeys = Object.keys(filters as any);
   const lowerPhrase = searchPhrase.toLowerCase();
@@ -34,7 +82,10 @@ export const containsSearchTerm = (
     if (
       !!filterValue &&
       !!entryCopy[filterKey] &&
-      entryCopy[filterKey].toLowerCase().includes(lowerPhrase)
+      entryCopy[filterKey]
+        .toString()
+        .toLowerCase()
+        .includes(lowerPhrase)
     ) {
       return true;
     }
