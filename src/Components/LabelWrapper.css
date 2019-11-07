@@ -19,6 +19,10 @@
   flex: 1;
 }
 
+.labelwrapper_header_center {
+  flex: 3;
+}
+
 .labelwrapper_label {
   align-self: center;
 }
