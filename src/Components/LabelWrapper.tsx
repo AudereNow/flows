@@ -14,7 +14,7 @@ class LabelWrapper extends Component<Props> {
       <div className={`labelwrapper_container ${this.props.className}`}>
         <div className="labelwrapper_header">
           <div className="labelwrapper_header_item"></div>
-          <div className="labelwrapper_header_item">{this.props.label}</div>
+          <div className="labelwrapper_header_center">{this.props.label}</div>
           <div className="labelwrapper_header_item">
             {!!this.props.renderLabelItems && this.props.renderLabelItems()}
           </div>
