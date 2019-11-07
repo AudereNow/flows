@@ -1,5 +1,5 @@
 import React from "react";
-import { Filters } from "../Screens/TaskPanel";
+import { ClaimEntryFilters } from "../Screens/TaskPanel";
 import "./TextItem.css";
 
 export interface TextData {
@@ -13,7 +13,7 @@ interface Props {
   searchTermGlobal?: string;
   valueOnly?: boolean; // true = no display key or unstyled display key; false = styled display key
   className?: string;
-  filters?: Filters;
+  filters?: ClaimEntryFilters;
 }
 
 function highlight(props: Props) {

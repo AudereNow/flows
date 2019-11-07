@@ -5,6 +5,7 @@ import { DateRangePicker, FocusedInputShape } from "react-dates";
 import { RouteComponentProps, withRouter } from "react-router";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import CheckBox from "../Components/CheckBox";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
@@ -34,10 +35,21 @@ export interface DetailsComponentProps {
     callback: () => Promise<ActionCallbackResult>
   ) => void;
   searchTermGlobal?: string;
-  filters: Filters;
+  filters: ClaimEntryFilters;
 }
 
-export interface Filters {
+export interface SiteFilters {
+  name?: boolean;
+}
+
+export interface ChangeRowFilters {
+  taskID?: boolean;
+  timestamp?: boolean;
+  description?: boolean;
+  notes?: boolean;
+}
+
+export interface ClaimEntryFilters {
   patient?: boolean;
   name?: boolean;
   patientID?: boolean;
@@ -66,7 +78,7 @@ type State = {
   searchTermGlobal: string;
   showSearch: boolean;
   notes: string;
-  filters: Filters;
+  filters: ClaimEntryFilters;
 };
 
 class TaskPanel extends React.Component<Props, State> {
@@ -278,7 +290,8 @@ class TaskPanel extends React.Component<Props, State> {
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
       filters: { patient: false, name: false, patientID: false, item: false },
-      selectedTaskIndex: 0
+      selectedTaskIndex: 0,
+      searchTermGlobal: ""
     });
   };
 
@@ -377,23 +390,13 @@ class TaskPanel extends React.Component<Props, State> {
           <div className="mainview_spaced_row">
             {Object.keys(patientKeyMap).map((key, index) => {
               return (
-                <div
-                  className="mainview_input_container"
+                <CheckBox
                   key={key + index}
-                  data-value={key}
-                  onClick={this._onCheckBoxSelect}
-                >
-                  <input
-                    className="mainview_input_label"
-                    type="checkbox"
-                    name={key}
-                    readOnly
-                    checked={(this.state.filters as any)[key] || false}
-                  />
-                  <span className="mainview_input_label">
-                    {patientKeyMap[key]}
-                  </span>
-                </div>
+                  checked={(this.state.filters as any)[key] || false}
+                  onCheckBoxSelect={this._onCheckBoxSelect}
+                  value={key}
+                  label={patientKeyMap[key]}
+                />
               );
             })}
           </div>
@@ -479,7 +482,7 @@ interface DetailsWrapperProps {
   notesux: ReactNode;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
-  filters: Filters;
+  filters: ClaimEntryFilters;
   searchTermGlobal: string;
   remoteConfig: Partial<RemoteConfig>;
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Filters } from "../Screens/TaskPanel";
+import { ClaimEntryFilters } from "../Screens/TaskPanel";
 import "./ImageRow.css";
 import TextItem, { TextData } from "./TextItem";
 import ZoomableImage from "./ZoomableImage";
@@ -7,7 +7,7 @@ import ZoomableImage from "./ZoomableImage";
 interface Props {
   images: Array<string | ImageData>;
   searchTermGlobal?: string;
-  filters: Filters;
+  filters: ClaimEntryFilters;
 }
 
 interface ImageData {

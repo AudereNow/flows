@@ -33,12 +33,6 @@
   margin-right: 5px;
 }
 
-.mainview_input_label {
-  color: white;
-  font-size: small;
-  cursor: pointer;
-}
-
 .mainview_button_disabled {
   background-color: #cccccc;
 }
@@ -92,4 +86,10 @@
   left: 0px;
   min-width: 100%;
   min-height: 100%;
+}
+
+.mainview_admin_panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
