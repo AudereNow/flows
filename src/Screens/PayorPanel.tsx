@@ -1,25 +1,45 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
+import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
+import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import {
   formatCurrency,
   getBestUserName,
-  issuePayments
+  issuePayments,
+  loadPreviousTasks
 } from "../store/corestore";
 import { DetailsComponentProps } from "./TaskPanel";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 
+const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
+  [TaskState.AUDIT]: "Awaiting Audit",
+  [TaskState.PAY]: "Awaiting Payment",
+  [TaskState.FOLLOWUP]: "Needs Ops Followup",
+  [TaskState.REJECTED]: "Claim Rejected",
+  [TaskState.COMPLETED]: "Paid",
+  [TaskState.CSV]: "Not yet imported"
+};
+
 interface RemoteProps {
   realPayments: boolean;
 }
+interface State {
+  relatedTasks?: Task[];
+  showPreviousClaims: boolean;
+}
 
 class ConfigurablePayorDetails extends React.Component<
-  DetailsComponentProps & RemoteProps
+  DetailsComponentProps & RemoteProps,
+  State
 > {
+  state: State = {
+    showPreviousClaims: false
+  };
+
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
   }
@@ -61,6 +81,15 @@ class ConfigurablePayorDetails extends React.Component<
     return { success: true };
   };
 
+  _toggleShowPreviousClaims = () => {
+    if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
+      loadPreviousTasks(this.props.task.site.name, this.props.task.id).then(
+        relatedTasks => this.setState({ relatedTasks })
+      );
+    }
+    this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
+  };
+
   render() {
     const { filters, searchTermGlobal, task, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
@@ -75,6 +104,27 @@ class ConfigurablePayorDetails extends React.Component<
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
       cleanedData.push(row);
     });
+
+    let relatedTaskRows: any[] | null = this.state.relatedTasks
+      ? this.state.relatedTasks.map(relatedTask => {
+          return {
+            Date: relatedTask.updatedAt
+              ? new Date(
+                  (relatedTask.updatedAt as any).seconds * 1000 ||
+                    relatedTask.updatedAt
+                ).toLocaleDateString()
+              : "",
+            Claims: relatedTask.entries.length,
+            "Total Amount": formatCurrency(
+              relatedTask.entries.reduce(
+                (total, entry) => total + entry.claimedCost,
+                0
+              )
+            ),
+            State: STATE_DESCRIPTIONS[relatedTask.state]
+          };
+        })
+      : null;
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
@@ -108,6 +158,24 @@ class ConfigurablePayorDetails extends React.Component<
           filters={filters}
         />
         <DataTable data={cleanedData} />
+        <Button
+          label={
+            this.state.showPreviousClaims
+              ? "Hide Previous Claims ▲"
+              : "Show Previous Claims ▼"
+          }
+          onClick={this._toggleShowPreviousClaims}
+        />
+        {this.state.showPreviousClaims &&
+          (relatedTaskRows ? (
+            relatedTaskRows.length ? (
+              <DataTable data={relatedTaskRows} />
+            ) : (
+              <div className="mainview_details_text">No Previous Claims</div>
+            )
+          ) : (
+            <div className="mainview_details_text">Loading...</div>
+          ))}
         {notesux}
         {this.props.children}
       </LabelWrapper>

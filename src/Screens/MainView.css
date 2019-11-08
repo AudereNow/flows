@@ -74,6 +74,10 @@
   flex: 4;
 }
 
+.mainview_details_text {
+  margin: 10px;
+}
+
 .mainview_actions_so_far_header {
   margin-top: 12px;
   margin: 10px;
