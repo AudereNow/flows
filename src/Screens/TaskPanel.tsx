@@ -237,7 +237,7 @@ class TaskPanel extends React.Component<Props, State> {
     });
   };
 
-  _handleSearchTermGlobalChange = debounce((searchTerm: string) => {
+  _handleSearchTermGlobalChange = debounce(async (searchTerm: string) => {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
@@ -245,6 +245,9 @@ class TaskPanel extends React.Component<Props, State> {
       searchTerm,
       this.state.searchDates
     );
+
+    const changes = await Promise.all(filteredTasks.map(t => getChanges(t.id)));
+
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
@@ -253,7 +256,8 @@ class TaskPanel extends React.Component<Props, State> {
         tasks: filteredTasks,
         searchTermGlobal: searchTerm,
         selectedTaskIndex: selectedIndex,
-        notes: ""
+        notes: "",
+        changes
       },
       () => {
         if (selectedIndex === -1 && filteredTasks.length > 0) {
@@ -263,7 +267,7 @@ class TaskPanel extends React.Component<Props, State> {
     );
   }, 500);
 
-  _handleSearchDatesChange = (searchDates: DateRange) => {
+  _handleSearchDatesChange = async (searchDates: DateRange) => {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
@@ -271,6 +275,9 @@ class TaskPanel extends React.Component<Props, State> {
       this.state.searchTermGlobal,
       searchDates
     );
+
+    const changes = await Promise.all(filteredTasks.map(t => getChanges(t.id)));
+
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
@@ -279,19 +286,23 @@ class TaskPanel extends React.Component<Props, State> {
       searchDates,
       tasks: filteredTasks,
       selectedTaskIndex: selectedIndex,
-      notes: ""
+      notes: "",
+      changes
     });
   };
 
-  _clearSearch = () => {
+  _clearSearch = async () => {
     const { allTasks } = this.state;
     this._inputRef.current!.value = "";
+    const changes = await Promise.all(allTasks.map(t => getChanges(t.id)));
+
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
       filters: { patient: false, name: false, patientID: false, item: false },
       selectedTaskIndex: 0,
-      searchTermGlobal: ""
+      searchTermGlobal: "",
+      changes
     });
   };
 
