@@ -1,75 +1,41 @@
+import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React from "react";
-import ReactTable, { RowRenderProps } from "react-table";
+import ReactTable from "react-table";
 import "react-table/react-table.css";
-import ReactTooltip from "react-tooltip";
-import { TaskChangeRecord } from "../sharedtypes";
-import { getAllChanges } from "../store/corestore";
+import { AdminLogRow, ChangeRow } from "../Screens/AdminPanel";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
-import "./ChangeHistory.css";
 import CheckBox from "./CheckBox";
+import "./SearchableTable.css";
 
-const TABLE_COLUMNS = [
-  { Header: "Task ID", accessor: "taskID", minWidth: 150 },
-  {
-    Header: "Time",
-    accessor: "timestamp",
-    Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
-    minWidth: 100
-  },
-  { Header: "Description", accessor: "description", minWidth: 450 },
-  { Header: "Notes", accessor: "notes", minWidth: 200 }
-];
-
-type ChangeRow = {
-  taskID: string;
-  timestamp: number;
-  description: string;
-  notes?: string;
+type Props = {
+  tableColumns: any[];
+  allData: ChangeRow[] | AdminLogRow[];
+  downloadPrefix: string;
 };
-
-type Props = {};
 type State = {
-  allChanges: ChangeRow[];
-  changes: ChangeRow[];
+  allData: any[];
+  data: any[];
   searchTerm: string;
   filters: {};
 };
 
-class ChangeHistory extends React.Component<Props, State> {
+class SearchableTable extends React.Component<Props, State> {
   state: State = {
-    allChanges: [],
-    changes: [],
+    allData: this.props.allData,
+    data: this.props.allData,
     filters: {},
     searchTerm: ""
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
-  async componentDidMount() {
-    const allChanges = await getAllChanges();
-    const allChangesRows = this._recordsToChangeRows(allChanges);
-
-    this.setState({ allChanges: allChangesRows, changes: allChangesRows });
-  }
-
-  _recordsToChangeRows(records: TaskChangeRecord[]): ChangeRow[] {
-    return records.map(r => {
-      return {
-        taskID: r.taskID,
-        timestamp: r.timestamp,
-        description: `${r.by} changed task from ${r.fromState} to ${r.state}`,
-        notes: r.notes
-      };
-    });
-  }
-
   _computeFilteredChanges = (searchTerm: string) => {
     const { filters } = this.state;
 
-    return this.state.allChanges.filter(change => {
-      return containsSearchTerm(searchTerm, change, filters);
+    return this.state.allData.filter(row => {
+      return containsSearchTerm(searchTerm, row, filters);
     });
   };
 
@@ -89,7 +55,7 @@ class ChangeHistory extends React.Component<Props, State> {
     this.setState({
       filters: {},
       searchTerm: "",
-      changes: this.state.allChanges
+      data: this.state.allData
     });
   };
   _onSearchTermChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,17 +64,47 @@ class ChangeHistory extends React.Component<Props, State> {
   };
 
   _handleSearchChange = debounce((searchTerm: string) => {
-    const filteredChanges = this._computeFilteredChanges(searchTerm);
+    const filteredData = this._computeFilteredChanges(searchTerm);
 
-    this.setState({ changes: filteredChanges, searchTerm });
+    this.setState({ data: filteredData, searchTerm });
   }, 500);
 
+  _downloadCSV = () => {
+    const { data } = this.state;
+    const { downloadPrefix } = this.props;
+
+    if (data.length === 0) {
+      alert("There are no tasks to download! Please adjust your search.");
+    }
+    const fileName = downloadPrefix + "_" + moment().format("YYYYMMDD_HHmmss");
+    const json2csvOptions = { checkSchemaDifferences: false };
+
+    json2csv(
+      data,
+      (err, csv) => {
+        if (!csv || err) {
+          alert("Something went wrong when trying to download your csv");
+        }
+
+        const dataString = "data:text/csv;charset=utf-8," + csv;
+        const encodedURI = encodeURI(dataString);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedURI);
+        link.setAttribute("download", `${fileName}.csv`);
+        link.click();
+      },
+      json2csvOptions
+    );
+  };
+
   render() {
-    const { changes } = this.state;
+    const { data } = this.state;
+    const { tableColumns } = this.props;
+
     return (
       <div>
-        <div className="changehistory_checkbox_row">
-          <div className="changehistory_checkbox_search">
+        <div className="searchabletable_checkbox_row">
+          <div className="searchabletable_checkbox_search">
             <div>
               <input
                 ref={this._inputRef}
@@ -117,7 +113,7 @@ class ChangeHistory extends React.Component<Props, State> {
               />
               <Button onClick={this._clearSearch} label="Clear Search" />
             </div>
-            {TABLE_COLUMNS.map((column, index) => {
+            {tableColumns.map((column, index) => {
               return (
                 <CheckBox
                   key={column.accessor + column.Header + index}
@@ -130,14 +126,15 @@ class ChangeHistory extends React.Component<Props, State> {
                 />
               );
             })}
+            <Button onClick={this._downloadCSV} label="Download CSV" />
           </div>
         </div>
-        {changes.length === 0 ? (
+        {data.length === 0 ? (
           "No changes found"
         ) : (
           <ReactTable
-            data={changes}
-            columns={TABLE_COLUMNS}
+            data={data}
+            columns={tableColumns}
             defaultPageSize={50}
             defaultSorted={[
               {
@@ -152,16 +149,4 @@ class ChangeHistory extends React.Component<Props, State> {
   }
 }
 
-function renderTooltippedTime(timestamp: number) {
-  const when = moment(timestamp).fromNow();
-  const tip = new Date(timestamp).toLocaleString();
-
-  return (
-    <span data-tip={tip}>
-      {when}
-      <ReactTooltip key={tip} />
-    </span>
-  );
-}
-
-export default ChangeHistory;
+export default SearchableTable;

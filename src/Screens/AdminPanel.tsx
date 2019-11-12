@@ -1,7 +1,11 @@
+import moment from "moment";
 import React from "react";
-import ChangeHistory from "../Components/ChangeHistory";
-import { UserRole } from "../sharedtypes";
-import { setRoles } from "../store/corestore";
+import { RowRenderProps } from "react-table";
+import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
+import ReactTooltip from "react-tooltip";
+import SearchableTable from "../Components/SearchableTable";
+import { TaskChangeRecord, UserRole } from "../sharedtypes";
+import { getAdminLogs, getAllChanges, setRoles } from "../store/corestore";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -16,18 +20,69 @@ const NO_ROLES_MAP: RoleMap = {
 
 type Props = {};
 type State = {
+  allChanges: ChangeRow[];
+  allAdminLogs: AdminLogRow[];
   email: string;
   roleMap: RoleMap;
 };
 
+export type ChangeRow = {
+  taskID: string;
+  timestamp: number;
+  description: string;
+  notes?: string;
+};
+
+export type AdminLogRow = {
+  desc: string;
+  timestamp: number;
+  userID: string;
+  userName: string;
+};
+
+const CHANGE_HISTORY_TABLE_COLUMNS = [
+  { Header: "Task ID", accessor: "taskID", minWidth: 150 },
+  {
+    Header: "Time",
+    accessor: "timestamp",
+    Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
+    minWidth: 100
+  },
+  { Header: "Description", accessor: "description", minWidth: 450 },
+  { Header: "Notes", accessor: "notes", minWidth: 200 }
+];
+
+const ADMIN_LOGS_TABLE_COLUMNS = [
+  { Header: "ID", accessor: "userID", minWidth: 200 },
+  { Header: "Name", accessor: "userName", minWidth: 100 },
+  { Header: "Description", accessor: "desc", minWidth: 150 },
+  {
+    Header: "Time",
+    accessor: "timestamp",
+    Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
+    minWidth: 100
+  }
+];
+
 class AdminPanel extends React.Component<Props, State> {
   state: State = {
+    allAdminLogs: [],
+    allChanges: [],
     email: "",
     roleMap: NO_ROLES_MAP
   };
 
+  _fetchedAllData = false;
+
   async componentDidMount() {
-    this.setState({ roleMap: NO_ROLES_MAP });
+    const allChanges = await getAllChanges();
+    const allAdminLogs = await getAdminLogs();
+    this._fetchedAllData = true;
+    this.setState({
+      roleMap: NO_ROLES_MAP,
+      allChanges: this._recordsToChangeRows(allChanges),
+      allAdminLogs: this._recordsToAdminLogRows(allAdminLogs)
+    });
   }
 
   _onEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,25 +141,86 @@ class AdminPanel extends React.Component<Props, State> {
     return <div>{roleBoxes}</div>;
   }
 
+  _recordsToChangeRows = (records: TaskChangeRecord[]): ChangeRow[] => {
+    return records.map(r => {
+      return {
+        taskID: r.taskID,
+        timestamp: r.timestamp,
+        description: !!r.fromState
+          ? `${r.by} changed task from ${r.fromState} to ${r.state}`
+          : `${r.by} ${(r as any).desc}`,
+        notes: r.notes || ""
+      };
+    });
+  };
+
+  _recordsToAdminLogRows = (records: any[]): AdminLogRow[] => {
+    return records.map(r => {
+      return {
+        desc: r.desc,
+        timestamp: r.timestamp,
+        userID: r.user.id,
+        userName: r.user.name
+      };
+    });
+  };
+
   render() {
+    const { allChanges, allAdminLogs } = this.state;
     return (
       <div className="mainview_admin_panel">
-        <h3>Set User Roles</h3>
-        <form onSubmit={this._setUserRoles}>
-          <input
-            type="text"
-            name="email"
-            placeholder="email of user"
-            onChange={this._onEmailChange}
-          />
-          {this._renderRoles()}
-          <input type="submit" value="Submit" />
-        </form>
-        <h3>Change History</h3>
-        <ChangeHistory />
+        <Tabs>
+          <TabList>
+            <Tab>Change History</Tab>
+            <Tab>Admin Logs</Tab>
+            <Tab>User Roles</Tab>
+          </TabList>
+          <TabPanel>
+            {this._fetchedAllData && (
+              <SearchableTable
+                downloadPrefix={"changeHistory_"}
+                allData={allChanges}
+                tableColumns={CHANGE_HISTORY_TABLE_COLUMNS}
+              />
+            )}
+          </TabPanel>
+          <TabPanel>
+            {this._fetchedAllData && (
+              <SearchableTable
+                downloadPrefix={"adminLogs_"}
+                allData={allAdminLogs}
+                tableColumns={ADMIN_LOGS_TABLE_COLUMNS}
+              />
+            )}
+          </TabPanel>
+          <TabPanel>
+            <form onSubmit={this._setUserRoles}>
+              <input
+                type="text"
+                name="email"
+                placeholder="email of user"
+                onChange={this._onEmailChange}
+              />
+              {this._renderRoles()}
+              <input type="submit" value="Submit" />
+            </form>
+          </TabPanel>
+        </Tabs>
       </div>
     );
   }
+}
+
+function renderTooltippedTime(timestamp: number) {
+  const when = moment(timestamp).fromNow();
+  const tip = new Date(timestamp).toLocaleString();
+
+  return (
+    <span data-tip={tip}>
+      {when}
+      <ReactTooltip key={tip} />
+    </span>
+  );
 }
 
 export default AdminPanel;

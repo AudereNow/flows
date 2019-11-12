@@ -1,13 +1,10 @@
-.changehistory_checkbox_row {
+.searchabletable_checkbox_row {
   background-color: #888888;
-
-  margin: 5px 0px;
-
   padding: 5px;
 }
 
-.changehistory_checkbox_search {
-  width: 50%;
+.searchabletable_checkbox_search {
+  width: 80%;
   justify-content: space-between;
   align-items: center;
   display: flex;
