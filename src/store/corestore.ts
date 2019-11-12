@@ -145,6 +145,21 @@ export async function loadTasks(taskState: TaskState): Promise<Task[]> {
   return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
 }
 
+export async function loadPreviousTasks(
+  siteName: string,
+  currentId: string
+): Promise<Task[]> {
+  const states = Object.values(TaskState);
+  return (await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .where("site.name", "==", siteName)
+    .get()).docs
+    .map(doc => doc.data() as Task)
+    .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
+    .filter(t => t.id !== currentId);
+}
+
 export async function setRoles(
   email: string,
   roles: UserRole[]
