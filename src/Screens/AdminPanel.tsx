@@ -20,18 +20,20 @@ const NO_ROLES_MAP: RoleMap = {
 
 type Props = {};
 type State = {
+  allChanges: ChangeRow[];
+  allAdminLogs: AdminLogRow[];
   email: string;
   roleMap: RoleMap;
 };
 
-type ChangeRow = {
+export type ChangeRow = {
   taskID: string;
   timestamp: number;
   description: string;
   notes?: string;
 };
 
-type AdminLogRow = {
+export type AdminLogRow = {
   desc: string;
   timestamp: number;
   userID: string;
@@ -64,12 +66,23 @@ const ADMIN_LOGS_TABLE_COLUMNS = [
 
 class AdminPanel extends React.Component<Props, State> {
   state: State = {
+    allAdminLogs: [],
+    allChanges: [],
     email: "",
     roleMap: NO_ROLES_MAP
   };
 
+  _fetchedAllData = false;
+
   async componentDidMount() {
-    this.setState({ roleMap: NO_ROLES_MAP });
+    const allChanges = await getAllChanges();
+    const allAdminLogs = await getAdminLogs();
+    this._fetchedAllData = true;
+    this.setState({
+      roleMap: NO_ROLES_MAP,
+      allChanges: this._recordsToChangeRows(allChanges),
+      allAdminLogs: this._recordsToAdminLogRows(allAdminLogs)
+    });
   }
 
   _onEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,6 +166,7 @@ class AdminPanel extends React.Component<Props, State> {
   };
 
   render() {
+    const { allChanges, allAdminLogs } = this.state;
     return (
       <div className="mainview_admin_panel">
         <Tabs>
@@ -162,20 +176,22 @@ class AdminPanel extends React.Component<Props, State> {
             <Tab>User Roles</Tab>
           </TabList>
           <TabPanel>
-            <SearchableTable
-              downloadPrefix={"changeHistory_"}
-              dataFetchingFunction={getAllChanges}
-              adapterFunction={this._recordsToChangeRows}
-              tableColumns={CHANGE_HISTORY_TABLE_COLUMNS}
-            />
+            {this._fetchedAllData && (
+              <SearchableTable
+                downloadPrefix={"changeHistory_"}
+                allData={allChanges}
+                tableColumns={CHANGE_HISTORY_TABLE_COLUMNS}
+              />
+            )}
           </TabPanel>
           <TabPanel>
-            <SearchableTable
-              downloadPrefix={"adminLogs_"}
-              dataFetchingFunction={getAdminLogs}
-              adapterFunction={this._recordsToAdminLogRows}
-              tableColumns={ADMIN_LOGS_TABLE_COLUMNS}
-            />
+            {this._fetchedAllData && (
+              <SearchableTable
+                downloadPrefix={"adminLogs_"}
+                allData={allAdminLogs}
+                tableColumns={ADMIN_LOGS_TABLE_COLUMNS}
+              />
+            )}
           </TabPanel>
           <TabPanel>
             <form onSubmit={this._setUserRoles}>

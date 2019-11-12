@@ -3,23 +3,16 @@ import moment from "moment";
 import React from "react";
 import ReactTable from "react-table";
 import "react-table/react-table.css";
+import { AdminLogRow, ChangeRow } from "../Screens/AdminPanel";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
 import CheckBox from "./CheckBox";
 import "./SearchableTable.css";
 
-type ChangeRow = {
-  taskID: string;
-  timestamp: number;
-  description: string;
-  notes?: string;
-};
-
 type Props = {
   tableColumns: any[];
-  adapterFunction: (all: any[]) => any[];
-  dataFetchingFunction: () => Promise<any[]>;
+  allData: ChangeRow[] | AdminLogRow[];
   downloadPrefix: string;
 };
 type State = {
@@ -31,19 +24,12 @@ type State = {
 
 class SearchableTable extends React.Component<Props, State> {
   state: State = {
-    allData: [],
-    data: [],
+    allData: this.props.allData,
+    data: this.props.allData,
     filters: {},
     searchTerm: ""
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-
-  async componentDidMount() {
-    const { dataFetchingFunction } = this.props;
-    const allData = await dataFetchingFunction();
-    const allDataRows = this.props.adapterFunction(allData);
-    this.setState({ allData: allDataRows, data: allDataRows });
-  }
 
   _computeFilteredChanges = (searchTerm: string) => {
     const { filters } = this.state;
