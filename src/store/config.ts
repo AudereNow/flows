@@ -36,7 +36,7 @@ export function isCustomPanel(config: TabConfig): config is CustomPanelConfig {
 
 export const defaultConfig: AppConfig = {
   tabs: {
-    Auditor: {
+    "Primary Review": {
       taskState: TaskState.AUDIT,
       taskListComponent: "default",
       detailsComponent: "AuditTask",
@@ -78,7 +78,7 @@ export const defaultConfig: AppConfig = {
         }
       }
     },
-    Operator: {
+    "Secondary Followup": {
       taskState: TaskState.FOLLOWUP,
       taskListComponent: "default",
       detailsComponent: "OperatorTask",
