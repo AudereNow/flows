@@ -85,9 +85,11 @@ class SearchableTable extends React.Component<Props, State> {
         if (!csv || err) {
           alert("Something went wrong when trying to download your csv");
         }
-
-        const dataString = "data:text/csv;charset=utf-8," + csv;
-        const encodedURI = encodeURI(dataString);
+        const encodedURI = encodeURI(
+          `data:text/csv;charset=utf-8,${data
+            .map(row => row.join(","))
+            .join(`\n`)}`
+        );
         const link = document.createElement("a");
         link.setAttribute("href", encodedURI);
         link.setAttribute("download", `${fileName}.csv`);

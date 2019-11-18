@@ -28,14 +28,14 @@ type State = {
 
 export type ChangeRow = {
   taskID: string;
-  timestamp: number;
+  timestamp: string;
   description: string;
   notes?: string;
 };
 
 export type AdminLogRow = {
   desc: string;
-  timestamp: number;
+  timestamp: string;
   userID: string;
   userName: string;
 };
@@ -145,7 +145,7 @@ class AdminPanel extends React.Component<Props, State> {
     return records.map(r => {
       return {
         taskID: r.taskID,
-        timestamp: r.timestamp,
+        timestamp: new Date(r.timestamp).toLocaleDateString(),
         description: !!r.fromState
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
@@ -158,7 +158,7 @@ class AdminPanel extends React.Component<Props, State> {
     return records.map(r => {
       return {
         desc: r.desc,
-        timestamp: r.timestamp,
+        timestamp: new Date(r.timestamp).toLocaleDateString(),
         userID: r.user.id,
         userName: r.user.name
       };
@@ -211,9 +211,9 @@ class AdminPanel extends React.Component<Props, State> {
   }
 }
 
-function renderTooltippedTime(timestamp: number) {
-  const when = moment(timestamp).fromNow();
-  const tip = new Date(timestamp).toLocaleString();
+function renderTooltippedTime(timestamp: string) {
+  const tip = moment(timestamp).fromNow();
+  const when = timestamp;
 
   return (
     <span data-tip={tip}>
