@@ -5,7 +5,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
-import TextItem from "../Components/TextItem";
+import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
@@ -33,6 +33,8 @@ export class AuditorDetails extends React.Component<
       MIN_SAMPLES
     )
   };
+
+  static contextType = SearchContext;
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._onApprove);
@@ -87,7 +89,6 @@ export class AuditorDetails extends React.Component<
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
     const { searchTermDetails } = this.state;
-    const { filters, searchTermGlobal } = this.props;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -111,8 +112,6 @@ export class AuditorDetails extends React.Component<
       <LabelWrapper key={JSON.stringify(entry)}>
         <TextItem
           data={{ displayKey: "Date", searchKey: "date", value: date }}
-          filters={filters}
-          searchTermGlobal={searchTermGlobal}
         />
         <div style={{ display: "flex", flexDirection: "row" }}>
           <TextItem
@@ -121,15 +120,9 @@ export class AuditorDetails extends React.Component<
               searchKey: "patient",
               value: patient
             }}
-            filters={filters}
-            searchTermGlobal={searchTermGlobal}
           />
         </div>
-        <ImageRow
-          filters={filters}
-          searchTermGlobal={searchTermGlobal}
-          images={this._extractImages(entry)}
-        />
+        <ImageRow images={this._extractImages(entry)} />
       </LabelWrapper>
     );
   };
@@ -146,9 +139,9 @@ export class AuditorDetails extends React.Component<
   };
 
   render() {
-    const showAllEntries =
-      !!this.props.searchTermGlobal || this.state.showAllEntries;
-    const { task, searchTermGlobal, notesux } = this.props;
+    const { searchTermGlobal } = this.context;
+    const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
+    const { task, notesux } = this.props;
 
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
@@ -165,8 +158,6 @@ export class AuditorDetails extends React.Component<
               searchKey: "name",
               value: task.site.name
             }}
-            filters={this.props.filters}
-            searchTermGlobal={searchTermGlobal}
           />
 
           <input

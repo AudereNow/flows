@@ -1,13 +1,10 @@
 import React from "react";
-import { ClaimEntryFilters } from "../Screens/TaskPanel";
 import "./ImageRow.css";
 import TextItem, { TextData } from "./TextItem";
 import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
-  searchTermGlobal?: string;
-  filters: ClaimEntryFilters;
 }
 
 interface ImageData {
@@ -29,8 +26,6 @@ const ImageRow = (props: Props) => {
                 <TextItem
                   className="imagerow_label"
                   data={(data as ImageData).label}
-                  filters={props.filters}
-                  searchTermGlobal={props.searchTermGlobal}
                   valueOnly={true}
                 />
               )}

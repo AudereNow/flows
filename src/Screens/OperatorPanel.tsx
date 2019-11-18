@@ -42,7 +42,6 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
       patientProps.push(entry.patientSex);
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
-    const { searchTermGlobal, filters } = this.props;
 
     return (
       <LabelWrapper key={patientInfo}>
@@ -52,8 +51,6 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
             searchKey: "date",
             value: new Date(entry.timestamp).toLocaleDateString()
           }}
-          filters={filters}
-          searchTermGlobal={searchTermGlobal}
         />
         <TextItem
           data={{
@@ -61,20 +58,13 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
             searchKey: "patient",
             value: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
           }}
-          filters={filters}
-          searchTermGlobal={searchTermGlobal}
         />
-        <ImageRow
-          searchTermGlobal={searchTermGlobal}
-          filters={filters}
-          images={this._extractImages(entry)}
-        />
+        <ImageRow images={this._extractImages(entry)} />
       </LabelWrapper>
     );
   };
 
   render() {
-    const { filters, searchTermGlobal } = this.props;
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem
@@ -83,8 +73,6 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
             searchKey: "name",
             value: this.props.task.site.name
           }}
-          filters={filters}
-          searchTermGlobal={searchTermGlobal}
         />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
