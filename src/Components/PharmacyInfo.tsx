@@ -98,7 +98,7 @@ class PharmacyInfoHelper extends React.Component<Props, State> {
             </div>
           ) : (
             <div className="pharmacy_detail">
-              Notes: {this.state.pharmacy.notes}{" "}
+              {`Notes: ${this.state.pharmacy.notes} `}
               <button onClick={this._onNotesEdit}>Edit</button>
             </div>
           ))}
