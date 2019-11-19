@@ -11,6 +11,7 @@ import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { SearchContext } from "../Components/TextItem";
 import {
+  Pharmacy,
   RemoteConfig,
   Task,
   TaskChangeRecord,
@@ -18,8 +19,10 @@ import {
 } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
+  getUserEmail,
   changeTaskState,
   getChanges,
+  getPharmacyDetails,
   subscribeToTasks
 } from "../store/corestore";
 import { configuredComponent } from "../util/configuredComponent";
@@ -63,10 +66,12 @@ type Props = RouteComponentProps & {
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
+  filterByOwners: boolean;
 };
 
 type State = {
   allTasks: Task[];
+  pharmacies: { [name: string]: Pharmacy };
   tasks: Task[];
   changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
@@ -78,11 +83,13 @@ type State = {
   showSearch: boolean;
   notes: string;
   filters: ClaimEntryFilters;
+  disableOwnersFilter: boolean;
 };
 
 class TaskPanel extends React.Component<Props, State> {
   state: State = {
     allTasks: [],
+    pharmacies: {},
     tasks: [],
     changes: [],
     selectedTaskIndex: -1,
@@ -92,6 +99,7 @@ class TaskPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     showSearch: false,
     notes: "",
+    disableOwnersFilter: false,
     filters: { patient: false, name: false, patientID: false, item: false }
   };
   _unsubscribe = () => {};
@@ -141,14 +149,17 @@ class TaskPanel extends React.Component<Props, State> {
       }
     }
 
-    this.setState({
-      allTasks: tasks,
-      tasks,
-      changes,
-      selectedTaskIndex,
-      selectedTaskId,
-      notes
-    });
+    this.setState(
+      {
+        allTasks: tasks,
+        tasks,
+        changes,
+        selectedTaskIndex,
+        selectedTaskId,
+        notes
+      },
+      this._updateTasks
+    );
   };
 
   _onTabSelect = (): boolean => {
@@ -220,11 +231,37 @@ class TaskPanel extends React.Component<Props, State> {
     this._handleSearchTermGlobalChange(input);
   };
 
+  _checkOwner = (siteName: string) => {
+    if (this.state.disableOwnersFilter) {
+      return true;
+    }
+    if (!this.state.pharmacies.hasOwnProperty(siteName)) {
+      getPharmacyDetails(siteName).then(pharmacy =>
+        this.setState(
+          state => ({
+            pharmacies: {
+              ...state.pharmacies,
+              [siteName]: pharmacy
+            }
+          }),
+          this._updateTasks
+        )
+      );
+      return true;
+    }
+    const pharmacy = this.state.pharmacies[siteName];
+    if (!pharmacy || pharmacy.owners.length === 0) {
+      return true;
+    }
+    return pharmacy.owners.includes(getUserEmail());
+  };
+
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     const { filters } = this.state;
 
     return this.state.allTasks.filter(task => {
       return (
+        this._checkOwner(task.site.name) &&
         (containsSearchTerm(searchTerm, task.site, filters) ||
           task.entries.some(entry => {
             return containsSearchTerm(searchTerm, entry, filters);
@@ -236,12 +273,20 @@ class TaskPanel extends React.Component<Props, State> {
     });
   };
 
-  _handleSearchTermGlobalChange = debounce(async (searchTerm: string) => {
+  _handleSearchTermGlobalChange = debounce(async (searchTermGlobal: string) => {
+    this.setState({ searchTermGlobal }, this._updateTasks);
+  }, 500);
+
+  _handleSearchDatesChange = async (searchDates: DateRange) => {
+    this.setState({ searchDates }, this._updateTasks);
+  };
+
+  _updateTasks = async () => {
     const { selectedTaskIndex, tasks } = this.state;
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
     const filteredTasks = this._computeFilteredTasks(
-      searchTerm,
+      this.state.searchTermGlobal,
       this.state.searchDates
     );
 
@@ -253,7 +298,6 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState(
       {
         tasks: filteredTasks,
-        searchTermGlobal: searchTerm,
         selectedTaskIndex: selectedIndex,
         notes: "",
         changes
@@ -264,30 +308,6 @@ class TaskPanel extends React.Component<Props, State> {
         }
       }
     );
-  }, 500);
-
-  _handleSearchDatesChange = async (searchDates: DateRange) => {
-    const { selectedTaskIndex, tasks } = this.state;
-    const selectedId =
-      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
-    const filteredTasks = this._computeFilteredTasks(
-      this.state.searchTermGlobal,
-      searchDates
-    );
-
-    const changes = await Promise.all(filteredTasks.map(t => getChanges(t.id)));
-
-    const selectedIndex = filteredTasks.findIndex(task => {
-      return task.id === selectedId;
-    });
-
-    this.setState({
-      searchDates,
-      tasks: filteredTasks,
-      selectedTaskIndex: selectedIndex,
-      notes: "",
-      changes
-    });
   };
 
   _clearSearch = async () => {
@@ -367,6 +387,15 @@ class TaskPanel extends React.Component<Props, State> {
     });
   };
 
+  _onOwnersFilterToggle = () => {
+    this.setState(
+      state => ({
+        disableOwnersFilter: !state.disableOwnersFilter
+      }),
+      this._updateTasks
+    );
+  };
+
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
     const patientKeyMap: any = {
@@ -382,6 +411,16 @@ class TaskPanel extends React.Component<Props, State> {
           !!this.state.showSearch ? "" : "mainview_hide_search"
         }`}
       >
+        <div className="labelwrapper_row">
+          {this.props.filterByOwners && (
+            <CheckBox
+              checked={this.state.disableOwnersFilter}
+              onCheckBoxSelect={this._onOwnersFilterToggle}
+              value={"disableOwnersFilter"}
+              label={"Show tasks owned by teammates"}
+            />
+          )}
+        </div>
         <div className="labelwrapper_row">
           <div className="mainview_search_row">
             <input

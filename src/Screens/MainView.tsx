@@ -122,6 +122,7 @@ class MainView extends React.Component<Props, State> {
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
                 actions={tabConfig.actions}
+                filterByOwners={tabConfig.filterByOwners || false}
                 registerForTabSelectCallback={
                   this._registerForTabSelectCallback
                 }

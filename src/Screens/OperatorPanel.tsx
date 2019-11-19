@@ -2,6 +2,7 @@ import React from "react";
 import "react-tabs/style/react-tabs.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
+import { PharmacyInfo } from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { DetailsComponentProps } from "./TaskPanel";
 import { ClaimEntry } from "../sharedtypes";
@@ -67,13 +68,7 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
   render() {
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem
-          data={{
-            displayKey: "Pharmacy",
-            searchKey: "name",
-            value: this.props.task.site.name
-          }}
-        />
+        <PharmacyInfo name={this.props.task.site.name} />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
         {this.props.children}

@@ -3,6 +3,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
+import { PharmacyInfo } from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import {
@@ -128,13 +129,7 @@ class ConfigurablePayorDetails extends React.Component<
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <TextItem
-          data={{
-            displayKey: "Pharmacy",
-            searchKey: "name",
-            value: task.site.name
-          }}
-        />
+        <PharmacyInfo name={task.site.name} />
         {!!task.site.phone && (
           <TextItem
             data={{

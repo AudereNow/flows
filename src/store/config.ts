@@ -21,6 +21,7 @@ export interface TaskConfig extends TabConfig {
   taskListComponent: string;
   detailsComponent: string;
   listLabel: string;
+  filterByOwners?: boolean;
   actions: { [key: string]: ActionConfig };
 }
 
@@ -85,6 +86,7 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR],
       baseUrl: "/operator",
+      filterByOwners: true,
       actions: {
         decline: {
           label: "Reject",
