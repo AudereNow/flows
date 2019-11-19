@@ -3,17 +3,19 @@ import "firebase/auth";
 import "firebase/firestore";
 import "firebase/functions";
 import {
-  UserRole,
-  Task,
-  TaskState,
-  PaymentRecipient,
   ACTIVE_TASK_COLLECTION,
-  removeEmptyFieldsInPlace,
-  TASK_CHANGE_COLLECTION,
-  TaskChangeRecord,
-  TASKS_COLLECTION,
   ADMIN_LOG_EVENT_COLLECTION,
-  AdminLogEvent
+  AdminLogEvent,
+  Pharmacy,
+  PHARMACY_COLLECTION,
+  PaymentRecipient,
+  TASKS_COLLECTION,
+  TASK_CHANGE_COLLECTION,
+  Task,
+  TaskChangeRecord,
+  TaskState,
+  UserRole,
+  removeEmptyFieldsInPlace
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -260,4 +262,28 @@ export function subscribeActiveTasks(
       onActiveTasksChanged(actives);
     });
   return unsubscriber;
+}
+
+export function subscribeToPharmacyDetails(
+  pharmacyId: string,
+  callback: (pharmacy: Pharmacy) => void
+): () => void {
+  return firebase
+    .firestore()
+    .collection(PHARMACY_COLLECTION)
+    .doc(pharmacyId)
+    .onSnapshot(snapshot => {
+      callback(snapshot.data() as Pharmacy);
+    });
+}
+
+export async function setPharmacyDetails(
+  pharmacyId: string,
+  pharmacy: Pharmacy
+) {
+  await firebase
+    .firestore()
+    .collection(PHARMACY_COLLECTION)
+    .doc(pharmacyId)
+    .set(pharmacy);
 }
