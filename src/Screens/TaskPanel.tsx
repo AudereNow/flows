@@ -59,6 +59,7 @@ type Props = RouteComponentProps & {
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
+  baseUrl: string;
   itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
@@ -96,7 +97,6 @@ class TaskPanel extends React.Component<Props, State> {
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-  _useInitialTaskID: boolean = false;
 
   async componentDidMount() {
     this._unsubscribe = subscribeToTasks(
@@ -119,9 +119,14 @@ class TaskPanel extends React.Component<Props, State> {
       selectedTaskId = undefined;
       notes = "";
     } else {
-      if (this._useInitialTaskID && !!this.props.initialSelectedTaskID) {
+      if (
+        !!this.props.initialSelectedTaskID &&
+        this.props.initialSelectedTaskID !== this.state.initialSelectedTaskID
+      ) {
         selectedTaskId = this.props.initialSelectedTaskID;
-        this._useInitialTaskID = false;
+        this.setState({
+          initialSelectedTaskID: this.props.initialSelectedTaskID
+        });
       }
 
       selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
@@ -141,6 +146,10 @@ class TaskPanel extends React.Component<Props, State> {
       }
     }
 
+    if (selectedTaskId !== this.state.selectedTaskId) {
+      this._pushHistory(selectedTaskId);
+    }
+
     this.setState({
       allTasks: tasks,
       tasks,
@@ -150,6 +159,12 @@ class TaskPanel extends React.Component<Props, State> {
       notes
     });
   };
+
+  _pushHistory(selectedTaskId?: string) {
+    this.props.history.push(
+      `${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
+    );
+  }
 
   _onTabSelect = (): boolean => {
     return this._okToSwitchAway();
@@ -168,11 +183,14 @@ class TaskPanel extends React.Component<Props, State> {
   _onTaskSelect = (index: number) => {
     const result = this._okToSwitchAway();
     if (result) {
+      const selectedTaskId =
+        index === -1 ? undefined : this.state.tasks[index].id;
       this.setState({
         selectedTaskIndex: index,
-        selectedTaskId: index === -1 ? undefined : this.state.tasks[index].id,
+        selectedTaskId,
         notes: ""
       });
+      this._pushHistory(selectedTaskId);
     }
     return result;
   };
