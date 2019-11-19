@@ -34,22 +34,27 @@ export type ChangeRow = {
 };
 
 export type AdminLogRow = {
+  userID: string;
   desc: string;
   timestamp: string;
-  userID: string;
   userName: string;
 };
 
 const CHANGE_HISTORY_TABLE_COLUMNS = [
-  { Header: "Task ID", accessor: "taskID", minWidth: 150 },
+  { Header: "Task ID", accessor: "taskID", minWidth: 100 },
   {
     Header: "Time",
     accessor: "timestamp",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
-    minWidth: 100
+    minWidth: 60
   },
-  { Header: "Description", accessor: "description", minWidth: 450 },
-  { Header: "Notes", accessor: "notes", minWidth: 200 }
+  { Header: "Description", accessor: "description", minWidth: 150 },
+  {
+    Header: "Notes",
+    accessor: "notes",
+    minWidth: 200,
+    style: { whiteSpace: "unset" }
+  }
 ];
 
 const ADMIN_LOGS_TABLE_COLUMNS = [
