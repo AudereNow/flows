@@ -93,6 +93,10 @@ export const defaultConfig: AppConfig = {
         approve: {
           label: "Approve for Payment",
           nextTaskState: TaskState.PAY
+        },
+        sendToPrimary: {
+          label: "Send to Primary Reviewer",
+          nextTaskState: TaskState.AUDIT
         }
       }
     },
