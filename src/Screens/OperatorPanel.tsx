@@ -3,9 +3,9 @@ import "react-tabs/style/react-tabs.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import TextItem from "../Components/TextItem";
-import { DetailsComponentProps } from "./TaskPanel";
 import { ClaimEntry } from "../sharedtypes";
 import "./MainView.css";
+import { DetailsComponentProps } from "./TaskPanel";
 
 export class OperatorDetails extends React.Component<DetailsComponentProps> {
   _extractImages = (claim: ClaimEntry) => {
@@ -56,7 +56,9 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
           data={{
             displayKey: "Patient",
             searchKey: "patient",
-            value: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
+            value: `${entry.patientFirstName} ${
+              entry.patientLastName
+            } ${patientInfo} ${entry.phone || ""}`
           }}
         />
         <ImageRow images={this._extractImages(entry)} />
