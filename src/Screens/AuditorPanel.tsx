@@ -97,7 +97,9 @@ export class AuditorDetails extends React.Component<
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     const date = new Date(entry.timestamp).toLocaleDateString();
-    const patient = `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`;
+    const patient = `${entry.patientFirstName} ${
+      entry.patientLastName
+    } ${patientInfo} ${entry.phone || ""}`;
 
     let checkEntry = Object.assign({}, entry, date, patient);
 

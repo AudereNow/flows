@@ -60,7 +60,7 @@ export const containsSearchTerm = (
   if (entry.hasOwnProperty("patientFirstName")) {
     entryCopy.patient = `${entry.patientFirstName ||
       ""} ${entry.patientLastName || ""} ${entry.patientAge ||
-      ""} ${entry.patientSex || ""}`;
+      ""} ${entry.patientSex || ""} ${entry.phone || ""}`;
   }
 
   if (
