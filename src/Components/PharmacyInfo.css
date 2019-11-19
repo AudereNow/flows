@@ -1,3 +1,7 @@
 .pharmacy_detail {
   margin: 5px
 }
+
+.pharmacy_helptext {
+  font-size: small;
+}

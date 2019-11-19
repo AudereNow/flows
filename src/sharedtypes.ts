@@ -102,8 +102,8 @@ export type User = {
 };
 
 export type Pharmacy = {
-  notes?: string;
-  opsOwners: string[];
+  notes: string;
+  owners: string[];
 };
 
 // This is used to log isuses that the Admin needs to see

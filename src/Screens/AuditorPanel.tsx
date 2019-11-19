@@ -157,7 +157,7 @@ export class AuditorDetails extends React.Component<
           <input
             type="text"
             onChange={this._handleSearchTermDetailsChange}
-            placeholder="Filter Details"
+            placeholder="Filter Claims"
           />
         </div>
         {samples.map(this._renderClaimEntryDetails)}
