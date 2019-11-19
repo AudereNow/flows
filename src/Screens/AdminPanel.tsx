@@ -35,7 +35,6 @@ export type HistoryRow = {
 
 const HISTORY_TABLE_COLUMNS = [
   { Header: "Task ID", accessor: "taskID", minWidth: 90 },
-  { Header: "User ID", accessor: "userID", minWidth: 110 },
   {
     Header: "Time",
     accessor: "timestamp",
@@ -151,7 +150,6 @@ class AdminPanel extends React.Component<Props, State> {
         description: r.desc,
         taskID: "",
         timestamp: new Date(r.timestamp).toLocaleDateString(),
-        userID: r.user.id,
         userName: r.user.name
       };
     });
