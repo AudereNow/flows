@@ -5,6 +5,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
+import { PharmacyInfo } from "../Components/PharmacyInfo";
 import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import debounce from "../util/debounce";
@@ -151,15 +152,8 @@ export class AuditorDetails extends React.Component<
         className="mainview_details"
         label="DETAILS"
       >
+        <PharmacyInfo name={task.site.name} />
         <div className="mainview_spaced_row">
-          <TextItem
-            data={{
-              displayKey: "Pharmacy",
-              searchKey: "name",
-              value: task.site.name
-            }}
-          />
-
           <input
             type="text"
             onChange={this._handleSearchTermDetailsChange}

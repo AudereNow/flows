@@ -11,6 +11,7 @@ export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
 export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
 export const TASKS_COLLECTION = "tasks";
+export const PHARMACY_COLLECTION = "pharmacies";
 
 export enum TaskState {
   CSV = "CSV",
@@ -98,6 +99,11 @@ export type UploaderInfo = {
 export type User = {
   name: string;
   id: string;
+};
+
+export type Pharmacy = {
+  notes?: string;
+  opsOwners: string[];
 };
 
 // This is used to log isuses that the Admin needs to see
