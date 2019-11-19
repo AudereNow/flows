@@ -3,7 +3,7 @@ import moment from "moment";
 import React from "react";
 import ReactTable from "react-table";
 import "react-table/react-table.css";
-import { AdminLogRow, ChangeRow } from "../Screens/AdminPanel";
+import { HistoryRow } from "../Screens/AdminPanel";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
@@ -12,7 +12,7 @@ import "./SearchableTable.css";
 
 type Props = {
   tableColumns: any[];
-  allData: ChangeRow[] | AdminLogRow[];
+  allData: HistoryRow[];
   downloadPrefix: string;
 };
 type State = {
