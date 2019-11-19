@@ -8,18 +8,24 @@ export interface TextData {
   value: string;
 }
 
+export const SearchContext = React.createContext({
+  searchTermGlobal: "",
+  filters: {}
+});
+
 interface Props {
   data: TextData;
-  searchTermGlobal?: string;
   valueOnly?: boolean; // true = no display key or unstyled display key; false = styled display key
   className?: string;
-  filters?: ClaimEntryFilters;
 }
 
-function highlight(props: Props) {
+function highlight(
+  props: Props,
+  searchTerm: string,
+  filters: ClaimEntryFilters
+) {
   const { searchKey, value } = props.data;
-  const searchTerm = props.searchTermGlobal;
-  let filters = props.filters || {};
+  filters = filters || {};
   if (!filters || !Object.values(filters).some(value => !!value)) {
     filters = { patient: true, name: true, patientID: true, item: true };
   }
@@ -43,19 +49,24 @@ function highlight(props: Props) {
   });
 }
 
-const TextItem = (props: Props) => {
-  const { displayKey } = props.data;
-  return (
-    <div className="textitem_container">
-      {!props.valueOnly && !!displayKey && (
-        <span className="textitem_key">{displayKey + ":"}</span>
-      )}
-      <div className={props.className}>
-        {props.valueOnly && !!displayKey && displayKey + ": "}
-        {!!props.searchTermGlobal ? highlight(props) : props.data.value}
-      </div>
-    </div>
-  );
-};
+export default class TextItem extends React.Component<Props> {
+  static contextType = SearchContext;
 
-export default TextItem;
+  render() {
+    const { displayKey } = this.props.data;
+    const { searchTermGlobal, filters } = this.context;
+    return (
+      <div className="textitem_container">
+        {!this.props.valueOnly && !!displayKey && (
+          <span className="textitem_key">{displayKey + ":"}</span>
+        )}
+        <div className={this.props.className}>
+          {this.props.valueOnly && !!displayKey && displayKey + ": "}
+          {!!searchTermGlobal
+            ? highlight(this.props, searchTermGlobal, filters)
+            : this.props.data.value}
+        </div>
+      </div>
+    );
+  }
+}

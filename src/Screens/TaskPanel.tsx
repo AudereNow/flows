@@ -9,6 +9,7 @@ import CheckBox from "../Components/CheckBox";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
+import { SearchContext } from "../Components/TextItem";
 import {
   RemoteConfig,
   Task,
@@ -34,8 +35,6 @@ export interface DetailsComponentProps {
     key: string,
     callback: () => Promise<ActionCallbackResult>
   ) => void;
-  searchTermGlobal?: string;
-  filters: ClaimEntryFilters;
 }
 
 export interface SiteFilters {
@@ -438,7 +437,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const { selectedTaskIndex, searchTermGlobal, notes } = this.state;
+    const { selectedTaskIndex, notes } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -451,35 +450,40 @@ class TaskPanel extends React.Component<Props, State> {
       ) : null;
 
     return (
-      <div className="mainview_content">
-        <LabelWrapper
-          label={`${this.props.listLabel}: ${this.state.tasks.length}`}
-          renderLabelItems={this._renderLabelItems}
-          searchPanel={this._renderSearchPanel()}
-        >
-          <TaskList
-            onSelect={this._onTaskSelect}
-            tasks={this.state.tasks}
-            renderItem={this._renderTaskListItem}
-            selectedItem={selectedTaskIndex}
-            className="mainview_tasklist"
-          />
-        </LabelWrapper>
-        <div style={{ width: "100%" }}>
-          {selectedTaskIndex >= 0 && (
-            <ConfiguredDetailsWrapper
-              task={this.state.tasks[selectedTaskIndex]}
-              notesux={notesux}
-              notes={notes}
-              detailsComponent={this.props.detailsComponent}
-              actions={this.props.actions}
-              filters={this.state.filters}
-              key={this.state.tasks[selectedTaskIndex].id}
-              searchTermGlobal={searchTermGlobal}
+      <SearchContext.Provider
+        value={{
+          searchTermGlobal: this.state.searchTermGlobal,
+          filters: this.state.filters
+        }}
+      >
+        <div className="mainview_content">
+          <LabelWrapper
+            label={`${this.props.listLabel}: ${this.state.tasks.length}`}
+            renderLabelItems={this._renderLabelItems}
+            searchPanel={this._renderSearchPanel()}
+          >
+            <TaskList
+              onSelect={this._onTaskSelect}
+              tasks={this.state.tasks}
+              renderItem={this._renderTaskListItem}
+              selectedItem={selectedTaskIndex}
+              className="mainview_tasklist"
             />
-          )}
+          </LabelWrapper>
+          <div style={{ width: "100%" }}>
+            {selectedTaskIndex >= 0 && (
+              <ConfiguredDetailsWrapper
+                task={this.state.tasks[selectedTaskIndex]}
+                notesux={notesux}
+                notes={notes}
+                detailsComponent={this.props.detailsComponent}
+                actions={this.props.actions}
+                key={this.state.tasks[selectedTaskIndex].id}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      </SearchContext.Provider>
     );
   }
 }
@@ -492,8 +496,6 @@ interface DetailsWrapperProps {
   notesux: ReactNode;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
-  filters: ClaimEntryFilters;
-  searchTermGlobal: string;
   remoteConfig: Partial<RemoteConfig>;
 }
 
@@ -571,8 +573,6 @@ class DetailsWrapper extends React.Component<
         notesux={this.props.notesux}
         key={this.props.task.id}
         registerActionCallback={this._registerActionCallback}
-        filters={this.props.filters}
-        searchTermGlobal={this.props.searchTermGlobal}
       >
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (

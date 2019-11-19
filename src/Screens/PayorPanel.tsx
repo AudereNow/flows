@@ -91,7 +91,7 @@ class ConfigurablePayorDetails extends React.Component<
   };
 
   render() {
-    const { filters, searchTermGlobal, task, notesux } = this.props;
+    const { task, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(task);
 
     let cleanedData: any[] = [];
@@ -129,13 +129,11 @@ class ConfigurablePayorDetails extends React.Component<
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
         <TextItem
-          searchTermGlobal={searchTermGlobal}
           data={{
             displayKey: "Pharmacy",
             searchKey: "name",
             value: task.site.name
           }}
-          filters={filters}
         />
         {!!task.site.phone && (
           <TextItem
@@ -144,18 +142,14 @@ class ConfigurablePayorDetails extends React.Component<
               searchKey: "phone",
               value: task.site.phone
             }}
-            filters={filters}
-            searchTermGlobal={searchTermGlobal}
           />
         )}
         <TextItem
-          searchTermGlobal={searchTermGlobal}
           data={{
             displayKey: "Total Reimbursement",
             searchKey: "reimbursement",
             value: formatCurrency(claimsTotal)
           }}
-          filters={filters}
         />
         <DataTable data={cleanedData} />
         <Button
