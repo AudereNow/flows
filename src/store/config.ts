@@ -24,6 +24,7 @@ export interface TaskConfig extends TabConfig {
   filterByOwners?: boolean;
   actions: { [key: string]: ActionConfig };
   hideImagesDefault?: boolean;
+  showPreviousClaims?: boolean;
 }
 
 export interface AppConfig {
@@ -45,6 +46,7 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR],
       baseUrl: "auditor",
+      showPreviousClaims: true,
       actions: {
         decline: {
           label: "Decline",

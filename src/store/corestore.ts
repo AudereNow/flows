@@ -4,18 +4,18 @@ import "firebase/firestore";
 import "firebase/functions";
 import {
   ACTIVE_TASK_COLLECTION,
-  ADMIN_LOG_EVENT_COLLECTION,
   AdminLogEvent,
+  ADMIN_LOG_EVENT_COLLECTION,
+  PaymentRecipient,
   Pharmacy,
   PHARMACY_COLLECTION,
-  PaymentRecipient,
-  TASKS_COLLECTION,
-  TASK_CHANGE_COLLECTION,
+  removeEmptyFieldsInPlace,
   Task,
   TaskChangeRecord,
   TaskState,
-  UserRole,
-  removeEmptyFieldsInPlace
+  TASKS_COLLECTION,
+  TASK_CHANGE_COLLECTION,
+  UserRole
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -156,11 +156,13 @@ export async function loadPreviousTasks(
   currentId: string
 ): Promise<Task[]> {
   const states = Object.values(TaskState);
-  return (await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .where("site.name", "==", siteName)
-    .get()).docs
+  return (
+    await firebase
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .where("site.name", "==", siteName)
+      .get()
+  ).docs
     .map(doc => doc.data() as Task)
     .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
     .filter(t => t.id !== currentId);
@@ -300,4 +302,22 @@ export async function setPharmacyDetails(
     .collection(PHARMACY_COLLECTION)
     .doc(pharmacyId)
     .set(pharmacy);
+}
+
+export async function getPharmacyClaims(siteName: string) {
+  // TODO: Possibly filter for claim state?
+  // TODO: Add the current task's id
+
+  return await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .where("site.name", "==", siteName)
+    .get()
+    .then(snapshot => {
+      let data: Task[] = [];
+      snapshot.docs.forEach(snap => {
+        data.push(snap.data() as Task);
+      });
+      return data;
+    });
 }
