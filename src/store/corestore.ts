@@ -6,6 +6,8 @@ import {
   ACTIVE_TASK_COLLECTION,
   ADMIN_LOG_EVENT_COLLECTION,
   AdminLogEvent,
+  Patient,
+  PATIENTS_COLLECTION,
   Pharmacy,
   PHARMACY_COLLECTION,
   PaymentRecipient,
@@ -209,6 +211,21 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
   }
 }
 
+export async function updatePatientsTaskLists() {
+  const serverUpdatePatientsTaskLists = firebase
+    .functions()
+    .httpsCallable("updatePatientsTaskLists");
+  try {
+    return await serverUpdatePatientsTaskLists();
+  } catch (e) {
+    return {
+      data: {
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
+      }
+    };
+  }
+}
+
 export async function uploadCSV(content: any) {
   const serverUploadCSV = firebase.functions().httpsCallable("uploadCSV");
 
@@ -300,4 +317,54 @@ export async function setPharmacyDetails(
     .collection(PHARMACY_COLLECTION)
     .doc(pharmacyId)
     .set(pharmacy);
+}
+
+export interface PatientHistory {
+  tasks: {
+    taskId: string;
+    totalAmount: number;
+    claimCount: number;
+  }[];
+}
+
+export async function getPatientHistories(patientIds: string[]) {
+  const patients = (await Promise.all(
+    new Array(Math.round(patientIds.length / 10) + 1).fill(0).map(
+      async (_, index) =>
+        (await firebase
+          .firestore()
+          .collection(PATIENTS_COLLECTION)
+          //@ts-ignore
+          .where("id", "in", patientIds.slice(index * 10, (index + 1) * 10))
+          .get()).docs.map((doc: any) => doc.data()) as Patient[]
+    )
+  )).reduce((a, b) => a.concat(b), []);
+  const patientHistories: { [id: string]: PatientHistory } = {};
+  await Promise.all(
+    patients.map(async patient => {
+      const tasks = (await firebase
+        .firestore()
+        .collection(TASKS_COLLECTION)
+        //@ts-ignore
+        .where("id", "in", patient.taskIds)
+        .get()).docs.map((doc: any) => doc.data()) as Task[];
+      const history = tasks.map(task => {
+        const entries = task.entries.filter(
+          entry => entry.patientID === patient.id
+        );
+        const sum = entries
+          .map(entry => entry.claimedCost)
+          .reduce((a, b) => a + b, 0);
+        return {
+          taskId: task.id,
+          totalAmount: sum,
+          claimCount: entries.length
+        };
+      });
+      patientHistories[patient.id] = {
+        tasks: history
+      };
+    })
+  );
+  return patientHistories;
 }
