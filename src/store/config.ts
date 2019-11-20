@@ -1,4 +1,4 @@
-import { UserRole, TaskState, RemoteConfig } from "../sharedtypes";
+import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
@@ -22,6 +22,7 @@ export interface TaskConfig extends TabConfig {
   detailsComponent: string;
   listLabel: string;
   actions: { [key: string]: ActionConfig };
+  hideImagesDefault?: boolean;
 }
 
 export interface AppConfig {
@@ -107,7 +108,8 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS",
       actions: {},
       roles: [UserRole.AUDITOR],
-      baseUrl: "/rejected"
+      baseUrl: "/rejected",
+      hideImagesDefault: true
     },
     Completed: {
       taskState: TaskState.COMPLETED,
@@ -116,7 +118,8 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS",
       actions: {},
       roles: [UserRole.AUDITOR],
-      baseUrl: "/completed"
+      baseUrl: "/completed",
+      hideImagesDefault: true
     },
     Admin: {
       panelComponent: "Admin",

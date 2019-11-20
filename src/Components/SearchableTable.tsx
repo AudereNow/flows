@@ -77,26 +77,18 @@ class SearchableTable extends React.Component<Props, State> {
       alert("There are no tasks to download! Please adjust your search.");
     }
     const fileName = downloadPrefix + "_" + moment().format("YYYYMMDD_HHmmss");
-    const json2csvOptions = { checkSchemaDifferences: false };
 
-    json2csv(
-      data,
-      (err, csv) => {
-        if (!csv || err) {
-          alert("Something went wrong when trying to download your csv");
-        }
-        const encodedURI = encodeURI(
-          `data:text/csv;charset=utf-8,${data
-            .map(row => row.join(","))
-            .join(`\n`)}`
-        );
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedURI);
-        link.setAttribute("download", `${fileName}.csv`);
-        link.click();
-      },
-      json2csvOptions
-    );
+    json2csv(data, (err, csv) => {
+      if (!csv || err) {
+        alert("Something went wrong when trying to download your csv");
+      }
+      const dataString = "data:text/csv;charset=utf-8," + csv;
+      const encodedURI = encodeURI(dataString);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedURI);
+      link.setAttribute("download", `${fileName}.csv`);
+      link.click();
+    });
   };
 
   render() {

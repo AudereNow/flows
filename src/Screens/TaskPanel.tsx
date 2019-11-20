@@ -35,6 +35,7 @@ export interface DetailsComponentProps {
     key: string,
     callback: () => Promise<ActionCallbackResult>
   ) => void;
+  hideImagesDefault?: boolean;
 }
 
 export interface SiteFilters {
@@ -64,6 +65,7 @@ type Props = RouteComponentProps & {
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
+  hideImagesDefault: boolean;
 };
 
 type State = {
@@ -491,6 +493,7 @@ class TaskPanel extends React.Component<Props, State> {
           <div style={{ width: "100%" }}>
             {selectedTaskIndex >= 0 && (
               <ConfiguredDetailsWrapper
+                hideImagesDefault={this.props.hideImagesDefault}
                 task={this.state.tasks[selectedTaskIndex]}
                 notesux={notesux}
                 notes={notes}
@@ -515,6 +518,7 @@ interface DetailsWrapperProps {
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   remoteConfig: Partial<RemoteConfig>;
+  hideImagesDefault: boolean;
 }
 
 interface DetailsWrapperState {
@@ -587,6 +591,7 @@ class DetailsWrapper extends React.Component<
     );
     return (
       <this.props.detailsComponent
+        hideImagesDefault={this.props.hideImagesDefault}
         task={this.props.task}
         notesux={this.props.notesux}
         key={this.props.task.id}

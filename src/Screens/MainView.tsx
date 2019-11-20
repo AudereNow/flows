@@ -133,6 +133,7 @@ class MainView extends React.Component<Props, State> {
                 registerForTabSelectCallback={
                   this._registerForTabSelectCallback
                 }
+                hideImagesDefault={tabConfig.hideImagesDefault || false}
               />
             );
           }

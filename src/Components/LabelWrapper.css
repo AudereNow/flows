@@ -30,6 +30,7 @@
 .labelwrapper_inner {
   max-height: 85vh;
   overflow-y: scroll;
+  padding: 5px;
 }
 
 .labelwrapper_header_icon {

@@ -5,20 +5,20 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
-import { PharmacyInfo } from "../Components/PharmacyInfo";
+import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
-
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 
 type State = {
   searchTermDetails: string;
   showAllEntries: boolean;
+  showImages: boolean;
   numSamples: number;
 };
 
@@ -29,6 +29,7 @@ export class AuditorDetails extends React.Component<
   state: State = {
     searchTermDetails: "",
     showAllEntries: false,
+    showImages: !!this.props.hideImagesDefault ? false : true, // TODO: Clean up logic
     numSamples: Math.max(
       Math.ceil(this.props.task.entries.length * MIN_SAMPLE_FRACTION),
       MIN_SAMPLES
@@ -89,7 +90,7 @@ export class AuditorDetails extends React.Component<
   };
 
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
-    const { searchTermDetails } = this.state;
+    const { searchTermDetails, showImages } = this.state;
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -125,7 +126,7 @@ export class AuditorDetails extends React.Component<
             }}
           />
         </div>
-        <ImageRow images={this._extractImages(entry)} />
+        <ImageRow showImages={showImages} images={this._extractImages(entry)} />
       </LabelWrapper>
     );
   };
@@ -141,10 +142,15 @@ export class AuditorDetails extends React.Component<
     this._setSearchTermDetails(input);
   };
 
+  _toggleImages = () => {
+    this.setState({ showImages: !this.state.showImages });
+  };
+
   render() {
     const { searchTermGlobal } = this.context;
     const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { task, notesux } = this.props;
+    const { showImages } = this.state;
 
     const samples = task.entries.slice(0, this.state.numSamples);
     const remaining = task.entries.length - this.state.numSamples;
@@ -154,7 +160,11 @@ export class AuditorDetails extends React.Component<
         className="mainview_details"
         label="DETAILS"
       >
-        <PharmacyInfo name={task.site.name} />
+        <PharmacyInfo
+          showImages={showImages}
+          onToggleImages={this._toggleImages}
+          name={task.site.name}
+        />
         <div className="mainview_spaced_row">
           <input
             type="text"

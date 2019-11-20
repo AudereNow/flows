@@ -11,9 +11,13 @@ interface Props {
 const CheckBox = (props: Props) => {
   const { checked, onCheckBoxSelect, label, value } = props;
   return (
-    <div data-value={value} onClick={onCheckBoxSelect}>
+    <div
+      className="checkbox_container"
+      data-value={value}
+      onClick={onCheckBoxSelect}
+    >
       <input type="checkbox" name={label} readOnly checked={checked} />
-      <span className="checkbox_input_label">{label}</span>
+      <div className="checkbox_input_label">{label}</div>
     </div>
   );
 };
