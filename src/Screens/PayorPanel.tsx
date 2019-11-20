@@ -12,9 +12,9 @@ import {
   issuePayments,
   loadPreviousTasks
 } from "../store/corestore";
-import { DetailsComponentProps } from "./TaskPanel";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
+import { DetailsComponentProps } from "./TaskPanel";
 
 const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
@@ -84,9 +84,10 @@ class ConfigurablePayorDetails extends React.Component<
 
   _toggleShowPreviousClaims = () => {
     if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
-      loadPreviousTasks(this.props.task.site.name, this.props.task.id).then(
-        relatedTasks => this.setState({ relatedTasks })
-      );
+      loadPreviousTasks(
+        this.props.task.site.name,
+        this.props.task.id
+      ).then(relatedTasks => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
