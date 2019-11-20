@@ -43,7 +43,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.AUDITOR],
-      baseUrl: "/auditor",
+      baseUrl: "auditor",
       actions: {
         decline: {
           label: "Decline",
@@ -61,7 +61,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "PayorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.PAYOR],
-      baseUrl: "/payor",
+      baseUrl: "payor",
       actions: {
         decline: {
           label: "Decline Payment",
@@ -85,7 +85,7 @@ export const defaultConfig: AppConfig = {
       detailsComponent: "OperatorTask",
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.OPERATOR],
-      baseUrl: "/operator",
+      baseUrl: "operator",
       actions: {
         decline: {
           label: "Reject",
@@ -108,7 +108,7 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS",
       actions: {},
       roles: [UserRole.AUDITOR],
-      baseUrl: "/rejected",
+      baseUrl: "rejected",
       hideImagesDefault: true
     },
     Completed: {
@@ -118,13 +118,13 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS",
       actions: {},
       roles: [UserRole.AUDITOR],
-      baseUrl: "/completed",
+      baseUrl: "completed",
       hideImagesDefault: true
     },
     Admin: {
       panelComponent: "Admin",
       roles: [UserRole.ADMIN],
-      baseUrl: "/admin"
+      baseUrl: "admin"
     }
   }
 };
