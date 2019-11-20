@@ -62,7 +62,15 @@ export class AuditorDetails extends React.Component<
 
   async componentDidMount() {
     this.props.registerActionCallback("approve", this._onApprove);
-    let tasks = await getPharmacyClaims(this.props.task.site.name);
+
+    const previousClaims = await this._loadPreviousClaims(
+      this.props.task.site.name
+    );
+    this.setState({ previousClaims });
+  }
+
+  _loadPreviousClaims = async (siteName: string) => {
+    let tasks = await getPharmacyClaims(siteName);
     let previousClaims: TaskTotal[] = [];
     tasks.forEach(task => {
       if (task.id !== this.props.task.id) {
@@ -85,8 +93,8 @@ export class AuditorDetails extends React.Component<
     previousClaims.sort((a, b) => {
       return moment(a.date).isAfter(moment(b.date)) ? -1 : 1;
     });
-    this.setState({ previousClaims });
-  }
+    return previousClaims;
+  };
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
