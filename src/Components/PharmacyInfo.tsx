@@ -1,10 +1,10 @@
 import React from "react";
+import Button from "./Button";
 import { Pharmacy } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails
 } from "../store/corestore";
-import Button from "./Button";
 import "./PharmacyInfo.css";
 import TextItem from "./TextItem";
 
@@ -15,8 +15,6 @@ const DEFAULT_PHARMACY: Pharmacy = {
 
 interface Props {
   name: string;
-  onToggleImages: () => void;
-  showImages: boolean;
 }
 
 interface State {
@@ -123,23 +121,25 @@ class PharmacyInfo extends React.Component<Props, State> {
                   defaultValue={this.state.editedNotes}
                 />
                 <div>
-                  <button
+                  <Button
                     onClick={this._onNotesSave}
                     disabled={this.state.saving}
-                  >
-                    Save
-                  </button>
+                    label="Save"
+                  />
                 </div>
               </div>
             ) : (
               <div>
                 <div>
                   {`Notes: ${this.state.pharmacy.notes} `}
-                  <button onClick={this._onNotesEdit}>
-                    {this.state.pharmacy.notes.length > 0
-                      ? "Edit"
-                      : "Add Notes"}
-                  </button>
+                  <Button
+                    onClick={this._onNotesEdit}
+                    label={
+                      this.state.pharmacy.notes.length > 0
+                        ? "Edit"
+                        : "Add Notes"
+                    }
+                  />
                 </div>
               </div>
             )}
@@ -151,12 +151,11 @@ class PharmacyInfo extends React.Component<Props, State> {
                   onChange={this._onOwnersChange}
                   defaultValue={this.state.editedOwners}
                 />
-                <button
+                <Button
                   onClick={this._onOwnersSave}
                   disabled={this.state.saving}
-                >
-                  Save
-                </button>
+                  label="Save"
+                />
                 <span className="pharmacy_helptext">
                   {" (Enter email addresses of owners, separated by commas)"}
                 </span>
@@ -164,19 +163,17 @@ class PharmacyInfo extends React.Component<Props, State> {
             ) : (
               <div>
                 {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
-                <button onClick={this._onOwnersEdit}>
-                  {this.state.pharmacy.owners.length > 0
-                    ? "Edit"
-                    : "Add Owners"}
-                </button>
+                <Button
+                  onClick={this._onOwnersEdit}
+                  label={
+                    this.state.pharmacy.owners.length > 0
+                      ? "Edit"
+                      : "Add Owners"
+                  }
+                />
               </div>
             )}
-            <div className="pharmacy_toggle_image_container">
-              <Button
-                onClick={this.props.onToggleImages}
-                label={!!this.props.showImages ? "Hide Images" : "Show Images"}
-              />
-            </div>
+            {this.props.children}
           </div>
         )}
       </div>

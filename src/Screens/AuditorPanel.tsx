@@ -160,11 +160,14 @@ export class AuditorDetails extends React.Component<
         className="mainview_details"
         label="DETAILS"
       >
-        <PharmacyInfo
-          showImages={showImages}
-          onToggleImages={this._toggleImages}
-          name={task.site.name}
-        />
+        <PharmacyInfo name={task.site.name}>
+          <div className="pharmacy_toggle_image_container">
+            <Button
+              onClick={this._toggleImages}
+              label={!!showImages ? "Hide Images" : "Show Images"}
+            />
+          </div>
+        </PharmacyInfo>
         <div className="mainview_spaced_row">
           <input
             type="text"

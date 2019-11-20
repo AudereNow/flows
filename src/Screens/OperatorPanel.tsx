@@ -1,5 +1,6 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
+import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -89,11 +90,14 @@ export class OperatorDetails extends React.Component<
   render() {
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo
-          showImages={this.state.showImages}
-          onToggleImages={this._toggleImages}
-          name={this.props.task.site.name}
-        />
+        <PharmacyInfo name={this.props.task.site.name}>
+          <div className="pharmacy_toggle_image_container">
+            <Button
+              onClick={this._toggleImages}
+              label={!!this.state.showImages ? "Hide Images" : "Show Images"}
+            />
+          </div>
+        </PharmacyInfo>
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
         {this.props.children}

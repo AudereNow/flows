@@ -3,7 +3,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
 import LabelWrapper from "../Components/LabelWrapper";
-import { PharmacyInfo } from "../Components/PharmacyInfo";
+import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry, Task, TaskState } from "../sharedtypes";
 import {
