@@ -235,20 +235,6 @@ class TaskPanel extends React.Component<Props, State> {
     if (this.state.disableOwnersFilter) {
       return true;
     }
-    if (!this.state.pharmacies.hasOwnProperty(siteName)) {
-      getPharmacyDetails(siteName).then(pharmacy =>
-        this.setState(
-          state => ({
-            pharmacies: {
-              ...state.pharmacies,
-              [siteName]: pharmacy
-            }
-          }),
-          this._updateTasks
-        )
-      );
-      return true;
-    }
     const pharmacy = this.state.pharmacies[siteName];
     if (!pharmacy || pharmacy.owners.length === 0) {
       return true;
@@ -295,10 +281,26 @@ class TaskPanel extends React.Component<Props, State> {
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
+    const pharmacyNames: { [name: string]: boolean } = {};
+    filteredTasks.forEach(task => (pharmacyNames[task.site.name] = true));
+    const pharmacies: { [name: string]: Pharmacy } = {};
+    await Promise.all(
+      Object.keys(pharmacyNames).map(async siteName => {
+        if (this.state.pharmacies.hasOwnProperty(siteName)) {
+          return;
+        }
+        pharmacies[siteName] = await getPharmacyDetails(siteName);
+      })
+    );
+
     this.setState(
       {
         tasks: filteredTasks,
         selectedTaskIndex: selectedIndex,
+        pharmacies: {
+          ...this.state.pharmacies,
+          ...pharmacies
+        },
         notes: "",
         changes
       },
