@@ -1,5 +1,9 @@
 .checkbox_input_label {
-  color: white;
   font-size: small;
   cursor: pointer;
+}
+
+.checkbox_container {
+  display: flex;
+  flex-direction: row;
 }

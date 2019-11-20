@@ -27,7 +27,6 @@ type State = {
 
 export type HistoryRow = {
   taskID: string;
-  userID?: string;
   timestamp: string;
   description: string;
   notes?: string;
@@ -147,10 +146,10 @@ class AdminPanel extends React.Component<Props, State> {
   _recordsToAdminLogRows = (records: any[]): HistoryRow[] => {
     return records.map(r => {
       return {
-        description: r.desc,
         taskID: "",
         timestamp: new Date(r.timestamp).toLocaleDateString(),
-        userName: r.user.name
+        description: r.desc,
+        notes: r.notes || ""
       };
     });
   };
@@ -168,7 +167,7 @@ class AdminPanel extends React.Component<Props, State> {
           <TabPanel>
             {this._fetchedAllData && (
               <SearchableTable
-                downloadPrefix={"changeHistory_"}
+                downloadPrefix={"history_"}
                 allData={allHistory}
                 tableColumns={HISTORY_TABLE_COLUMNS}
               />
