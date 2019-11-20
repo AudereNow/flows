@@ -172,6 +172,7 @@ exports.uploadCSV = functions.https.onCall(
       );
       return result;
     } catch (e) {
+      console.error(e.message || e.error || JSON.stringify(e));
       return {
         error: `CSV processing error: ${e.message ||
           e.error ||
@@ -310,13 +311,16 @@ async function completeCSVProcessing(
   cache: any[],
   user: User
 ): Promise<CallResult> {
-  let dedupedCache = cache;
-  console.log(`Full CSV parsed with ${cache.length} lines`);
+  const validCache = cache.filter(c => c[RECORD_ID_FIELD]);
+  let dedupedCache = validCache;
+  console.log(`Full CSV parsed with ${validCache.length} lines`);
   let result = "";
+
+  console.error(JSON.stringify(cache.filter(c => !c[RECORD_ID_FIELD])));
 
   const allowDupes = await getConfig("allowDuplicateUploads");
   if (!allowDupes) {
-    const dupes = await findDuplicateRecords(cache);
+    const dupes = await findDuplicateRecords(validCache);
 
     if (dupes.length > 0) {
       result = `Ignored ${dupes.length} duplicate CSV records: ${JSON.stringify(
@@ -324,7 +328,9 @@ async function completeCSVProcessing(
       )}\n\n`;
       await LogAdminEvent(user, result);
 
-      dedupedCache = cache.filter(c => !dupes.includes(c[RECORD_ID_FIELD]));
+      dedupedCache = validCache.filter(
+        c => !dupes.includes(c[RECORD_ID_FIELD])
+      );
     }
   }
 
