@@ -5,6 +5,7 @@ import ZoomableImage from "./ZoomableImage";
 
 interface Props {
   images: Array<string | ImageData>;
+  showImages: boolean;
 }
 
 interface ImageData {
@@ -19,7 +20,10 @@ const ImageRow = (props: Props) => {
         props.images.map((data: string | ImageData, index: number) => {
           const isImgString = typeof data === "string";
           const url = isImgString ? (data as string) : (data as ImageData).url;
-          return (
+          const imageLabelSearchKey = !!(data as ImageData).label.searchKey
+            ? (data as ImageData).label.searchKey + ":"
+            : "";
+          return props.showImages || props.showImages === undefined ? (
             <div key={url + index} className="imagerow_item">
               <ZoomableImage src={url} alt={url} />
               {!isImgString && (
@@ -29,6 +33,12 @@ const ImageRow = (props: Props) => {
                   valueOnly={true}
                 />
               )}
+            </div>
+          ) : (
+            <div key={url + index}>
+              <span>{`${imageLabelSearchKey} ${
+                (data as ImageData).label.value
+              }`}</span>
             </div>
           );
         })}

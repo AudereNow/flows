@@ -58,8 +58,8 @@ class MainView extends React.Component<Props, State> {
     let selectedTabIndex = 0;
 
     if (!!this.props.startingTab) {
-      selectedTabIndex = Object.keys(defaultConfig.tabs).findIndex(
-        tabName => tabName.toLowerCase() === this.props.startingTab
+      selectedTabIndex = Object.values(defaultConfig.tabs).findIndex(
+        tab => tab.baseUrl === this.props.startingTab
       );
     }
 
@@ -72,6 +72,13 @@ class MainView extends React.Component<Props, State> {
       this._onTabSelectCallback = undefined;
     }
     this.setState({ selectedTabIndex: index });
+
+    // Set admin URL in browser if you're in the admin tab
+    const tabName = this._getTabNames(defaultConfig);
+    const tabConfig = defaultConfig.tabs[tabName[index]];
+    if (isCustomPanel(tabConfig)) {
+      this.props.history.push("/" + tabConfig.baseUrl);
+    }
     return result;
   };
 
@@ -121,11 +128,13 @@ class MainView extends React.Component<Props, State> {
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
                 listLabel={tabConfig.listLabel}
+                baseUrl={tabConfig.baseUrl}
                 actions={tabConfig.actions}
                 filterByOwners={tabConfig.filterByOwners || false}
                 registerForTabSelectCallback={
                   this._registerForTabSelectCallback
                 }
+                hideImagesDefault={tabConfig.hideImagesDefault || false}
               />
             );
           }

@@ -1,11 +1,12 @@
 import React from "react";
 import { Pharmacy } from "../sharedtypes";
 import {
-  subscribeToPharmacyDetails,
-  setPharmacyDetails
+  setPharmacyDetails,
+  subscribeToPharmacyDetails
 } from "../store/corestore";
-import TextItem from "./TextItem";
+import Button from "./Button";
 import "./PharmacyInfo.css";
+import TextItem from "./TextItem";
 
 const DEFAULT_PHARMACY: Pharmacy = {
   notes: "",
@@ -14,12 +15,8 @@ const DEFAULT_PHARMACY: Pharmacy = {
 
 interface Props {
   name: string;
-}
-
-export class PharmacyInfo extends React.Component<Props> {
-  render() {
-    return <PharmacyInfoHelper name={this.props.name} key={this.props.name} />;
-  }
+  onToggleImages: () => void;
+  showImages: boolean;
 }
 
 interface State {
@@ -28,7 +25,7 @@ interface State {
   editedOwners?: string;
   saving: boolean;
 }
-class PharmacyInfoHelper extends React.Component<Props, State> {
+class PharmacyInfo extends React.Component<Props, State> {
   state: State = {
     saving: false
   };
@@ -40,6 +37,17 @@ class PharmacyInfoHelper extends React.Component<Props, State> {
       }
       this.setState({ pharmacy });
     });
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.name !== this.props.name) {
+      subscribeToPharmacyDetails(this.props.name, pharmacy => {
+        if (pharmacy === undefined) {
+          pharmacy = DEFAULT_PHARMACY;
+        }
+        this.setState({ pharmacy });
+      });
+    }
   }
 
   _onNotesEdit = () => {
@@ -96,7 +104,7 @@ class PharmacyInfoHelper extends React.Component<Props, State> {
 
   render() {
     return (
-      <div>
+      <div className="pharmacy_container">
         <TextItem
           data={{
             displayKey: "Pharmacy",
@@ -163,9 +171,17 @@ class PharmacyInfoHelper extends React.Component<Props, State> {
                 </button>
               </div>
             )}
+            <div className="pharmacy_toggle_image_container">
+              <Button
+                onClick={this.props.onToggleImages}
+                label={!!this.props.showImages ? "Hide Images" : "Show Images"}
+              />
+            </div>
           </div>
         )}
       </div>
     );
   }
 }
+
+export default PharmacyInfo;

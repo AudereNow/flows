@@ -2,13 +2,25 @@ import React from "react";
 import "react-tabs/style/react-tabs.css";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
-import { PharmacyInfo } from "../Components/PharmacyInfo";
+import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
-import { DetailsComponentProps } from "./TaskPanel";
 import { ClaimEntry } from "../sharedtypes";
 import "./MainView.css";
+import { DetailsComponentProps } from "./TaskPanel";
 
-export class OperatorDetails extends React.Component<DetailsComponentProps> {
+interface State {
+  showImages: boolean;
+}
+
+export class OperatorDetails extends React.Component<
+  DetailsComponentProps,
+  State
+> {
+  constructor(props: DetailsComponentProps) {
+    super(props);
+    this.state = { showImages: true };
+  }
+
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
     if (!!claim.photoMedUri) {
@@ -36,6 +48,10 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
     return claimImages;
   };
 
+  _toggleImages = () => {
+    this.setState({ showImages: !this.state.showImages });
+  };
+
   _renderClaimEntryDetails = (entry: ClaimEntry) => {
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -57,10 +73,15 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
           data={{
             displayKey: "Patient",
             searchKey: "patient",
-            value: `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`
+            value: `${entry.patientFirstName} ${
+              entry.patientLastName
+            } ${patientInfo} ${entry.phone || ""}`
           }}
         />
-        <ImageRow images={this._extractImages(entry)} />
+        <ImageRow
+          showImages={this.state.showImages}
+          images={this._extractImages(entry)}
+        />
       </LabelWrapper>
     );
   };
@@ -68,7 +89,11 @@ export class OperatorDetails extends React.Component<DetailsComponentProps> {
   render() {
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo name={this.props.task.site.name} />
+        <PharmacyInfo
+          showImages={this.state.showImages}
+          onToggleImages={this._toggleImages}
+          name={this.props.task.site.name}
+        />
         {this.props.task.entries.map(this._renderClaimEntryDetails)}
         {this.props.notesux}
         {this.props.children}

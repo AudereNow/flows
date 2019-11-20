@@ -20,54 +20,42 @@ const NO_ROLES_MAP: RoleMap = {
 
 type Props = {};
 type State = {
-  allChanges: ChangeRow[];
-  allAdminLogs: AdminLogRow[];
+  allHistory: HistoryRow[];
   email: string;
   roleMap: RoleMap;
 };
 
-export type ChangeRow = {
+export type HistoryRow = {
   taskID: string;
   timestamp: string;
   description: string;
   notes?: string;
 };
 
-export type AdminLogRow = {
-  desc: string;
-  timestamp: string;
-  userID: string;
-  userName: string;
-};
-
-const CHANGE_HISTORY_TABLE_COLUMNS = [
-  { Header: "Task ID", accessor: "taskID", minWidth: 150 },
+const HISTORY_TABLE_COLUMNS = [
+  { Header: "Task ID", accessor: "taskID", minWidth: 90 },
   {
     Header: "Time",
     accessor: "timestamp",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
-    minWidth: 100
+    minWidth: 60
   },
-  { Header: "Description", accessor: "description", minWidth: 450 },
-  { Header: "Notes", accessor: "notes", minWidth: 200 }
-];
-
-const ADMIN_LOGS_TABLE_COLUMNS = [
-  { Header: "ID", accessor: "userID", minWidth: 200 },
-  { Header: "Name", accessor: "userName", minWidth: 100 },
-  { Header: "Description", accessor: "desc", minWidth: 150 },
   {
-    Header: "Time",
-    accessor: "timestamp",
-    Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
-    minWidth: 100
+    Header: "Description",
+    accessor: "description",
+    minWidth: 150
+  },
+  {
+    Header: "Notes",
+    accessor: "notes",
+    minWidth: 200,
+    style: { whiteSpace: "unset" }
   }
 ];
 
 class AdminPanel extends React.Component<Props, State> {
   state: State = {
-    allAdminLogs: [],
-    allChanges: [],
+    allHistory: [],
     email: "",
     roleMap: NO_ROLES_MAP
   };
@@ -80,8 +68,9 @@ class AdminPanel extends React.Component<Props, State> {
     this._fetchedAllData = true;
     this.setState({
       roleMap: NO_ROLES_MAP,
-      allChanges: this._recordsToChangeRows(allChanges),
-      allAdminLogs: this._recordsToAdminLogRows(allAdminLogs)
+      allHistory: this._recordsToChangeRows(allChanges).concat(
+        this._recordsToAdminLogRows(allAdminLogs)
+      )
     });
   }
 
@@ -141,7 +130,7 @@ class AdminPanel extends React.Component<Props, State> {
     return <div>{roleBoxes}</div>;
   }
 
-  _recordsToChangeRows = (records: TaskChangeRecord[]): ChangeRow[] => {
+  _recordsToChangeRows = (records: TaskChangeRecord[]): HistoryRow[] => {
     return records.map(r => {
       return {
         taskID: r.taskID,
@@ -154,42 +143,33 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
-  _recordsToAdminLogRows = (records: any[]): AdminLogRow[] => {
+  _recordsToAdminLogRows = (records: any[]): HistoryRow[] => {
     return records.map(r => {
       return {
-        desc: r.desc,
+        taskID: "",
         timestamp: new Date(r.timestamp).toLocaleDateString(),
-        userID: r.user.id,
-        userName: r.user.name
+        description: r.desc,
+        notes: r.notes || ""
       };
     });
   };
 
   render() {
-    const { allChanges, allAdminLogs } = this.state;
+    const { allHistory } = this.state;
+
     return (
       <div className="mainview_admin_panel">
         <Tabs>
           <TabList>
-            <Tab>Change History</Tab>
-            <Tab>Admin Logs</Tab>
+            <Tab>History</Tab>
             <Tab>User Roles</Tab>
           </TabList>
           <TabPanel>
             {this._fetchedAllData && (
               <SearchableTable
-                downloadPrefix={"changeHistory_"}
-                allData={allChanges}
-                tableColumns={CHANGE_HISTORY_TABLE_COLUMNS}
-              />
-            )}
-          </TabPanel>
-          <TabPanel>
-            {this._fetchedAllData && (
-              <SearchableTable
-                downloadPrefix={"adminLogs_"}
-                allData={allAdminLogs}
-                tableColumns={ADMIN_LOGS_TABLE_COLUMNS}
+                downloadPrefix={"history_"}
+                allData={allHistory}
+                tableColumns={HISTORY_TABLE_COLUMNS}
               />
             )}
           </TabPanel>
