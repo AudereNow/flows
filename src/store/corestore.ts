@@ -84,6 +84,10 @@ export async function changeTaskState(
   ]);
 }
 
+export function getUserEmail(): string {
+  return firebase.auth().currentUser!.email!;
+}
+
 export function getBestUserName(): string {
   return (
     firebase.auth().currentUser!.displayName ||
@@ -275,6 +279,16 @@ export function subscribeToPharmacyDetails(
     .onSnapshot(snapshot => {
       callback(snapshot.data() as Pharmacy);
     });
+}
+
+export async function getPharmacyDetails(
+  pharmacyId: string
+): Promise<Pharmacy> {
+  return (await firebase
+    .firestore()
+    .collection(PHARMACY_COLLECTION)
+    .doc(pharmacyId)
+    .get()).data() as Pharmacy;
 }
 
 export async function setPharmacyDetails(

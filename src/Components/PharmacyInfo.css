@@ -6,3 +6,7 @@
 .pharmacy_container {
   padding: 5px;
 }
+
+.pharmacy_helptext {
+  font-size: small;
+}

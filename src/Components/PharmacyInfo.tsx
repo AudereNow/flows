@@ -1,32 +1,30 @@
 import React from "react";
+import Button from "./Button";
 import { Pharmacy } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails
 } from "../store/corestore";
-import Button from "./Button";
 import "./PharmacyInfo.css";
 import TextItem from "./TextItem";
 
 const DEFAULT_PHARMACY: Pharmacy = {
-  opsOwners: []
+  notes: "",
+  owners: []
 };
 
 interface Props {
   name: string;
-  onToggleImages: () => void;
-  showImages: boolean;
 }
 
 interface State {
   pharmacy?: Pharmacy;
-  editing: boolean;
-  saving: boolean;
   editedNotes?: string;
+  editedOwners?: string;
+  saving: boolean;
 }
 class PharmacyInfo extends React.Component<Props, State> {
   state: State = {
-    editing: false,
     saving: false
   };
 
@@ -54,7 +52,7 @@ class PharmacyInfo extends React.Component<Props, State> {
     if (!this.state.pharmacy) {
       return;
     }
-    this.setState({ editing: true, editedNotes: this.state.pharmacy.notes });
+    this.setState({ editedNotes: this.state.pharmacy.notes });
   };
 
   _onNotesSave = async () => {
@@ -64,14 +62,41 @@ class PharmacyInfo extends React.Component<Props, State> {
     this.setState({ saving: true });
     await setPharmacyDetails(this.props.name, {
       ...this.state.pharmacy,
-      notes: this.state.editedNotes
+      notes: this.state.editedNotes || ""
     });
-    this.setState({ editing: false, saving: false });
+    this.setState({ editedNotes: undefined, saving: false });
   };
 
   _onNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     this.setState({
       editedNotes: event.target.value
+    });
+  };
+
+  _onOwnersEdit = () => {
+    if (!this.state.pharmacy) {
+      return;
+    }
+    this.setState({ editedOwners: this.state.pharmacy.owners.join(", ") });
+  };
+
+  _onOwnersSave = async () => {
+    if (!this.state.pharmacy) {
+      return;
+    }
+    this.setState({ saving: true });
+    await setPharmacyDetails(this.props.name, {
+      ...this.state.pharmacy,
+      owners: (this.state.editedOwners || "")
+        .split(",")
+        .map(owner => owner.trim())
+    });
+    this.setState({ editedOwners: undefined, saving: false });
+  };
+
+  _onOwnersChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      editedOwners: event.target.value
     });
   };
 
@@ -85,37 +110,72 @@ class PharmacyInfo extends React.Component<Props, State> {
             value: this.props.name
           }}
         />
-        {this.state.pharmacy &&
-          (this.state.editing ? (
-            <div>
-              <div>Notes:</div>
-              <textarea
-                readOnly={this.state.saving}
-                onChange={this._onNotesChange}
-              >
-                {this.state.pharmacy.notes}
-              </textarea>
+        {this.state.pharmacy && (
+          <div className="pharmacy_detail">
+            {this.state.editedNotes !== undefined ? (
               <div>
-                <button
-                  onClick={this._onNotesSave}
-                  disabled={this.state.saving}
-                >
-                  Save
-                </button>
+                <div>Notes:</div>
+                <textarea
+                  readOnly={this.state.saving}
+                  onChange={this._onNotesChange}
+                  defaultValue={this.state.editedNotes}
+                />
+                <div>
+                  <Button
+                    onClick={this._onNotesSave}
+                    disabled={this.state.saving}
+                    label="Save"
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="pharmacy_detail">
-              {`Notes: ${this.state.pharmacy.notes || ""} `}
-              <button onClick={this._onNotesEdit}>Edit</button>
-            </div>
-          ))}
-        <div className="pharmacy_toggle_image_container">
-          <Button
-            onClick={this.props.onToggleImages}
-            label={!!this.props.showImages ? "Hide Images" : "Show Images"}
-          />
-        </div>
+            ) : (
+              <div>
+                <div>
+                  {`Notes: ${this.state.pharmacy.notes} `}
+                  <Button
+                    onClick={this._onNotesEdit}
+                    label={
+                      this.state.pharmacy.notes.length > 0
+                        ? "Edit"
+                        : "Add Notes"
+                    }
+                  />
+                </div>
+              </div>
+            )}
+            {this.state.editedOwners !== undefined ? (
+              <div>
+                {"Owners: "}
+                <input
+                  readOnly={this.state.saving}
+                  onChange={this._onOwnersChange}
+                  defaultValue={this.state.editedOwners}
+                />
+                <Button
+                  onClick={this._onOwnersSave}
+                  disabled={this.state.saving}
+                  label="Save"
+                />
+                <span className="pharmacy_helptext">
+                  {" (Enter email addresses of owners, separated by commas)"}
+                </span>
+              </div>
+            ) : (
+              <div>
+                {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
+                <Button
+                  onClick={this._onOwnersEdit}
+                  label={
+                    this.state.pharmacy.owners.length > 0
+                      ? "Edit"
+                      : "Add Owners"
+                  }
+                />
+              </div>
+            )}
+            {this.props.children}
+          </div>
+        )}
       </div>
     );
   }
