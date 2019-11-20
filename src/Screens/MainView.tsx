@@ -58,8 +58,8 @@ class MainView extends React.Component<Props, State> {
     let selectedTabIndex = 0;
 
     if (!!this.props.startingTab) {
-      selectedTabIndex = Object.keys(defaultConfig.tabs).findIndex(
-        tabName => tabName.toLowerCase() === this.props.startingTab
+      selectedTabIndex = Object.values(defaultConfig.tabs).findIndex(
+        tab => tab.baseUrl === this.props.startingTab
       );
     }
 
@@ -77,7 +77,7 @@ class MainView extends React.Component<Props, State> {
     const tabName = this._getTabNames(defaultConfig);
     const tabConfig = defaultConfig.tabs[tabName[index]];
     if (isCustomPanel(tabConfig)) {
-      this.props.history.push(tabConfig.baseUrl);
+      this.props.history.push("/" + tabConfig.baseUrl);
     }
     return result;
   };

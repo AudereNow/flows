@@ -164,7 +164,7 @@ class TaskPanel extends React.Component<Props, State> {
 
   _pushHistory(selectedTaskId?: string) {
     this.props.history.push(
-      `${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
+      `/${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
     );
   }
 
