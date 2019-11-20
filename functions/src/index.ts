@@ -8,6 +8,8 @@ import {
   ADMIN_LOG_EVENT_COLLECTION,
   DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
+  Patient,
+  PATIENTS_COLLECTION,
   REMOTE_CONFIG_DOC,
   RemoteConfig,
   removeEmptyFieldsInPlace,
@@ -29,6 +31,8 @@ const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
 const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
 const RECORD_ID_FIELD = "meta:instanceID";
+
+const TASKS_LOOP_PAGE_SIZE = 100;
 
 type RecordUploadLog = {
   csvID: string;
@@ -195,6 +199,61 @@ exports.onUpdateTask = functions.firestore
     return null;
   });
 
+exports.updatePatientsTaskLists = functions.https.onCall(
+  async (data, context): Promise<CallResult> => {
+    await forAllTasks(tasks => Promise.all(tasks.map(updatePatientsForTask)));
+    return { result: "" };
+  }
+);
+
+async function forAllTasks(callback: (tasks: Task[]) => Promise<any>) {
+  let tasks = await admin
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .orderBy("id")
+    .limit(TASKS_LOOP_PAGE_SIZE)
+    .get();
+  while (tasks.docs.length > 0) {
+    console.log(`Processing tasks from ${tasks.docs[0].id}...`);
+    await callback(tasks.docs.map(doc => doc.data() as Task));
+    tasks = await admin
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .orderBy("id")
+      .startAfter(tasks.docs[tasks.docs.length - 1])
+      .limit(TASKS_LOOP_PAGE_SIZE)
+      .get();
+  }
+}
+
+async function updatePatientsForTask(task: Task) {
+  await Promise.all(
+    task.entries.map(async entry => {
+      if (!entry.patientID) {
+        return;
+      }
+      let patient: Patient = (await admin
+        .firestore()
+        .collection(PATIENTS_COLLECTION)
+        .doc(entry.patientID)
+        .get()).data() as Patient;
+      if (!patient) {
+        patient = { id: entry.patientID, taskIds: [task.id] };
+      } else {
+        if (patient.taskIds.includes(task.id)) {
+          return;
+        }
+        patient.taskIds.push(task.id);
+      }
+      await admin
+        .firestore()
+        .collection(PATIENTS_COLLECTION)
+        .doc(entry.patientID)
+        .set(patient);
+    })
+  );
+}
+
 async function LogAdminEvent(user: User, desc: string) {
   const dateString = `${new Date().toISOString()} ${Math.random()}`;
   const event: AdminLogEvent = {
@@ -283,7 +342,8 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
           .firestore()
           .collection(TASK_CHANGE_COLLECTION)
           .doc()
-          .set(record)
+          .set(record),
+        updatePatientsForTask(task)
       ]);
     })
   );
