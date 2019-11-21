@@ -1,6 +1,5 @@
 .tooltipicon_container {
   position: relative;
-  cursor: pointer;
 }
 
 .tooltipicon_label {
@@ -10,8 +9,13 @@
 .tooltipicon_tooltip {
   position: absolute;
   top: 20px;
-  right: 0px;
+  left: 10px;
   min-width: 100px;
   background-color: white;
   padding: 10px;
+}
+
+.tooltipicon_information {
+  margin: 5px;
+  color: white;
 }

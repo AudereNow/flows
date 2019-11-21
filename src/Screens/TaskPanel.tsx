@@ -10,6 +10,7 @@ import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import TaskList from "../Components/TaskList";
 import { SearchContext } from "../Components/TextItem";
+import { ToolTipIcon } from "../Components/ToolTipIcon";
 import {
   Pharmacy,
   RemoteConfig,
@@ -406,20 +407,21 @@ class TaskPanel extends React.Component<Props, State> {
         </div>
         <div className="labelwrapper_row">
           <div className="mainview_search_row">
+            <ToolTipIcon
+              label={"ⓘ"}
+              iconClassName="tooltipicon_information"
+              tooltip={
+                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: item:e, patient:ru"
+              }
+            />
             <input
               className="mainview_search_input"
               ref={this._inputRef}
               type="text"
               onChange={this._onSearchTermChange}
-              placeholder="Search"
+              placeholder="Search by keyword"
             />
-            <Button
-              className="mainview_clear_search_button"
-              label="Clear Search"
-              onClick={this._clearSearch}
-            />
-          </div>
-          <div className="mainview_spaced_row">
+
             <div className="mainview_date_picker">
               <DateRangePicker
                 startDate={searchDates.startDate}
@@ -434,6 +436,14 @@ class TaskPanel extends React.Component<Props, State> {
                 block={true}
               />
             </div>
+          </div>
+          <div className="mainview_spaced_row">
+            <Button
+              className="mainview_clear_search_button"
+              label="Clear Search"
+              onClick={this._clearSearch}
+            />
+
             <Button label={"Download CSV"} onClick={this._downloadCSV} />
           </div>
         </div>

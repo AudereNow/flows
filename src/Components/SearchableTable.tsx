@@ -8,6 +8,7 @@ import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
 import "./SearchableTable.css";
+import { ToolTipIcon } from "./ToolTipIcon";
 
 type Props = {
   tableColumns: any[];
@@ -83,6 +84,13 @@ class SearchableTable extends React.Component<Props, State> {
         <div className="searchabletable_checkbox_row">
           <div className="searchabletable_checkbox_search">
             <div>
+              <ToolTipIcon
+                label={"ⓘ"}
+                iconClassName="tooltipicon_information"
+                tooltip={
+                  "Available search keys: 'id', 'time', 'description', 'notes'. Example query: id:xvc, time:11/24"
+                }
+              />
               <input
                 ref={this._inputRef}
                 type="text"
