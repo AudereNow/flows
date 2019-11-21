@@ -9,8 +9,10 @@ import { TaskChangeRecord, UserRole } from "../sharedtypes";
 import {
   getAdminLogs,
   getAllChanges,
+  getBestUserName,
   setRoles,
-  updatePatientsTaskLists
+  updatePatientsTaskLists,
+  issuePayments
 } from "../store/corestore";
 
 type RoleMap = {
@@ -29,6 +31,11 @@ type State = {
   allHistory: HistoryRow[];
   email: string;
   roleMap: RoleMap;
+  paymentForm: {
+    sending?: boolean;
+    phoneNumber?: string;
+    amount?: number;
+  };
 };
 
 export type HistoryRow = {
@@ -63,7 +70,8 @@ class AdminPanel extends React.Component<Props, State> {
   state: State = {
     allHistory: [],
     email: "",
-    roleMap: NO_ROLES_MAP
+    roleMap: NO_ROLES_MAP,
+    paymentForm: {}
   };
 
   _fetchedAllData = false;
@@ -92,6 +100,23 @@ class AdminPanel extends React.Component<Props, State> {
     this.setState({ roleMap });
   };
 
+  _onPhoneNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      paymentForm: {
+        ...this.state.paymentForm,
+        phoneNumber: event.target.value
+      }
+    });
+  };
+
+  _onAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      paymentForm: {
+        ...this.state.paymentForm,
+        amount: parseInt(event.target.value)
+      }
+    });
+  };
   _setUserRoles = async (event: React.FormEvent<HTMLFormElement>) => {
     // You need to call this, or else browsers reload the entire page by default
     // on every form submit.
@@ -166,6 +191,53 @@ class AdminPanel extends React.Component<Props, State> {
     console.log("Update complete");
   };
 
+  _sendPayment = async () => {
+    const { amount, phoneNumber } = this.state.paymentForm;
+    if (!amount) {
+      alert("Enter a payment amount");
+      return;
+    }
+    if (amount > 500) {
+      alert("Please an amount less than 500");
+      return;
+    }
+    if (!phoneNumber) {
+      alert("Enter a phone number");
+      return;
+    }
+
+    this.setState({
+      paymentForm: { ...this.state.paymentForm, sending: true }
+    });
+
+    try {
+      const result = await issuePayments([
+        {
+          name: "Maisha Meds",
+          reason: "TestPayment",
+          amount,
+          phoneNumber,
+          currencyCode: "KES",
+          metadata: {
+            payorName: getBestUserName()
+          }
+        }
+      ]);
+      console.log(result);
+      if (result.data && result.data.error) {
+        alert("Payment failed");
+      } else {
+        alert("Payment issued successfully!");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Payment failed");
+    }
+    this.setState({
+      paymentForm: { ...this.state.paymentForm, sending: false }
+    });
+  };
+
   render() {
     const { allHistory } = this.state;
 
@@ -199,10 +271,30 @@ class AdminPanel extends React.Component<Props, State> {
             </form>
           </TabPanel>
           <TabPanel>
-            <Button
-              onClick={this._updatePatientsTaskLists}
-              label="Update Patients Collection"
-            />
+            <div>
+              <div>Issue Payment:</div>
+              <input
+                type="text"
+                name="phone"
+                placeholder="recipient phone number"
+                onChange={this._onPhoneNumberChange}
+              />
+              <input
+                type="text"
+                name="amount"
+                placeholder="payment amount"
+                onChange={this._onAmountChange}
+              />
+              <Button
+                onClick={this._sendPayment}
+                label="Send Payment"
+                disabled={this.state.paymentForm.sending}
+              />
+            </div>
+            <div>
+              <div>Update Patients Collection:</div>
+              <Button onClick={this._updatePatientsTaskLists} label="Update" />
+            </div>
           </TabPanel>
         </Tabs>
       </div>

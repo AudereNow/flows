@@ -17,6 +17,7 @@ import {
   TaskState,
   TASKS_COLLECTION,
   TASK_CHANGE_COLLECTION,
+  User,
   UserRole
 } from "../sharedtypes";
 
@@ -197,18 +198,48 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
   const serverIssuePayments = firebase
     .functions()
     .httpsCallable("issuePayments", { timeout: 300000 });
+  const totalPayment = recipients.reduce(
+    (total, recipient) => total + recipient.amount,
+    0
+  );
 
   try {
+    logAdminEvent(
+      `${recipients.length} payments issued totalling ${totalPayment}`
+    );
     return await serverIssuePayments({
       recipients
     });
   } catch (e) {
+    logAdminEvent(
+      `${recipients.length} payments failed totalling ${totalPayment}`
+    );
     return {
       data: {
         error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
       }
     };
   }
+}
+
+async function logAdminEvent(desc: string) {
+  const authUser = await firebase.auth().currentUser;
+  const user: User = {
+    name: getBestUserName(),
+    id: authUser ? authUser.uid : ""
+  };
+  const dateString = `${new Date().toISOString()} ${Math.random()}`;
+  const event: AdminLogEvent = {
+    timestamp: Date.now(),
+    user,
+    desc
+  };
+  console.log(desc);
+  await firebase
+    .firestore()
+    .collection(ADMIN_LOG_EVENT_COLLECTION)
+    .doc(dateString)
+    .set(event);
 }
 
 export async function updatePatientsTaskLists() {
