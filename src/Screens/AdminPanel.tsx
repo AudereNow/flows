@@ -32,6 +32,7 @@ type State = {
   email: string;
   roleMap: RoleMap;
   paymentForm: {
+    sending?: boolean;
     phoneNumber?: string;
     amount?: number;
   };
@@ -196,10 +197,18 @@ class AdminPanel extends React.Component<Props, State> {
       alert("Enter a payment amount");
       return;
     }
+    if (amount > 500) {
+      alert("Please an amount less than 500");
+      return;
+    }
     if (!phoneNumber) {
       alert("Enter a phone number");
       return;
     }
+
+    this.setState({
+      paymentForm: { ...this.state.paymentForm, sending: true }
+    });
 
     try {
       const result = await issuePayments([
@@ -224,6 +233,9 @@ class AdminPanel extends React.Component<Props, State> {
       console.error(e);
       alert("Payment failed");
     }
+    this.setState({
+      paymentForm: { ...this.state.paymentForm, sending: false }
+    });
   };
 
   render() {
@@ -261,27 +273,27 @@ class AdminPanel extends React.Component<Props, State> {
           <TabPanel>
             <div>
               <div>Issue Payment:</div>
-              <form onSubmit={this._sendPayment}>
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="recipient phone number"
-                  onChange={this._onPhoneNumberChange}
-                />
-                <input
-                  type="text"
-                  name="amount"
-                  placeholder="payment amount"
-                  onChange={this._onAmountChange}
-                />
-                <input type="submit" value="Submit" />
-              </form>
+              <input
+                type="text"
+                name="phone"
+                placeholder="recipient phone number"
+                onChange={this._onPhoneNumberChange}
+              />
+              <input
+                type="text"
+                name="amount"
+                placeholder="payment amount"
+                onChange={this._onAmountChange}
+              />
+              <Button
+                onClick={this._sendPayment}
+                label="Send Payment"
+                disabled={this.state.paymentForm.sending}
+              />
             </div>
             <div>
-              <Button
-                onClick={this._updatePatientsTaskLists}
-                label="Update Patients Collection"
-              />
+              <div>Update Patients Collection:</div>
+              <Button onClick={this._updatePatientsTaskLists} label="Update" />
             </div>
           </TabPanel>
         </Tabs>
