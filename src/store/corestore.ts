@@ -5,6 +5,8 @@ import "firebase/functions";
 import {
   ACTIVE_TASK_COLLECTION,
   AdminLogEvent,
+  Patient,
+  PATIENTS_COLLECTION,
   ADMIN_LOG_EVENT_COLLECTION,
   PaymentRecipient,
   Pharmacy,
@@ -156,13 +158,11 @@ export async function loadPreviousTasks(
   currentId: string
 ): Promise<Task[]> {
   const states = Object.values(TaskState);
-  return (
-    await firebase
-      .firestore()
-      .collection(TASKS_COLLECTION)
-      .where("site.name", "==", siteName)
-      .get()
-  ).docs
+  return (await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .where("site.name", "==", siteName)
+    .get()).docs
     .map(doc => doc.data() as Task)
     .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
     .filter(t => t.id !== currentId);
@@ -202,6 +202,21 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
     return await serverIssuePayments({
       recipients
     });
+  } catch (e) {
+    return {
+      data: {
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
+      }
+    };
+  }
+}
+
+export async function updatePatientsTaskLists() {
+  const serverUpdatePatientsTaskLists = firebase
+    .functions()
+    .httpsCallable("updatePatientsTaskLists");
+  try {
+    return await serverUpdatePatientsTaskLists();
   } catch (e) {
     return {
       data: {
@@ -302,6 +317,69 @@ export async function setPharmacyDetails(
     .collection(PHARMACY_COLLECTION)
     .doc(pharmacyId)
     .set(pharmacy);
+}
+
+export interface PatientHistory {
+  tasks: {
+    taskId: string;
+    date: string;
+    totalAmount: number;
+    claimCount: number;
+  }[];
+}
+
+export async function getPatientHistories(patientIds: string[]) {
+  const patients = (await Promise.all(
+    new Array(Math.round(patientIds.length / 10) + 1).fill(0).map(
+      async (_, index) =>
+        (await firebase
+          .firestore()
+          .collection(PATIENTS_COLLECTION)
+          //@ts-ignore
+          .where("id", "in", patientIds.slice(index * 10, (index + 1) * 10))
+          .get()).docs.map((doc: any) => doc.data()) as Patient[]
+    )
+  )).reduce((a, b) => a.concat(b), []);
+  const patientHistories: { [id: string]: PatientHistory } = {};
+  await Promise.all(
+    patients.map(async patient => {
+      const tasks = (await firebase
+        .firestore()
+        .collection(TASKS_COLLECTION)
+        //@ts-ignore
+        .where("id", "in", patient.taskIds)
+        .get()).docs.map((doc: any) => doc.data()) as Task[];
+      const history = tasks.map(task => {
+        const entries = task.entries.filter(
+          entry => entry.patientID === patient.id
+        );
+        const sum = entries
+          .map(entry => entry.claimedCost)
+          .reduce((a, b) => a + b, 0);
+        const timestamps = entries.map(entry => entry.timestamp).sort();
+        const date =
+          timestamps.length === 0
+            ? task.updatedAt
+              ? new Date(task.updatedAt).toLocaleDateString()
+              : ""
+            : entries.length === 1
+            ? new Date(timestamps[0]).toLocaleDateString()
+            : `${new Date(timestamps[0]).toLocaleDateString()} - ${new Date(
+                timestamps[timestamps.length - 1]
+              ).toLocaleDateString()}`;
+        return {
+          taskId: task.id,
+          date,
+          totalAmount: sum,
+          claimCount: entries.length
+        };
+      });
+      patientHistories[patient.id] = {
+        tasks: history
+      };
+    })
+  );
+  return patientHistories;
 }
 
 export async function getPharmacyClaims(siteName: string) {

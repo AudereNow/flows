@@ -1,5 +1,6 @@
 import moment from "moment";
 import React from "react";
+import ReactTable from "react-table";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
@@ -14,8 +15,25 @@ import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
+import {
+  formatCurrency,
+  getPatientHistories,
+  PatientHistory
+} from "../store/corestore";
+
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
+const PATIENT_HISTORY_TABLE_COLUMNS = [
+  { Header: "Task ID", accessor: "taskId", minWidth: 90 },
+  { Header: "Date", accessor: "date", minWidth: 70 },
+  {
+    Header: "Total Amount",
+    id: "totalAmount",
+    accessor: (row: any) => formatCurrency(row.totalAmount),
+    minWidth: 60
+  },
+  { Header: "Number of Claims", accessor: "claimCount", minWidth: 70 }
+];
 
 export interface TaskTotal {
   total: number;
@@ -35,6 +53,7 @@ type State = {
 interface PatientInfo {
   patientId: string;
   currentClaims: ClaimEntry[];
+  history?: PatientHistory;
 }
 
 function getInitialState(props: DetailsComponentProps): State {
@@ -62,6 +81,7 @@ export class AuditorDetails extends React.Component<
 
   async componentDidMount() {
     this.props.registerActionCallback("approve", this._onApprove);
+    this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
       this.props.task.site.name
@@ -120,6 +140,22 @@ export class AuditorDetails extends React.Component<
       })
     };
     return { success: true, task };
+  };
+
+  _loadPatientHistories = async () => {
+    const histories = await getPatientHistories(
+      this.state.patients.map(patient => patient.patientId)
+    );
+    this.setState({
+      patients: this.state.patients.map(patient => ({
+        ...patient,
+        history: {
+          tasks: histories[patient.patientId].tasks.filter(
+            task => task.taskId !== this.props.task.id
+          )
+        }
+      }))
+    });
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -199,6 +235,17 @@ export class AuditorDetails extends React.Component<
             />
           </React.Fragment>
         ))}
+        {patient.history && patient.history.tasks.length > 0 && (
+          <React.Fragment>
+            <div>Previous Claims:</div>
+            <ReactTable
+              data={patient.history.tasks}
+              columns={PATIENT_HISTORY_TABLE_COLUMNS}
+              minRows={0}
+              showPagination={false}
+            />
+          </React.Fragment>
+        )}
       </LabelWrapper>
     );
   };

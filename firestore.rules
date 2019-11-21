@@ -18,6 +18,9 @@ service cloud.firestore {
     match /pharmacies/{name} {
       allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
     }
+    match /patients/{id} {
+      allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
+    }
     match /metadata/remoteConfig {
       allow read: if true;
     }

@@ -3,9 +3,15 @@ import React from "react";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
+import Button from "../Components/Button";
 import SearchableTable from "../Components/SearchableTable";
 import { TaskChangeRecord, UserRole } from "../sharedtypes";
-import { getAdminLogs, getAllChanges, setRoles } from "../store/corestore";
+import {
+  getAdminLogs,
+  getAllChanges,
+  setRoles,
+  updatePatientsTaskLists
+} from "../store/corestore";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -154,6 +160,12 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
+  _updatePatientsTaskLists = async () => {
+    console.log("Starting update...");
+    await updatePatientsTaskLists();
+    console.log("Update complete");
+  };
+
   render() {
     const { allHistory } = this.state;
 
@@ -163,6 +175,7 @@ class AdminPanel extends React.Component<Props, State> {
           <TabList>
             <Tab>History</Tab>
             <Tab>User Roles</Tab>
+            <Tab>Advanced</Tab>
           </TabList>
           <TabPanel>
             {this._fetchedAllData && (
@@ -184,6 +197,12 @@ class AdminPanel extends React.Component<Props, State> {
               {this._renderRoles()}
               <input type="submit" value="Submit" />
             </form>
+          </TabPanel>
+          <TabPanel>
+            <Button
+              onClick={this._updatePatientsTaskLists}
+              label="Update Patients Collection"
+            />
           </TabPanel>
         </Tabs>
       </div>

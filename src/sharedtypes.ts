@@ -11,6 +11,7 @@ export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
 export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
 export const TASKS_COLLECTION = "tasks";
+export const PATIENTS_COLLECTION = "patients";
 export const PHARMACY_COLLECTION = "pharmacies";
 
 export enum TaskState {
@@ -104,6 +105,11 @@ export type User = {
 export type Pharmacy = {
   notes: string;
   owners: string[];
+};
+
+export type Patient = {
+  id: string;
+  taskIds: string[];
 };
 
 // This is used to log isuses that the Admin needs to see
