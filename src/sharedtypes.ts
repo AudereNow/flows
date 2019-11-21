@@ -78,6 +78,7 @@ export type Task = {
   state: TaskState;
   entries: ClaimEntry[];
   site: Site;
+  createdAt: number; // timestamp
   updatedAt?: number; // timestamp
 };
 
