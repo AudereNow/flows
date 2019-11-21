@@ -326,6 +326,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         id: doc.id,
         state: TaskState.AUDIT,
         entries: patients,
+        createdAt: Date.now(),
         site: {
           name: pharm.values[0]["g3:B01 Pharmacy name"]
         }
