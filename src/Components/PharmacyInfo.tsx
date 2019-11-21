@@ -36,13 +36,18 @@ class PharmacyInfo extends React.Component<Props, State> {
     saving: false
   };
 
+  _unsubscribe = () => {};
+
   componentDidMount() {
-    subscribeToPharmacyDetails(this.props.name, pharmacy => {
-      if (pharmacy === undefined) {
-        pharmacy = DEFAULT_PHARMACY;
+    this._unsubscribe = subscribeToPharmacyDetails(
+      this.props.name,
+      pharmacy => {
+        if (pharmacy === undefined) {
+          pharmacy = DEFAULT_PHARMACY;
+        }
+        this.setState({ pharmacy });
       }
-      this.setState({ pharmacy });
-    });
+    );
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -54,6 +59,10 @@ class PharmacyInfo extends React.Component<Props, State> {
         this.setState({ pharmacy });
       });
     }
+  }
+
+  componentWillUnmount() {
+    this._unsubscribe();
   }
 
   _onNotesEdit = () => {
@@ -117,7 +126,6 @@ class PharmacyInfo extends React.Component<Props, State> {
             previousClaims[0]["count"] >
           0.5
         : false;
-
     return (
       <div className="pharmacy_container">
         <div className="pharmacy_half">

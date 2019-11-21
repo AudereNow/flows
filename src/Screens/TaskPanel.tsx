@@ -42,24 +42,6 @@ export interface DetailsComponentProps {
   showPreviousClaims: boolean;
 }
 
-export interface SiteFilters {
-  name?: boolean;
-}
-
-export interface ChangeRowFilters {
-  taskID?: boolean;
-  timestamp?: boolean;
-  description?: boolean;
-  notes?: boolean;
-}
-
-export interface ClaimEntryFilters {
-  patient?: boolean;
-  name?: boolean;
-  patientID?: boolean;
-  item?: boolean;
-}
-
 type Props = RouteComponentProps & {
   initialSelectedTaskID?: string;
   taskState: TaskState;
@@ -87,7 +69,6 @@ type State = {
   searchTermGlobal: string;
   showSearch: boolean;
   notes: string;
-  filters: ClaimEntryFilters;
   disableOwnersFilter: boolean;
 };
 
@@ -104,8 +85,7 @@ class TaskPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     showSearch: false,
     notes: "",
-    disableOwnersFilter: false,
-    filters: { patient: false, name: false, patientID: false, item: false }
+    disableOwnersFilter: false
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -264,15 +244,13 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
-    const { filters } = this.state;
-
     return this.state.allTasks.filter(task => {
       return (
         this._checkOwner(task.site.name) &&
-        (containsSearchTerm(searchTerm, task.site, filters) ||
-          task.entries.some(entry => {
-            return containsSearchTerm(searchTerm, entry, filters);
-          })) &&
+        task.entries.some(entry => {
+          (entry as any).pharmacy = task.site.name;
+          return containsSearchTerm(searchTerm, entry);
+        }) &&
         task.entries.some(entry => {
           return withinDateRange(dateRange, entry);
         })
@@ -341,7 +319,6 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState({
       searchDates: { startDate: null, endDate: null },
       tasks: allTasks,
-      filters: { patient: false, name: false, patientID: false, item: false },
       selectedTaskIndex: 0,
       searchTermGlobal: "",
       changes
@@ -399,17 +376,6 @@ class TaskPanel extends React.Component<Props, State> {
     );
   };
 
-  _onCheckBoxSelect = (event: React.MouseEvent<HTMLDivElement>) => {
-    const name = event.currentTarget.attributes.getNamedItem("data-value")!
-      .value;
-
-    let filters = this.state.filters;
-    (filters as any)[name] = !(filters as any)[name];
-    this.setState({ filters }, () => {
-      this._handleSearchTermGlobalChange(this.state.searchTermGlobal);
-    });
-  };
-
   _onOwnersFilterToggle = () => {
     this.setState(
       state => ({
@@ -421,12 +387,6 @@ class TaskPanel extends React.Component<Props, State> {
 
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
-    const patientKeyMap: any = {
-      patient: "Patient",
-      patientID: "ID",
-      name: "Pharmacy",
-      item: "Item"
-    };
 
     return (
       <div
@@ -460,19 +420,6 @@ class TaskPanel extends React.Component<Props, State> {
             />
           </div>
           <div className="mainview_spaced_row">
-            {Object.keys(patientKeyMap).map((key, index) => {
-              return (
-                <CheckBox
-                  key={key + index}
-                  checked={(this.state.filters as any)[key] || false}
-                  onCheckBoxSelect={this._onCheckBoxSelect}
-                  value={key}
-                  label={patientKeyMap[key]}
-                />
-              );
-            })}
-          </div>
-          <div className="mainview_spaced_row">
             <div className="mainview_date_picker">
               <DateRangePicker
                 startDate={searchDates.startDate}
@@ -499,7 +446,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   render() {
-    const { selectedTaskIndex, notes } = this.state;
+    const { searchTermGlobal, selectedTaskIndex, notes } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -514,8 +461,7 @@ class TaskPanel extends React.Component<Props, State> {
     return (
       <SearchContext.Provider
         value={{
-          searchTermGlobal: this.state.searchTermGlobal,
-          filters: this.state.filters
+          searchTermGlobal: searchTermGlobal
         }}
       >
         <div className="mainview_content">

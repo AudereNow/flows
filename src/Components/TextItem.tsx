@@ -1,5 +1,4 @@
 import React from "react";
-import { ClaimEntryFilters } from "../Screens/TaskPanel";
 import "./TextItem.css";
 
 export interface TextData {
@@ -9,8 +8,7 @@ export interface TextData {
 }
 
 export const SearchContext = React.createContext({
-  searchTermGlobal: "",
-  filters: {}
+  searchTermGlobal: ""
 });
 
 interface Props {
@@ -19,34 +17,50 @@ interface Props {
   className?: string;
 }
 
-function highlight(
-  props: Props,
-  searchTerm: string,
-  filters: ClaimEntryFilters
-) {
+function highlight(props: Props, searchTerm: string) {
   const { searchKey, value } = props.data;
-  filters = filters || {};
-  if (!filters || !Object.values(filters).some(value => !!value)) {
-    filters = { patient: true, name: true, patientID: true, item: true };
-  }
 
-  if (!(filters as any)[searchKey]) {
-    return [value];
-  }
-
-  const regexp = new RegExp("(" + searchTerm + ")", "gi");
-  const divided = value.split(regexp);
-
-  return divided.map((phrase: string) => {
-    if (phrase.toLowerCase() === searchTerm!.toLowerCase()) {
-      return (
-        <span key={phrase} className="highlight">
-          {phrase}
-        </span>
-      );
+  const keyValues = searchTerm.split(",");
+  for (let i = 0; i < keyValues.length; i++) {
+    const keyValue = keyValues[i];
+    let key: string;
+    let searchValue: string;
+    if (keyValue.indexOf(":") > 0) {
+      const split = keyValue.split(":");
+      key = split[0].trim().toLowerCase();
+      searchValue = split[1].trim().toLowerCase();
+    } else {
+      key = searchKey;
+      searchValue = keyValue.trim();
     }
-    return phrase;
-  });
+    if (
+      key === searchKey &&
+      value
+        .toLowerCase()
+        .trim()
+        .includes(searchValue)
+    ) {
+      const regexp = new RegExp("(" + searchValue + ")", "gi");
+      const divided = value.split(regexp);
+      return divided.map((phrase: string, index: number) => {
+        if (
+          phrase
+            .toLowerCase()
+            .trim()
+            .includes(searchValue)
+        ) {
+          return (
+            <span key={phrase + index} className="highlight">
+              {phrase}
+            </span>
+          );
+        } else {
+          return phrase;
+        }
+      });
+    }
+  }
+  return value;
 }
 
 export default class TextItem extends React.Component<Props> {
@@ -54,7 +68,8 @@ export default class TextItem extends React.Component<Props> {
 
   render() {
     const { displayKey } = this.props.data;
-    const { searchTermGlobal, filters } = this.context;
+    const { searchTermGlobal } = this.context;
+
     return (
       <div className="textitem_container">
         {!this.props.valueOnly && !!displayKey && (
@@ -63,7 +78,7 @@ export default class TextItem extends React.Component<Props> {
         <div className={this.props.className}>
           {this.props.valueOnly && !!displayKey && displayKey + ": "}
           {!!searchTermGlobal
-            ? highlight(this.props, searchTermGlobal, filters)
+            ? highlight(this.props, searchTermGlobal)
             : this.props.data.value}
         </div>
       </div>
