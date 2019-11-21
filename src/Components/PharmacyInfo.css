@@ -5,6 +5,23 @@
 
 .pharmacy_container {
   padding: 5px;
+  display: flex;
+  flex-direction: row;
+}
+
+.pharmacy_half {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.pharmacy_claims_header {
+  align-self: center;
+  display: flex;
+  flex-direction: row;
+}
+
+.pharmacy_claims_header_text {
+  margin-right: 10px;
 }
 
 .pharmacy_helptext {

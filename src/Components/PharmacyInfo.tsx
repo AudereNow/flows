@@ -1,12 +1,15 @@
-import React from "react";
-import Button from "./Button";
+import React, { Fragment } from "react";
+import { TaskTotal } from "../Screens/AuditorPanel";
 import { Pharmacy } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails
 } from "../store/corestore";
+import Button from "./Button";
+import DataTable from "./DataTable";
 import "./PharmacyInfo.css";
 import TextItem from "./TextItem";
+import { ToolTipIcon } from "./ToolTipIcon";
 
 const DEFAULT_PHARMACY: Pharmacy = {
   notes: "",
@@ -15,6 +18,11 @@ const DEFAULT_PHARMACY: Pharmacy = {
 
 interface Props {
   name: string;
+  onToggleImages?: () => void;
+  showImages?: boolean;
+  previousClaims?: TaskTotal[];
+  showPreviousClaims?: boolean;
+  claimCount?: number;
 }
 
 interface State {
@@ -101,81 +109,111 @@ class PharmacyInfo extends React.Component<Props, State> {
   };
 
   render() {
+    const { previousClaims, showPreviousClaims, claimCount } = this.props;
+
+    const showIncreaseWarning =
+      !!previousClaims && previousClaims.length > 0 && !!claimCount
+        ? (claimCount - previousClaims[0]["count"]) /
+            previousClaims[0]["count"] >
+          0.5
+        : false;
+
     return (
       <div className="pharmacy_container">
-        <TextItem
-          data={{
-            displayKey: "Pharmacy",
-            searchKey: "name",
-            value: this.props.name
-          }}
-        />
-        {this.state.pharmacy && (
-          <div className="pharmacy_detail">
-            {this.state.editedNotes !== undefined ? (
-              <div>
-                <div>Notes:</div>
-                <textarea
-                  readOnly={this.state.saving}
-                  onChange={this._onNotesChange}
-                  defaultValue={this.state.editedNotes}
-                />
+        <div className="pharmacy_half">
+          <TextItem
+            data={{
+              displayKey: "Pharmacy",
+              searchKey: "name",
+              value: this.props.name
+            }}
+          />
+          {this.state.pharmacy && (
+            <div className="pharmacy_detail">
+              {this.state.editedNotes !== undefined ? (
                 <div>
+                  <div>Notes:</div>
+                  <textarea
+                    readOnly={this.state.saving}
+                    onChange={this._onNotesChange}
+                    defaultValue={this.state.editedNotes}
+                  />
+                  <div>
+                    <Button
+                      onClick={this._onNotesSave}
+                      disabled={this.state.saving}
+                      label="Save"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div>
+                    {`Notes: ${this.state.pharmacy.notes} `}
+                    <Button
+                      onClick={this._onNotesEdit}
+                      label={
+                        !!this.state.pharmacy.notes &&
+                        this.state.pharmacy.notes.length > 0
+                          ? "Edit"
+                          : "Add Notes"
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+              {this.state.editedOwners !== undefined ? (
+                <div>
+                  {"Owners: "}
+                  <input
+                    readOnly={this.state.saving}
+                    onChange={this._onOwnersChange}
+                    defaultValue={this.state.editedOwners}
+                  />
                   <Button
-                    onClick={this._onNotesSave}
+                    onClick={this._onOwnersSave}
                     disabled={this.state.saving}
                     label="Save"
                   />
+                  <span className="pharmacy_helptext">
+                    {" (Enter email addresses of owners, separated by commas)"}
+                  </span>
                 </div>
-              </div>
-            ) : (
-              <div>
+              ) : (
                 <div>
-                  {`Notes: ${this.state.pharmacy.notes} `}
+                  {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
                   <Button
-                    onClick={this._onNotesEdit}
+                    onClick={this._onOwnersEdit}
                     label={
-                      this.state.pharmacy.notes.length > 0
+                      this.state.pharmacy.owners.length > 0
                         ? "Edit"
-                        : "Add Notes"
+                        : "Add Owners"
                     }
                   />
                 </div>
-              </div>
-            )}
-            {this.state.editedOwners !== undefined ? (
-              <div>
-                {"Owners: "}
-                <input
-                  readOnly={this.state.saving}
-                  onChange={this._onOwnersChange}
-                  defaultValue={this.state.editedOwners}
-                />
-                <Button
-                  onClick={this._onOwnersSave}
-                  disabled={this.state.saving}
-                  label="Save"
-                />
-                <span className="pharmacy_helptext">
-                  {" (Enter email addresses of owners, separated by commas)"}
+              )}
+              {this.props.children}
+            </div>
+          )}
+        </div>
+        <div className="pharmacy_half">
+          {!!previousClaims && !!showPreviousClaims && (
+            <Fragment>
+              <div className="pharmacy_claims_header">
+                <span className="pharmacy_claims_header_text">
+                  Previous Claims
                 </span>
+                {!!showIncreaseWarning && (
+                  <ToolTipIcon
+                    label={"⚠"}
+                    tooltip="Greater than 50% increase in claims. Please check for possible fraud"
+                  ></ToolTipIcon>
+                )}
               </div>
-            ) : (
-              <div>
-                {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
-                <Button
-                  onClick={this._onOwnersEdit}
-                  label={
-                    this.state.pharmacy.owners.length > 0
-                      ? "Edit"
-                      : "Add Owners"
-                  }
-                />
-              </div>
-            )}
-            {this.props.children}
-          </div>
-        )}
+              <DataTable data={previousClaims} />
+            </Fragment>
+          )}
+        </div>
       </div>
     );
   }

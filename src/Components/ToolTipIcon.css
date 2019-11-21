@@ -1,0 +1,17 @@
+.tooltipicon_container {
+  position: relative;
+  cursor: pointer;
+}
+
+.tooltipicon_label {
+  color: red;
+}
+
+.tooltipicon_tooltip {
+  position: absolute;
+  top: 20px;
+  right: 0px;
+  min-width: 100px;
+  background-color: white;
+  padding: 10px;
+}

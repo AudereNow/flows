@@ -4,20 +4,20 @@ import "firebase/firestore";
 import "firebase/functions";
 import {
   ACTIVE_TASK_COLLECTION,
-  ADMIN_LOG_EVENT_COLLECTION,
   AdminLogEvent,
   Patient,
   PATIENTS_COLLECTION,
+  ADMIN_LOG_EVENT_COLLECTION,
+  PaymentRecipient,
   Pharmacy,
   PHARMACY_COLLECTION,
-  PaymentRecipient,
-  TASKS_COLLECTION,
-  TASK_CHANGE_COLLECTION,
+  removeEmptyFieldsInPlace,
   Task,
   TaskChangeRecord,
   TaskState,
-  UserRole,
-  removeEmptyFieldsInPlace
+  TASKS_COLLECTION,
+  TASK_CHANGE_COLLECTION,
+  UserRole
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
@@ -380,4 +380,22 @@ export async function getPatientHistories(patientIds: string[]) {
     })
   );
   return patientHistories;
+}
+
+export async function getPharmacyClaims(siteName: string) {
+  // TODO: Possibly filter for claim state?
+  // TODO: Add the current task's id
+
+  return await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .where("site.name", "==", siteName)
+    .get()
+    .then(snapshot => {
+      let data: Task[] = [];
+      snapshot.docs.forEach(snap => {
+        data.push(snap.data() as Task);
+      });
+      return data;
+    });
 }

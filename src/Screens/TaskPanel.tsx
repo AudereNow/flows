@@ -19,10 +19,10 @@ import {
 } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
-  getUserEmail,
   changeTaskState,
   getChanges,
   getPharmacyDetails,
+  getUserEmail,
   subscribeToTasks
 } from "../store/corestore";
 import { configuredComponent } from "../util/configuredComponent";
@@ -39,6 +39,7 @@ export interface DetailsComponentProps {
     callback: () => Promise<ActionCallbackResult>
   ) => void;
   hideImagesDefault?: boolean;
+  showPreviousClaims: boolean;
 }
 
 export interface SiteFilters {
@@ -70,6 +71,7 @@ type Props = RouteComponentProps & {
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
   filterByOwners: boolean;
   hideImagesDefault: boolean;
+  showPreviousClaims: boolean;
 };
 
 type State = {
@@ -534,6 +536,7 @@ class TaskPanel extends React.Component<Props, State> {
             {selectedTaskIndex >= 0 && (
               <ConfiguredDetailsWrapper
                 hideImagesDefault={this.props.hideImagesDefault}
+                showPreviousClaims={this.props.showPreviousClaims}
                 task={this.state.tasks[selectedTaskIndex]}
                 notesux={notesux}
                 notes={notes}
@@ -559,6 +562,7 @@ interface DetailsWrapperProps {
   actions: { [key: string]: ActionConfig };
   remoteConfig: Partial<RemoteConfig>;
   hideImagesDefault: boolean;
+  showPreviousClaims: boolean;
 }
 
 interface DetailsWrapperState {
@@ -632,6 +636,7 @@ class DetailsWrapper extends React.Component<
     return (
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
+        showPreviousClaims={this.props.showPreviousClaims}
         task={this.props.task}
         notesux={this.props.notesux}
         key={this.props.task.id}
