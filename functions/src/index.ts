@@ -29,7 +29,7 @@ const serviceAccount = require("../flows-app-staging-key.json");
 
 const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
-const ROW_GROUP_BY_KEY = "g3:B01 Pharmacy name";
+const ROW_GROUP_BY_KEY = "Pharmacy Name FULL";
 const RECORD_ID_FIELD = "meta:instanceID";
 
 const TASKS_LOOP_PAGE_SIZE = 100;
@@ -328,7 +328,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         entries: patients,
         createdAt: Date.now(),
         site: {
-          name: pharm.values[0]["g3:B01 Pharmacy name"]
+          name: pharm.values[0]["Pharmacy Name FULL"]
         }
       };
       const record: TaskChangeRecord = {
