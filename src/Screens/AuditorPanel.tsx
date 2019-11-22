@@ -2,16 +2,15 @@ import moment from "moment";
 import React from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
-import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import DataTable from "../Components/DataTable";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import {
-  formatCurrency,
   getPatientHistories,
   getPharmacyClaims,
   PatientHistory
@@ -23,17 +22,6 @@ import { DetailsComponentProps } from "./TaskPanel";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
-const PATIENT_HISTORY_TABLE_COLUMNS = [
-  { Header: "Task ID", accessor: "taskId", minWidth: 90 },
-  { Header: "Date", accessor: "date", minWidth: 70 },
-  {
-    Header: "Total Amount",
-    id: "totalAmount",
-    accessor: (row: any) => formatCurrency(row.totalAmount),
-    minWidth: 60
-  },
-  { Header: "Number of Claims", accessor: "claimCount", minWidth: 70 }
-];
 
 export interface TaskTotal {
   total: number;
@@ -238,12 +226,7 @@ export class AuditorDetails extends React.Component<
         {patient.history && patient.history.tasks.length > 0 && (
           <React.Fragment>
             <div>Previous claims from this patient:</div>
-            <ReactTable
-              data={patient.history.tasks}
-              columns={PATIENT_HISTORY_TABLE_COLUMNS}
-              minRows={0}
-              showPagination={false}
-            />
+            <DataTable data={patient.history.tasks} />
           </React.Fragment>
         )}
       </LabelWrapper>

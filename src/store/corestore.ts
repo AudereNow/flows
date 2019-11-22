@@ -354,7 +354,7 @@ export interface PatientHistory {
   tasks: {
     taskId: string;
     date: string;
-    totalAmount: number;
+    totalAmount: string;
     claimCount: number;
   }[];
 }
@@ -401,7 +401,6 @@ export async function getPatientHistories(patientIds: string[]) {
       ))
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 5);
-      console.log(tasks.map(t => t.createdAt));
       const history = tasks.map(task => {
         const entries = task.entries.filter(
           entry => entry.patientID === patient.id
@@ -412,7 +411,7 @@ export async function getPatientHistories(patientIds: string[]) {
         return {
           taskId: task.id,
           date: new Date(task.createdAt).toLocaleDateString(),
-          totalAmount: sum,
+          totalAmount: formatCurrency(sum),
           claimCount: entries.length
         };
       });
