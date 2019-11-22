@@ -5,6 +5,7 @@ import "react-dates/lib/css/_datepicker.css";
 import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import ClaimNotes from "../Components/ClaimNotes";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -185,7 +186,7 @@ export class AuditorDetails extends React.Component<
     return claimImages;
   };
 
-  _renderPatientDetails = (patient: PatientInfo) => {
+  _renderPatientDetails = (patient: PatientInfo, taskId: string) => {
     const { searchTermDetails, showImages } = this.state;
     let patientProps = [];
     const entry = patient.currentClaims[0];
@@ -233,8 +234,14 @@ export class AuditorDetails extends React.Component<
               showImages={showImages}
               images={this._extractImages(claim)}
             />
+            <ClaimNotes
+              claimIndex={index}
+              task={this.props.task}
+              notes={claim.notes || ""}
+            />
           </React.Fragment>
         ))}
+
         {patient.history && patient.history.tasks.length > 0 && (
           <React.Fragment>
             <div>Previous claims from this patient:</div>
@@ -294,7 +301,9 @@ export class AuditorDetails extends React.Component<
             placeholder="Filter Claims"
           />
         </div>
-        {patients.map(this._renderPatientDetails)}
+        {patients.map(patient => {
+          return this._renderPatientDetails(patient, task.id);
+        })}
         {remaining > 0 && (
           <div className="mainview_button_row">
             <Button
@@ -309,7 +318,9 @@ export class AuditorDetails extends React.Component<
           showAllEntries &&
           this.state.patients
             .slice(this.state.numPatients, task.entries.length)
-            .map(this._renderPatientDetails)}
+            .map(patient => {
+              return this._renderPatientDetails(patient, task.id);
+            })}
         {notesux}
         {this.props.children}
       </LabelWrapper>

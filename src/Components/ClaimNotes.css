@@ -1,0 +1,9 @@
+.claimnotes_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.claimnotes_textarea {
+  border: 1px solid black;
+}

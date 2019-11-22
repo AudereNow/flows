@@ -62,6 +62,7 @@ export type ClaimEntry = {
   photoMedBatchUri?: string;
   timestamp: number;
   reviewed?: boolean;
+  notes?: string;
 };
 
 export type TaskChangeRecord = {
