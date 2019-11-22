@@ -394,11 +394,14 @@ export async function getPatientHistories(patientIds: string[]) {
   const patientHistories: { [id: string]: PatientHistory } = {};
   await Promise.all(
     patients.map(async patient => {
-      const tasks = await getAllDocsIn<Task>(
+      const tasks = (await getAllDocsIn<Task>(
         TASKS_COLLECTION,
         "id",
         patient.taskIds
-      );
+      ))
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 5);
+      console.log(tasks.map(t => t.createdAt));
       const history = tasks.map(task => {
         const entries = task.entries.filter(
           entry => entry.patientID === patient.id
