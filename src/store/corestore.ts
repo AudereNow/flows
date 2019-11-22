@@ -406,20 +406,9 @@ export async function getPatientHistories(patientIds: string[]) {
         const sum = entries
           .map(entry => entry.claimedCost)
           .reduce((a, b) => a + b, 0);
-        const timestamps = entries.map(entry => entry.timestamp).sort();
-        const date =
-          timestamps.length === 0
-            ? task.updatedAt
-              ? new Date(task.updatedAt).toLocaleDateString()
-              : ""
-            : entries.length === 1
-            ? new Date(timestamps[0]).toLocaleDateString()
-            : `${new Date(timestamps[0]).toLocaleDateString()} - ${new Date(
-                timestamps[timestamps.length - 1]
-              ).toLocaleDateString()}`;
         return {
           taskId: task.id,
-          date,
+          date: new Date(task.createdAt).toLocaleDateString(),
           totalAmount: sum,
           claimCount: entries.length
         };
