@@ -359,27 +359,46 @@ export interface PatientHistory {
   }[];
 }
 
-export async function getPatientHistories(patientIds: string[]) {
-  const patients = (await Promise.all(
-    new Array(Math.round(patientIds.length / 10) + 1).fill(0).map(
+async function getAllDocsIn<T>(
+  collection: string,
+  attribute: string,
+  attributeValues: string[]
+) {
+  if (attributeValues.length === 0) {
+    return [];
+  }
+
+  return (await Promise.all(
+    new Array(Math.floor((attributeValues.length - 1) / 10) + 1).fill(0).map(
       async (_, index) =>
         (await firebase
           .firestore()
-          .collection(PATIENTS_COLLECTION)
-          //@ts-ignore
-          .where("id", "in", patientIds.slice(index * 10, (index + 1) * 10))
-          .get()).docs.map((doc: any) => doc.data()) as Patient[]
+          .collection(collection)
+          .where(
+            attribute,
+            //@ts-ignore
+            "in",
+            attributeValues.slice(index * 10, (index + 1) * 10)
+          )
+          .get()).docs.map((doc: any) => doc.data()) as T[]
     )
   )).reduce((a, b) => a.concat(b), []);
+}
+
+export async function getPatientHistories(patientIds: string[]) {
+  const patients = await getAllDocsIn<Patient>(
+    PATIENTS_COLLECTION,
+    "id",
+    patientIds
+  );
   const patientHistories: { [id: string]: PatientHistory } = {};
   await Promise.all(
     patients.map(async patient => {
-      const tasks = (await firebase
-        .firestore()
-        .collection(TASKS_COLLECTION)
-        //@ts-ignore
-        .where("id", "in", patient.taskIds)
-        .get()).docs.map((doc: any) => doc.data()) as Task[];
+      const tasks = await getAllDocsIn<Task>(
+        TASKS_COLLECTION,
+        "id",
+        patient.taskIds
+      );
       const history = tasks.map(task => {
         const entries = task.entries.filter(
           entry => entry.patientID === patient.id
