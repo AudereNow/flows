@@ -21,6 +21,9 @@ service cloud.firestore {
     match /patients/{id} {
       allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
     }
+    match /canned_notes/{category} {
+      allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
+    }
     match /metadata/remoteConfig {
       allow read: if true;
     }

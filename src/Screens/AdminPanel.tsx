@@ -4,6 +4,7 @@ import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
 import Button from "../Components/Button";
+import CannedNotesEditor from "../Components/CannedNotesEditor";
 import SearchableTable from "../Components/SearchableTable";
 import { TaskChangeRecord, UserRole } from "../sharedtypes";
 import {
@@ -247,6 +248,7 @@ class AdminPanel extends React.Component<Props, State> {
           <TabList>
             <Tab>History</Tab>
             <Tab>User Roles</Tab>
+            <Tab>Canned Responses</Tab>
             <Tab>Advanced</Tab>
           </TabList>
           <TabPanel>
@@ -269,6 +271,16 @@ class AdminPanel extends React.Component<Props, State> {
               {this._renderRoles()}
               <input type="submit" value="Submit" />
             </form>
+          </TabPanel>
+          <TabPanel>
+            <div>
+              <div>Edit Canned Claim Notes:</div>
+              <CannedNotesEditor categoryName="claim" />
+            </div>
+            <div>
+              <div>Edit Canned Task Notes:</div>
+              <CannedNotesEditor categoryName="task" />
+            </div>
           </TabPanel>
           <TabPanel>
             <div>
