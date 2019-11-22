@@ -237,7 +237,7 @@ export class AuditorDetails extends React.Component<
         ))}
         {patient.history && patient.history.tasks.length > 0 && (
           <React.Fragment>
-            <div>Previous Claims:</div>
+            <div>Previous claims from this patient:</div>
             <ReactTable
               data={patient.history.tasks}
               columns={PATIENT_HISTORY_TABLE_COLUMNS}
