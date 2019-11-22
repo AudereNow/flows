@@ -63,6 +63,7 @@ export type ClaimEntry = {
   timestamp: number;
   reviewed?: boolean;
   notes?: string;
+  rejected?: boolean;
 };
 
 export type TaskChangeRecord = {

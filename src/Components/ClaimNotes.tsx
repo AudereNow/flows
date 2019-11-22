@@ -28,6 +28,7 @@ class ClaimNotes extends React.Component<Props, State> {
     const { notes } = this.state;
     const { claimIndex, task } = this.props;
     await setClaimNotes(task, claimIndex, notes);
+    this.setState({ editing: false });
   };
 
   _onEdit = () => {

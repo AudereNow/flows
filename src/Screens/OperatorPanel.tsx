@@ -1,6 +1,7 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import ClaimNotes from "../Components/ClaimNotes";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -53,7 +54,7 @@ export class OperatorDetails extends React.Component<
     this.setState({ showImages: !this.state.showImages });
   };
 
-  _renderClaimEntryDetails = (entry: ClaimEntry) => {
+  _renderClaimEntryDetails = (entry: ClaimEntry, claimIndex: number) => {
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -83,6 +84,11 @@ export class OperatorDetails extends React.Component<
           showImages={this.state.showImages}
           images={this._extractImages(entry)}
         />
+        <ClaimNotes
+          claimIndex={claimIndex}
+          task={this.props.task}
+          notes={entry.notes || ""}
+        />
       </LabelWrapper>
     );
   };
@@ -98,7 +104,9 @@ export class OperatorDetails extends React.Component<
             />
           </div>
         </PharmacyInfo>
-        {this.props.task.entries.map(this._renderClaimEntryDetails)}
+        {this.props.task.entries.map((entry, index) => {
+          return this._renderClaimEntryDetails(entry, index);
+        })}
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>

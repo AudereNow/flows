@@ -103,6 +103,7 @@ class ConfigurablePayorDetails extends React.Component<
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
+      row["Notes"] = entry.notes;
       cleanedData.push(row);
     });
 
