@@ -21,6 +21,7 @@ import {
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
   changeTaskState,
+  getNotes,
   getChanges,
   getPharmacyDetails,
   getUserEmail,
@@ -71,6 +72,7 @@ type State = {
   showSearch: boolean;
   notes: string;
   disableOwnersFilter: boolean;
+  cannedTaskNotes?: string[];
 };
 
 class TaskPanel extends React.Component<Props, State> {
@@ -97,6 +99,9 @@ class TaskPanel extends React.Component<Props, State> {
       this._onTasksChanged
     );
     this.props.registerForTabSelectCallback(this._onTabSelect);
+    this.setState({
+      cannedTaskNotes: await getNotes("task")
+    });
   }
 
   componentWillUnmount() {
@@ -465,6 +470,7 @@ class TaskPanel extends React.Component<Props, State> {
           actionable={actionable}
           notes={notes}
           onNotesChanged={this._onNotesChanged}
+          cannedNotes={this.state.cannedTaskNotes}
         />
       ) : null;
 

@@ -459,6 +459,15 @@ export function saveNotes(categoryName: string, notes: string[]) {
     .set({ notes });
 }
 
+export async function getNotes(categoryName: string): Promise<string[]> {
+  const data = (await firebase
+    .firestore()
+    .collection(CANNED_NOTES_COLLECTION)
+    .doc(categoryName)
+    .get()).data();
+  return data ? data.notes : [];
+}
+
 export function subscribeToNotes(
   categoryName: string,
   callback: (notes: string[]) => void
