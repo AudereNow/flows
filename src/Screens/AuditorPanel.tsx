@@ -14,6 +14,7 @@ import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import {
   formatCurrency,
+  getPatientHistories,
   getPharmacyClaims,
   PatientHistory,
   setRejectedClaim
@@ -48,7 +49,7 @@ type State = {
   showAllEntries: boolean;
   showImages: boolean;
   numPatients: number;
-
+  patients: PatientInfo[];
   previousClaims: TaskTotal[];
 };
 
@@ -68,7 +69,8 @@ function getInitialState(props: DetailsComponentProps): State {
     numPatients: Math.max(
       Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
       MIN_SAMPLES
-    )
+    ),
+    patients
   };
 }
 
@@ -82,7 +84,7 @@ export class AuditorDetails extends React.Component<
 
   async componentDidMount() {
     this.props.registerActionCallback("approve", this._onApprove);
-    // this._loadPatientHistories();
+    this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
       this.props.task.site.name
@@ -125,7 +127,7 @@ export class AuditorDetails extends React.Component<
     const task = {
       ...this.props.task,
       entries: this.props.task.entries.map((entry, index) => {
-        const patientIndex = getPatients(this.props.task.entries).findIndex(
+        const patientIndex = this.state.patients.findIndex(
           patient => patient.patientId === entry.patientID
         );
         if (
@@ -143,23 +145,21 @@ export class AuditorDetails extends React.Component<
     return { success: true, task };
   };
 
-  // TODO: Get and set patient histories
-  // _loadPatientHistories = async () => {
-  //   const currentPatients = getPatients(this.props.task.entries);
-  //   const histories = await getPatientHistories(
-  //     currentPatients.map(patient => patient.patientId)
-  //   );
-  //   this.setState({
-  //     patients: currentpatients.map(patient => ({
-  //       ...patient,
-  //       history: {
-  //         tasks: histories[patient.patientId].tasks.filter(
-  //           task => task.taskId !== this.props.task.id
-  //         )
-  //       }
-  //     }))
-  //   });
-  // };
+  _loadPatientHistories = async () => {
+    const histories = await getPatientHistories(
+      this.state.patients.map(patient => patient.patientId)
+    );
+    this.setState({
+      patients: this.state.patients.map(patient => ({
+        ...patient,
+        history: {
+          tasks: histories[patient.patientId].tasks.filter(
+            task => task.taskId !== this.props.task.id
+          )
+        }
+      }))
+    });
+  };
 
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
@@ -191,11 +191,10 @@ export class AuditorDetails extends React.Component<
   _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
     const claimIndex = event.currentTarget.getAttribute("data-value");
-    console.log("CHECKED: ", checked, " CLAIM INDEX: ", claimIndex);
-    if (!claimIndex) return; // TODO: REMOVE
-    console.log(this.props.task.entries[parseInt(claimIndex)]);
     if (!claimIndex) return;
+
     await setRejectedClaim(this.props.task, parseInt(claimIndex), checked);
+    await this._loadPatientHistories();
   };
 
   _renderPatientDetails = (patient: PatientInfo) => {
@@ -253,7 +252,7 @@ export class AuditorDetails extends React.Component<
               notes={claim.notes || ""}
             />
             <CheckBox
-              checked={claim.rejected || false}
+              checked={claim.rejected === undefined ? false : claim.rejected}
               label={"Rejected: "}
               value={(claim as any).originalIndex}
               onCheckBoxSelect={this._toggleRejectClaim}
@@ -296,8 +295,8 @@ export class AuditorDetails extends React.Component<
     const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { task, notesux } = this.props;
     const { showImages } = this.state;
-    const patients = getPatients(task.entries).slice(0, this.state.numPatients);
-    const remaining = patients.length - this.state.numPatients;
+    const patients = this.state.patients.slice(0, this.state.numPatients);
+    const remaining = this.state.patients.length - this.state.numPatients;
 
     return (
       <LabelWrapper
@@ -335,7 +334,7 @@ export class AuditorDetails extends React.Component<
         )}
         {remaining > 0 &&
           showAllEntries &&
-          patients
+          this.state.patients
             .slice(this.state.numPatients, task.entries.length)
             .map(patient => {
               return this._renderPatientDetails(patient);
