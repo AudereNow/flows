@@ -369,7 +369,7 @@ async function getAllDocsIn<T>(
   }
 
   return (await Promise.all(
-    new Array(Math.floor((attributeValues.length - 1) / 10) + 1).fill(0).map(
+    new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
       async (_, index) =>
         (await firebase
           .firestore()
