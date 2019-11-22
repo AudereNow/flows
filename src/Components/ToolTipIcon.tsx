@@ -4,6 +4,7 @@ import "./ToolTipIcon.css";
 interface Props {
   label: string;
   tooltip: string;
+  iconClassName?: string;
 }
 
 export const ToolTipIcon = (props: Props) => {
@@ -14,7 +15,9 @@ export const ToolTipIcon = (props: Props) => {
       onMouseEnter={() => setHidden(false)}
       onMouseLeave={() => setHidden(true)}
     >
-      <span className="tooltipicon_label">{props.label}</span>
+      <span className={`tooltipicon_label ${props.iconClassName}`}>
+        {props.label}
+      </span>
       {!hidden && <div className="tooltipicon_tooltip">{props.tooltip}</div>}
     </div>
   );

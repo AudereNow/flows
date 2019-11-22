@@ -7,8 +7,8 @@ import { HistoryRow } from "../Screens/AdminPanel";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
-import CheckBox from "./CheckBox";
 import "./SearchableTable.css";
+import { ToolTipIcon } from "./ToolTipIcon";
 
 type Props = {
   tableColumns: any[];
@@ -19,41 +19,25 @@ type State = {
   allData: any[];
   data: any[];
   searchTerm: string;
-  filters: {};
 };
 
 class SearchableTable extends React.Component<Props, State> {
   state: State = {
     allData: this.props.allData,
     data: this.props.allData,
-    filters: {},
     searchTerm: ""
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
   _computeFilteredChanges = (searchTerm: string) => {
-    const { filters } = this.state;
-
     return this.state.allData.filter(row => {
-      return containsSearchTerm(searchTerm, row, filters);
-    });
-  };
-
-  _onCheckBoxSelect = (event: React.MouseEvent<HTMLDivElement>) => {
-    const name = event.currentTarget.attributes.getNamedItem("data-value")!
-      .value;
-
-    let filters = this.state.filters;
-    (filters as any)[name] = !(filters as any)[name];
-    this.setState({ filters }, () => {
-      this._handleSearchChange(this.state.searchTerm);
+      return containsSearchTerm(searchTerm, row);
     });
   };
 
   _clearSearch = () => {
     this._inputRef.current!.value = "";
     this.setState({
-      filters: {},
       searchTerm: "",
       data: this.state.allData
     });
@@ -100,6 +84,13 @@ class SearchableTable extends React.Component<Props, State> {
         <div className="searchabletable_checkbox_row">
           <div className="searchabletable_checkbox_search">
             <div>
+              <ToolTipIcon
+                label={"ⓘ"}
+                iconClassName="tooltipicon_information"
+                tooltip={
+                  "Available search keys: 'id', 'time', 'description', 'notes'. Example query: id:xvc, time:11/24"
+                }
+              />
               <input
                 ref={this._inputRef}
                 type="text"
@@ -107,19 +98,6 @@ class SearchableTable extends React.Component<Props, State> {
               />
               <Button onClick={this._clearSearch} label="Clear Search" />
             </div>
-            {tableColumns.map((column, index) => {
-              return (
-                <CheckBox
-                  key={column.accessor + column.Header + index}
-                  label={column.Header}
-                  value={column.accessor}
-                  checked={
-                    (this.state.filters as any)[column.accessor] || false
-                  }
-                  onCheckBoxSelect={this._onCheckBoxSelect}
-                />
-              );
-            })}
             <Button onClick={this._downloadCSV} label="Download CSV" />
           </div>
         </div>

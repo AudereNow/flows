@@ -1,96 +1,64 @@
 import moment, { Moment } from "moment";
-import {
-  ChangeRowFilters,
-  ClaimEntryFilters,
-  SiteFilters
-} from "../Screens/TaskPanel";
 
 export interface DateRange {
   startDate: Moment | null;
   endDate: Moment | null;
 }
 
-function isClaimEntry(entry: any) {
-  return entry.hasOwnProperty("patientFirstName");
-}
-
-function isChangeRow(entry: any) {
-  return entry.hasOwnProperty("taskID");
-}
-
-const DEFAULT_CLAIM_ENTRY_FILTERS = {
-  patient: true,
-  name: true,
-  patientID: true,
-  item: true
-};
-
-const DEFAULT_CHANGE_ROW_FILTERS = {
-  taskID: true,
-  timestamp: true,
-  description: true,
-  notes: true
-};
-
-const DEFAULT_SITE_FILTERS = {
-  name: true
-};
+const DEFAULT_FILTERS_ENTRY = ["patient", "item", "pharmacy"];
+const DEFAULT_FILTERS_HISTORY = ["id", "time", "description", "notes"];
 
 export const containsSearchTerm = (
   searchPhrase: string,
-  entry: any,
-  filters?: ClaimEntryFilters | ChangeRowFilters | SiteFilters
+  entry: any
 ): boolean => {
   if (searchPhrase === "") {
     return true;
   }
 
-  if (!filters || !Object.values(filters).some(value => !!value)) {
-    if (isClaimEntry(entry)) {
-      filters = DEFAULT_CLAIM_ENTRY_FILTERS;
-    } else if (isChangeRow(entry)) {
-      filters = DEFAULT_CHANGE_ROW_FILTERS;
-    } else {
-      filters = DEFAULT_SITE_FILTERS;
-    }
-  }
-
-  let entryCopy = Object.assign({}, entry);
-
   if (entry.hasOwnProperty("patientFirstName")) {
-    entryCopy.patient = `${entry.patientFirstName ||
+    (entry as any).patient = `${entry.patientFirstName ||
       ""} ${entry.patientLastName || ""} ${entry.patientAge ||
       ""} ${entry.patientSex || ""} ${entry.phone || ""}`;
   }
 
-  if (
-    entry.hasOwnProperty("timestamp") &&
-    filters.hasOwnProperty("timestamp")
-  ) {
-    const dateString = moment(entry.timestamp).fromNow();
-    if (dateString.toLowerCase().includes(searchPhrase.toLowerCase())) {
-      return true;
-    }
-  }
+  let foundCount = 0;
+  const phrases = searchPhrase.split(",");
 
-  const filterKeys = Object.keys(filters as any);
-  const lowerPhrase = searchPhrase.toLowerCase();
-
-  for (let i = 0; i < filterKeys.length; i++) {
-    const filterValue = (filters as any)[filterKeys[i]];
-    const filterKey = filterKeys[i];
-    if (
-      !!filterValue &&
-      !!entryCopy[filterKey] &&
-      entryCopy[filterKey]
-        .toString()
-        .toLowerCase()
-        .includes(lowerPhrase)
-    ) {
-      return true;
+  phrases.forEach(term => {
+    if (term.indexOf(":") > 0) {
+      const keyValue = term.split(":");
+      const key = keyValue[0].toLowerCase().trim();
+      const value = keyValue[1].toLowerCase().trim();
+      if (
+        entry[key] &&
+        entry[key]
+          .toString()
+          .toLowerCase()
+          .includes(value)
+      ) {
+        foundCount += 1;
+      }
+    } else {
+      const defaultFilters = entry.hasOwnProperty("claimedCost")
+        ? DEFAULT_FILTERS_ENTRY
+        : DEFAULT_FILTERS_HISTORY;
+      if (
+        defaultFilters.some(filter => {
+          return (
+            entry[filter] &&
+            entry[filter]
+              .toString()
+              .toLowerCase()
+              .includes(term)
+          );
+        })
+      ) {
+        foundCount += 1;
+      }
     }
-  }
-  return false;
+  });
+  return foundCount === phrases.length;
 };
 
 export const withinDateRange = (dateRange: DateRange, entry: any) => {

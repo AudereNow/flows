@@ -135,7 +135,7 @@ class ConfigurablePayorDetails extends React.Component<
           <TextItem
             data={{
               displayKey: "Phone",
-              searchKey: "phone",
+              searchKey: "pharmacy",
               value: task.site.phone
             }}
           />

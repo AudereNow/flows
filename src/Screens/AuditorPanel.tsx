@@ -1,8 +1,8 @@
 import moment from "moment";
 import React from "react";
-import ReactTable from "react-table";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
+import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
@@ -10,16 +10,16 @@ import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem, { SearchContext } from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
-import { getPharmacyClaims } from "../store/corestore";
+import {
+  formatCurrency,
+  getPatientHistories,
+  getPharmacyClaims,
+  PatientHistory
+} from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
-import {
-  formatCurrency,
-  getPatientHistories,
-  PatientHistory
-} from "../store/corestore";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -220,8 +220,8 @@ export class AuditorDetails extends React.Component<
             }}
           />
         </div>
-        {patient.currentClaims.map(claim => (
-          <React.Fragment>
+        {patient.currentClaims.map((claim, index) => (
+          <React.Fragment key={`${claim.totalCost}_${index}`}>
             <TextItem
               data={{
                 displayKey: "Date",

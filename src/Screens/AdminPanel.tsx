@@ -39,17 +39,17 @@ type State = {
 };
 
 export type HistoryRow = {
-  taskID: string;
-  timestamp: string;
+  id: string;
+  time: string;
   description: string;
   notes?: string;
 };
 
 const HISTORY_TABLE_COLUMNS = [
-  { Header: "Task ID", accessor: "taskID", minWidth: 90 },
+  { Header: "ID", accessor: "id", minWidth: 90 },
   {
     Header: "Time",
-    accessor: "timestamp",
+    accessor: "time",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
     minWidth: 60
   },
@@ -164,8 +164,8 @@ class AdminPanel extends React.Component<Props, State> {
   _recordsToChangeRows = (records: TaskChangeRecord[]): HistoryRow[] => {
     return records.map(r => {
       return {
-        taskID: r.taskID,
-        timestamp: new Date(r.timestamp).toLocaleDateString(),
+        id: r.taskID,
+        time: new Date(r.timestamp).toLocaleDateString(),
         description: !!r.fromState
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
@@ -177,8 +177,8 @@ class AdminPanel extends React.Component<Props, State> {
   _recordsToAdminLogRows = (records: any[]): HistoryRow[] => {
     return records.map(r => {
       return {
-        taskID: "",
-        timestamp: new Date(r.timestamp).toLocaleDateString(),
+        id: "",
+        time: new Date(r.timestamp).toLocaleDateString(),
         description: r.desc,
         notes: r.notes || ""
       };
