@@ -90,7 +90,7 @@ export class OperatorDetails extends React.Component<
   render() {
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo name={this.props.task.site.name}>
+        <PharmacyInfo site={this.props.task.site}>
           <div className="pharmacy_toggle_image_container">
             <Button
               onClick={this._toggleImages}
