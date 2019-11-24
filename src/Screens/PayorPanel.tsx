@@ -60,7 +60,7 @@ class ConfigurablePayorDetails extends React.Component<
     const result = await issuePayments([
       {
         name: task.site.name,
-        phoneNumber: task.site.phone || "+254739994489",
+        phoneNumber: task.site.phone,
         currencyCode: "KES",
         amount: reimburseAmount,
         reason: "PromotionPayment",
