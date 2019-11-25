@@ -4,8 +4,9 @@ import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
 import Button from "../Components/Button";
+import CheckBox from "../Components/CheckBox";
 import SearchableTable from "../Components/SearchableTable";
-import { TaskChangeRecord, UserRole } from "../sharedtypes";
+import { RemoteConfig, TaskChangeRecord, UserRole } from "../sharedtypes";
 import {
   getAdminLogs,
   getAllChanges,
@@ -14,6 +15,8 @@ import {
   updatePatientsTaskLists,
   issuePayments
 } from "../store/corestore";
+import { setConfig } from "../store/remoteconfig";
+import { configuredComponent } from "../util/configuredComponent";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -26,7 +29,9 @@ const NO_ROLES_MAP: RoleMap = {
   Admin: false
 };
 
-type Props = {};
+type Props = {
+  config: RemoteConfig;
+};
 type State = {
   allHistory: HistoryRow[];
   email: string;
@@ -64,6 +69,11 @@ const HISTORY_TABLE_COLUMNS = [
     minWidth: 200,
     style: { whiteSpace: "unset" }
   }
+];
+
+const REMOTE_CONFIG_TOGGLES: { key: keyof RemoteConfig; label: string }[] = [
+  { key: "allowDuplicateUploads", label: "Allow duplicate uploads" },
+  { key: "enableRealPayments", label: "Enable Africa's talking payments" }
 ];
 
 class AdminPanel extends React.Component<Props, State> {
@@ -238,6 +248,11 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
+  _remoteConfigToggle = async (k: string) => {
+    const key = k as keyof RemoteConfig;
+    await setConfig(key, !this.props.config[key]);
+  };
+
   render() {
     const { allHistory } = this.state;
 
@@ -271,6 +286,18 @@ class AdminPanel extends React.Component<Props, State> {
             </form>
           </TabPanel>
           <TabPanel>
+            <div>
+              <div>Config Options:</div>
+              {REMOTE_CONFIG_TOGGLES.map(toggle => (
+                <CheckBox
+                  checked={this.props.config[toggle.key]}
+                  label={toggle.label}
+                  value={toggle.key}
+                  onCheckBoxSelect={this._remoteConfigToggle}
+                  key={toggle.key}
+                />
+              ))}
+            </div>
             <div>
               <div>Issue Payment:</div>
               <input
@@ -314,4 +341,6 @@ function renderTooltippedTime(timestamp: string) {
   );
 }
 
-export default AdminPanel;
+export default configuredComponent<{}, Props>(AdminPanel, config => ({
+  config
+}));
