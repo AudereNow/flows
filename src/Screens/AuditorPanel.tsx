@@ -213,6 +213,8 @@ export class AuditorDetails extends React.Component<
     } ${patientInfo} ${entry.phone || ""}`;
 
     let checkEntry = Object.assign({}, entry, date, patient);
+    const disabledCheckbox =
+      task.state === "REJECTED" || "COMPLETED" ? true : false;
 
     if (
       !!searchTermDetails &&
@@ -250,6 +252,7 @@ export class AuditorDetails extends React.Component<
               label={"Rejected"}
               value={(claim as any).originalIndex}
               onCheckBoxSelect={this._toggleRejectClaim}
+              disabled={disabledCheckbox}
             />
             <ClaimNotes
               claimIndex={(claim as any).originalIndex}
@@ -296,6 +299,8 @@ export class AuditorDetails extends React.Component<
     const { showImages } = this.state;
     const patients = getPatients(task.entries).slice(0, this.state.numPatients);
     const remaining = this.state.patients.length - this.state.numPatients;
+
+    console.log("PROPS: ", this.props);
 
     return (
       <LabelWrapper

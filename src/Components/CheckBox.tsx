@@ -6,6 +6,7 @@ interface Props {
   checked: boolean;
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 class CheckBox extends React.Component<Props> {
@@ -21,6 +22,7 @@ class CheckBox extends React.Component<Props> {
           readOnly
           checked={checked}
           onChange={onCheckBoxSelect}
+          disabled={this.props.disabled}
         />
         <div style={{ display: "inline" }} className="checkbox_input_label">
           {label}
