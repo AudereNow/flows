@@ -79,6 +79,11 @@
   margin: 10px;
 }
 
+.mainview_instructions_header {
+  margin: 10px;
+  font-weight: bold;
+}
+
 .mainview_actions_so_far_header {
   margin-top: 12px;
   margin: 10px;
@@ -97,4 +102,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+}
+
+.mainview_instructions_edit {
+  margin: 10px;
+  width: 250px;
+  height: 100px;
 }

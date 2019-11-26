@@ -3,6 +3,7 @@ import React, { ChangeEvent } from "react";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
+import ReactMarkdown from "react-markdown";
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import SearchableTable from "../Components/SearchableTable";
@@ -41,6 +42,8 @@ type State = {
     phoneNumber?: string;
     amount?: number;
   };
+  opsInstructions?: string;
+  savingOpsInstructions: boolean;
 };
 
 export type HistoryRow = {
@@ -81,7 +84,8 @@ class AdminPanel extends React.Component<Props, State> {
     allHistory: [],
     email: "",
     roleMap: NO_ROLES_MAP,
-    paymentForm: {}
+    paymentForm: {},
+    savingOpsInstructions: false
   };
 
   _fetchedAllData = false;
@@ -248,6 +252,22 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
+  _onOpsInstructionsEdit = () => {
+    this.setState({ opsInstructions: this.props.config.opsInstructions });
+  };
+
+  _onOpsInstructionsChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    this.setState({ opsInstructions: event.target.value });
+  };
+
+  _onOpsInstructionsSave = async () => {
+    this.setState({ savingOpsInstructions: true });
+    await setConfig("opsInstructions", this.state.opsInstructions || "");
+    this.setState({ savingOpsInstructions: false, opsInstructions: undefined });
+  };
+
   _remoteConfigToggle = async (e: ChangeEvent<HTMLInputElement>) => {
     const key = e.currentTarget.getAttribute(
       "data-value"
@@ -263,6 +283,7 @@ class AdminPanel extends React.Component<Props, State> {
         <Tabs>
           <TabList>
             <Tab>History</Tab>
+            <Tab>Instructions</Tab>
             <Tab>User Roles</Tab>
             <Tab>Advanced</Tab>
           </TabList>
@@ -274,6 +295,38 @@ class AdminPanel extends React.Component<Props, State> {
                 tableColumns={HISTORY_TABLE_COLUMNS}
               />
             )}
+          </TabPanel>
+          <TabPanel>
+            <div>Instructions for secondary review:</div>
+            {this.state.opsInstructions !== undefined && (
+              <div>
+                <textarea
+                  defaultValue={this.props.config.opsInstructions}
+                  onChange={this._onOpsInstructionsChange}
+                  className="mainview_instructions_edit"
+                />
+              </div>
+            )}
+            <div>
+              <ReactMarkdown
+                source={
+                  this.state.opsInstructions !== undefined
+                    ? this.state.opsInstructions
+                    : this.props.config.opsInstructions
+                }
+              />
+            </div>
+            <div>
+              {this.state.opsInstructions === undefined ? (
+                <Button label="Edit" onClick={this._onOpsInstructionsEdit} />
+              ) : (
+                <Button
+                  label="Save"
+                  onClick={this._onOpsInstructionsSave}
+                  disabled={this.state.savingOpsInstructions}
+                />
+              )}
+            </div>
           </TabPanel>
           <TabPanel>
             <form onSubmit={this._setUserRoles}>
@@ -292,7 +345,7 @@ class AdminPanel extends React.Component<Props, State> {
               <div>Config Options:</div>
               {REMOTE_CONFIG_TOGGLES.map(toggle => (
                 <CheckBox
-                  checked={this.props.config[toggle.key]}
+                  checked={!!this.props.config[toggle.key]}
                   label={toggle.label}
                   value={toggle.key}
                   onCheckBoxSelect={this._remoteConfigToggle}
