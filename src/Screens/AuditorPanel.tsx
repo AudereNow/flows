@@ -194,7 +194,6 @@ export class AuditorDetails extends React.Component<
     if (!claimIndex) return;
 
     await setRejectedClaim(this.props.task, parseInt(claimIndex), checked);
-    await this._loadPatientHistories();
   };
 
   _renderPatientDetails = (patient: PatientInfo) => {
@@ -246,16 +245,16 @@ export class AuditorDetails extends React.Component<
               showImages={showImages}
               images={this._extractImages(claim)}
             />
+            <CheckBox
+              checked={claim.rejected === undefined ? false : claim.rejected}
+              label={"Rejected"}
+              value={(claim as any).originalIndex}
+              onCheckBoxSelect={this._toggleRejectClaim}
+            />
             <ClaimNotes
               claimIndex={(claim as any).originalIndex}
               task={task}
               notes={claim.notes || ""}
-            />
-            <CheckBox
-              checked={claim.rejected === undefined ? false : claim.rejected}
-              label={"Rejected: "}
-              value={(claim as any).originalIndex}
-              onCheckBoxSelect={this._toggleRejectClaim}
             />
           </React.Fragment>
         ))}
@@ -295,7 +294,7 @@ export class AuditorDetails extends React.Component<
     const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { task, notesux } = this.props;
     const { showImages } = this.state;
-    const patients = this.state.patients.slice(0, this.state.numPatients);
+    const patients = getPatients(task.entries).slice(0, this.state.numPatients);
     const remaining = this.state.patients.length - this.state.numPatients;
 
     return (

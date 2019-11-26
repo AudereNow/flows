@@ -1,12 +1,14 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import CheckBox from "../Components/CheckBox";
 import ClaimNotes from "../Components/ClaimNotes";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
+import { setRejectedClaim } from "../store/corestore";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
 
@@ -54,6 +56,14 @@ export class OperatorDetails extends React.Component<
     this.setState({ showImages: !this.state.showImages });
   };
 
+  _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    const claimIndex = event.currentTarget.getAttribute("data-value");
+    if (!claimIndex) return;
+
+    await setRejectedClaim(this.props.task, parseInt(claimIndex), checked);
+  };
+
   _renderClaimEntryDetails = (entry: ClaimEntry, claimIndex: number) => {
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -83,6 +93,12 @@ export class OperatorDetails extends React.Component<
         <ImageRow
           showImages={this.state.showImages}
           images={this._extractImages(entry)}
+        />
+        <CheckBox
+          checked={entry.rejected === undefined ? false : entry.rejected}
+          label={"Rejected"}
+          value={claimIndex.toString()}
+          onCheckBoxSelect={this._toggleRejectClaim}
         />
         <ClaimNotes
           claimIndex={claimIndex}

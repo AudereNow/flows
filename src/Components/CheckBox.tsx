@@ -14,6 +14,7 @@ class CheckBox extends React.Component<Props> {
     return (
       <Fragment>
         <input
+          style={{ display: "inline" }}
           data-value={value}
           type="checkbox"
           name={label}
@@ -21,7 +22,9 @@ class CheckBox extends React.Component<Props> {
           checked={checked}
           onChange={onCheckBoxSelect}
         />
-        <div className="checkbox_input_label">{label}</div>
+        <div style={{ display: "inline" }} className="checkbox_input_label">
+          {label}
+        </div>
       </Fragment>
     );
   }
