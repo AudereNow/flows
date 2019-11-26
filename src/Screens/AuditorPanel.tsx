@@ -1,3 +1,4 @@
+import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React, { ChangeEvent } from "react";
 import "react-dates/initialize";
@@ -292,6 +293,40 @@ export class AuditorDetails extends React.Component<
     this.setState({ showImages: !this.state.showImages });
   };
 
+  _downloadPharmacyReport = () => {
+    const { task } = this.props;
+
+    let rows: any[] = [];
+
+    task.entries.forEach(entry => {
+      rows.push({
+        date: new Date(entry.timestamp).toLocaleDateString(),
+        first: entry.patientFirstName,
+        last: entry.patientLastName,
+        id: entry.patientID,
+        sex: entry.patientSex,
+        phone: entry.phone,
+        item: entry.item,
+        "claimed cost": entry.claimedCost,
+        notes: (entry as any).notes || "",
+        rejected: (entry as any).rejected || false
+      });
+    });
+
+    json2csv(rows, (err, csv) => {
+      if (!csv || err) {
+        alert("Something went wrong when trying to download your csv");
+      }
+
+      const dataString = "data:text/csv;charset=utf-8," + csv;
+      const encodedURI = encodeURI(dataString);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedURI);
+      link.setAttribute("download", `${task.site.name}.csv`);
+      link.click();
+    });
+  };
+
   render() {
     const { searchTermGlobal } = this.context;
     const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
@@ -313,6 +348,10 @@ export class AuditorDetails extends React.Component<
           site={task.site}
           claimCount={task.entries.length}
           showPreviousClaims={this.props.showPreviousClaims}
+        />
+        <Button
+          label="Download Pharmacy Report"
+          onClick={this._downloadPharmacyReport}
         />
         <div className="mainview_spaced_row">
           <input
