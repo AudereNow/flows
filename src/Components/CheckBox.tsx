@@ -2,24 +2,32 @@ import React from "react";
 import "./CheckBox.css";
 
 interface Props {
-  onCheckBoxSelect: (event: React.MouseEvent<HTMLDivElement>) => void;
+  onCheckBoxSelect: (value: string) => void;
   checked: boolean;
   label: string;
   value: string;
 }
 
-const CheckBox = (props: Props) => {
-  const { checked, onCheckBoxSelect, label, value } = props;
-  return (
-    <div
-      className="checkbox_container"
-      data-value={value}
-      onClick={onCheckBoxSelect}
-    >
-      <input type="checkbox" name={label} readOnly checked={checked} />
-      <div className="checkbox_input_label">{label}</div>
-    </div>
-  );
-};
+class CheckBox extends React.Component<Props> {
+  _onClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    this.props.onCheckBoxSelect(
+      event.currentTarget.attributes.getNamedItem("data-value")!.value
+    );
+  };
+
+  render() {
+    const { checked, label, value } = this.props;
+    return (
+      <div
+        className="checkbox_container"
+        data-value={value}
+        onClick={this._onClick}
+      >
+        <input type="checkbox" name={label} readOnly checked={checked} />
+        <div className="checkbox_input_label">{label}</div>
+      </div>
+    );
+  }
+}
 
 export default CheckBox;
