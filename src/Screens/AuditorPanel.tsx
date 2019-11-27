@@ -283,7 +283,7 @@ export class AuditorDetails extends React.Component<
           showImages={showImages}
           onToggleImages={this._toggleImages}
           previousClaims={this.state.previousClaims}
-          name={task.site.name}
+          site={task.site}
           claimCount={task.entries.length}
           showPreviousClaims={this.props.showPreviousClaims}
         />

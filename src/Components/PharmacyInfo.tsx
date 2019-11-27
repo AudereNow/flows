@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { TaskTotal } from "../Screens/AuditorPanel";
-import { Pharmacy } from "../sharedtypes";
+import { Pharmacy, Site } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails
@@ -17,7 +17,7 @@ const DEFAULT_PHARMACY: Pharmacy = {
 };
 
 interface Props {
-  name: string;
+  site: Site;
   onToggleImages?: () => void;
   showImages?: boolean;
   previousClaims?: TaskTotal[];
@@ -40,7 +40,7 @@ class PharmacyInfo extends React.Component<Props, State> {
 
   componentDidMount() {
     this._unsubscribe = subscribeToPharmacyDetails(
-      this.props.name,
+      this.props.site.name,
       pharmacy => {
         if (pharmacy === undefined) {
           pharmacy = DEFAULT_PHARMACY;
@@ -51,8 +51,8 @@ class PharmacyInfo extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.name !== this.props.name) {
-      subscribeToPharmacyDetails(this.props.name, pharmacy => {
+    if (prevProps.site.name !== this.props.site.name) {
+      subscribeToPharmacyDetails(this.props.site.name, pharmacy => {
         if (pharmacy === undefined) {
           pharmacy = DEFAULT_PHARMACY;
         }
@@ -77,7 +77,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.name, {
+    await setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       notes: this.state.editedNotes || ""
     });
@@ -102,7 +102,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.name, {
+    await setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       owners: (this.state.editedOwners || "")
         .split(",")
@@ -133,7 +133,14 @@ class PharmacyInfo extends React.Component<Props, State> {
             data={{
               displayKey: "Pharmacy",
               searchKey: "name",
-              value: this.props.name
+              value: this.props.site.name
+            }}
+          />
+          <TextItem
+            data={{
+              displayKey: "Phone Number",
+              searchKey: "phone",
+              value: this.props.site.phone
             }}
           />
           {this.state.pharmacy && (

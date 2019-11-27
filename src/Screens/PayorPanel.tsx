@@ -60,7 +60,7 @@ class ConfigurablePayorDetails extends React.Component<
     const result = await issuePayments([
       {
         name: task.site.name,
-        phoneNumber: task.site.phone || "+254739994489",
+        phoneNumber: task.site.phone,
         currencyCode: "KES",
         amount: reimburseAmount,
         reason: "PromotionPayment",
@@ -84,10 +84,9 @@ class ConfigurablePayorDetails extends React.Component<
 
   _toggleShowPreviousClaims = () => {
     if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
-      loadPreviousTasks(
-        this.props.task.site.name,
-        this.props.task.id
-      ).then(relatedTasks => this.setState({ relatedTasks }));
+      loadPreviousTasks(this.props.task.site.name, this.props.task.id).then(
+        relatedTasks => this.setState({ relatedTasks })
+      );
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
@@ -130,7 +129,7 @@ class ConfigurablePayorDetails extends React.Component<
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo name={task.site.name} />
+        <PharmacyInfo site={task.site} />
         {!!task.site.phone && (
           <TextItem
             data={{

@@ -44,7 +44,7 @@ export enum UserRole {
 
 export type Site = {
   name: string;
-  phone?: string;
+  phone: string;
 };
 
 export type ClaimEntry = {
