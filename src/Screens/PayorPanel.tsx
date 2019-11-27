@@ -1,7 +1,7 @@
-import React, { Fragment } from "react";
+import React from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
+import ExpandableDiv from "../Components/ExpandableDiv";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
@@ -30,16 +30,13 @@ interface RemoteProps {
 }
 interface State {
   relatedTasks?: Task[];
-  showPreviousClaims: boolean;
 }
 
 class ConfigurablePayorDetails extends React.Component<
   DetailsComponentProps & RemoteProps,
   State
 > {
-  state: State = {
-    showPreviousClaims: false
-  };
+  state: State = {};
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
@@ -83,12 +80,12 @@ class ConfigurablePayorDetails extends React.Component<
   };
 
   _toggleShowPreviousClaims = () => {
-    if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
-      loadPreviousTasks(this.props.task.site.name, this.props.task.id).then(
-        relatedTasks => this.setState({ relatedTasks })
-      );
+    if (!this.state.relatedTasks) {
+      loadPreviousTasks(
+        this.props.task.site.name,
+        this.props.task.id
+      ).then(relatedTasks => this.setState({ relatedTasks }));
     }
-    this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   render() {
@@ -153,24 +150,12 @@ class ConfigurablePayorDetails extends React.Component<
           }}
         />
         <DataTable data={cleanedData} />
-        {rejectedData.length > 0 && (
-          <Fragment>
-            <span>
-              <b>Rejected Claims</b>
-            </span>
-            <DataTable data={rejectedData} />
-          </Fragment>
-        )}
-        <Button
-          label={
-            this.state.showPreviousClaims
-              ? "Hide Previous Claims ▲"
-              : "Show Previous Claims ▼"
-          }
-          onClick={this._toggleShowPreviousClaims}
-        />
-        {this.state.showPreviousClaims &&
-          (relatedTaskRows ? (
+
+        <ExpandableDiv
+          label="Previous Tasks"
+          onExpand={this._toggleShowPreviousClaims}
+        >
+          {relatedTaskRows ? (
             relatedTaskRows.length ? (
               <DataTable data={relatedTaskRows} />
             ) : (
@@ -178,7 +163,8 @@ class ConfigurablePayorDetails extends React.Component<
             )
           ) : (
             <div className="mainview_details_text">Loading...</div>
-          ))}
+          )}
+        </ExpandableDiv>
         {notesux}
         {this.props.children}
       </LabelWrapper>

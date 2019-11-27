@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { TaskTotal } from "../Screens/AuditorPanel";
 import { Pharmacy, Site } from "../sharedtypes";
 import {
@@ -7,6 +7,7 @@ import {
 } from "../store/corestore";
 import Button from "./Button";
 import DataTable from "./DataTable";
+import ExpandableDiv from "./ExpandableDiv";
 import "./PharmacyInfo.css";
 import TextItem from "./TextItem";
 import { ToolTipIcon } from "./ToolTipIcon";
@@ -213,11 +214,8 @@ class PharmacyInfo extends React.Component<Props, State> {
         </div>
         <div className="pharmacy_half">
           {!!previousClaims && !!showPreviousClaims && (
-            <Fragment>
+            <ExpandableDiv label="Previous Claims by Pharmacy">
               <div className="pharmacy_claims_header">
-                <span className="pharmacy_claims_header_text">
-                  Previous Claims
-                </span>
                 {!!showIncreaseWarning && (
                   <ToolTipIcon
                     label={"⚠"}
@@ -226,7 +224,7 @@ class PharmacyInfo extends React.Component<Props, State> {
                 )}
               </div>
               <DataTable data={previousClaims} />
-            </Fragment>
+            </ExpandableDiv>
           )}
         </div>
       </div>
