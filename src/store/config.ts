@@ -1,3 +1,5 @@
+import ApproveImg from "../assets/approve.png";
+import DeclineImg from "../assets/decline.png";
 import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
 
 interface TabConfig {
@@ -11,6 +13,9 @@ interface CustomPanelConfig extends TabConfig {
 
 export interface ActionConfig {
   label: string;
+  labelClassName?: string;
+  labelImg?: string;
+  postLabelElement?: JSX.Element;
   nextTaskState: TaskState;
   enableOnConfig?: keyof RemoteConfig;
   disableOnConfig?: keyof RemoteConfig;
@@ -49,12 +54,16 @@ export const defaultConfig: AppConfig = {
       showPreviousClaims: true,
       actions: {
         decline: {
-          label: "Decline",
-          nextTaskState: TaskState.FOLLOWUP
+          label: "DECLINE",
+          nextTaskState: TaskState.FOLLOWUP,
+          labelClassName: "mainview_decline_button",
+          labelImg: DeclineImg
         },
         approve: {
-          label: "Approve",
-          nextTaskState: TaskState.PAY
+          label: "APPROVE",
+          nextTaskState: TaskState.PAY,
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg
         }
       }
     },
@@ -67,16 +76,21 @@ export const defaultConfig: AppConfig = {
       baseUrl: "payor",
       actions: {
         decline: {
-          label: "Decline Payment",
+          label: "DECLINE PAYMENT",
+          labelClassName: "mainview_decline_button",
+          labelImg: DeclineImg,
           nextTaskState: TaskState.FOLLOWUP
         },
         approve: {
-          label: "Issue Payment",
+          label: "ISSUE PAYMENT",
           nextTaskState: TaskState.COMPLETED,
+          labelImg: ApproveImg,
           enableOnConfig: "enableRealPayments"
         },
         markApprove: {
-          label: "Mark Paid",
+          label: "MARK PAID",
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg,
           nextTaskState: TaskState.COMPLETED,
           disableOnConfig: "enableRealPayments"
         }
@@ -92,16 +106,21 @@ export const defaultConfig: AppConfig = {
       filterByOwners: true,
       actions: {
         decline: {
-          label: "Reject",
-          nextTaskState: TaskState.REJECTED
+          label: "REJECT",
+          labelImg: DeclineImg,
+          nextTaskState: TaskState.REJECTED,
+          labelClassName: "mainview_decline_button"
         },
         approve: {
-          label: "Approve for Payment",
-          nextTaskState: TaskState.PAY
+          label: "APPROVE FOR PAYMENT",
+          nextTaskState: TaskState.PAY,
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg
         },
         sendToPrimary: {
-          label: "Send to Primary Reviewer",
-          nextTaskState: TaskState.AUDIT
+          label: "SEND TO PRIMARY REVIEWER",
+          nextTaskState: TaskState.AUDIT,
+          labelClassName: "mainview_neutral_button"
         }
       }
     },

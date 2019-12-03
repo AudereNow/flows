@@ -1,6 +1,7 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { TaskChangeRecord } from "../sharedtypes";
 import LabelTextInput from "./LabelTextInput";
+import "./Notes.css";
 import NotesAudit from "./NotesAudit";
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 const Notes = (props: Props) => {
   const { actionable, changes, notes, onNotesChanged } = props;
   return (
-    <Fragment>
+    <div className="notes_container">
       <div className="mainview_actions_so_far_header">Actions so far:</div>
       {changes.map((change: TaskChangeRecord, index: number) => {
         return <NotesAudit key={change.by + index} change={change} />;
@@ -25,7 +26,7 @@ const Notes = (props: Props) => {
           value={notes}
         />
       )}
-    </Fragment>
+    </div>
   );
 };
 

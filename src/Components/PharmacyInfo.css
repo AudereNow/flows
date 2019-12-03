@@ -3,8 +3,15 @@
   flex-direction: row;
 }
 
+.pharmacy_button {
+  background-color: white;
+  border: 1px solid var(--primary-color-dark);
+  color: var(--primary-color-dark);
+  width: 100px;
+}
+
 .pharmacy_container {
-  padding: 5px;
+  padding: 10px;
   display: flex;
   flex-direction: row;
 }
@@ -15,15 +22,24 @@
   flex: 1;
 }
 .pharmacy_claims_header {
-  align-self: center;
   display: flex;
   flex-direction: row;
 }
 
 .pharmacy_claims_header_text {
+  font-weight: bold;
   margin-right: 10px;
 }
 
 .pharmacy_helptext {
   font-size: small;
+}
+
+.pharmacy_text {
+  font-weight: bold;
+  color: var(--primary-color-dark);
+}
+
+.pharmacy_textarea {
+  border: 1px solid var(--border-color);
 }

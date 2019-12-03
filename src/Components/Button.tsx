@@ -3,6 +3,7 @@ import "./Button.css";
 
 interface BaseProps {
   label: string;
+  labelImg?: string;
   className?: string;
   disabled?: boolean;
   name?: string;
@@ -35,17 +36,20 @@ class Button extends React.PureComponent<Props> {
   };
 
   render() {
-    const { className, disabled, label, name } = this.props;
+    const { className, disabled, label, labelImg, name } = this.props;
     const enabledClassName = disabled ? "disabled" : "enabled";
 
     return (
       <button
-        className={`button_container ${enabledClassName} ${className || ""}`}
+        className={`button_container ${enabledClassName} ${className}`}
         disabled={disabled}
         name={name}
         type="button"
         onClick={this._onClick}
       >
+        {!!labelImg && (
+          <img className="button_image_label" alt={labelImg} src={labelImg} />
+        )}
         {label}
       </button>
     );

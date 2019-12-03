@@ -1,0 +1,11 @@
+:root {
+  --primary-color-dark: #275d5f;
+  --primary-color-light: #298c85;
+  --primary-color-grey: #606060;
+  --hover-bg: #efefef;
+  --border-color: #999;
+  --border-radius: 3px;
+  --body-size: 16px;
+  --text-color: #2b2b2b;
+  --text-line-height: 22px;
+}

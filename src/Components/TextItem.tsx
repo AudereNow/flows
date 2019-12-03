@@ -73,7 +73,7 @@ export default class TextItem extends React.Component<Props> {
     return (
       <div className="textitem_container">
         {!this.props.valueOnly && !!displayKey && (
-          <span className="textitem_key">{displayKey + ":"}</span>
+          <span className="textitem_key pharmacy_text">{displayKey + ":"}</span>
         )}
         <div className={this.props.className}>
           {this.props.valueOnly && !!displayKey && displayKey + ": "}

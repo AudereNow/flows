@@ -1,15 +1,16 @@
-import React from "react";
 import firebase from "firebase/app";
 import "firebase/auth";
-import LoginScreen from "./Screens/LoginScreen";
-import { initializeStore } from "./store/corestore";
-import MainView from "./Screens/MainView";
+import React from "react";
 import {
   BrowserRouter as Router,
-  Switch,
   Route,
-  RouteComponentProps
+  RouteComponentProps,
+  Switch
 } from "react-router-dom";
+import LoginScreen from "./Screens/LoginScreen";
+import MainView from "./Screens/MainView";
+import { initializeStore } from "./store/corestore";
+import "./styles/SharedStyles.css";
 
 type Props = {};
 type State = {

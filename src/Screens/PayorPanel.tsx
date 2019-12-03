@@ -1,11 +1,11 @@
 import React from "react";
+import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
-import DataTable from "../Components/DataTable";
-import ExpandableDiv from "../Components/ExpandableDiv";
+import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry, Task, TaskState } from "../sharedtypes";
+import { Task, TaskState } from "../sharedtypes";
 import {
   formatCurrency,
   getBestUserName,
@@ -25,18 +25,87 @@ const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
   [TaskState.CSV]: "Not yet imported"
 };
 
+const PATIENT_CLAIMS_TABLE_COLUMNS = [
+  {
+    Header: "DATE",
+    id: "Date",
+    accessor: (entry: any) => new Date(entry.timestamp).toLocaleDateString(),
+    minWidth: 70
+  },
+  {
+    id: "Patient",
+    Header: "PATIENT",
+    accessor: (entry: any) =>
+      `${entry.patientFirstName} ${entry.patientLastName}`,
+    minWidth: 90
+  },
+  { id: "Item", Header: "ITEM", accessor: "item", minWidth: 70 },
+  {
+    id: "Reimbursement",
+    Header: "REIMBURSEMENT",
+    accessor: (entry: any) => formatCurrency(entry.claimedCost),
+    minWidth: 60
+  }
+];
+
+const RELATED_TASKS_TABLE_COLUMNS = [
+  {
+    Header: "Date",
+    id: "Date",
+    accessor: (entry: any) =>
+      entry.updatedAt
+        ? new Date(
+            (entry.updatedAt as any).seconds * 1000 || entry.updatedAt
+          ).toLocaleDateString()
+        : "",
+    minWidth: 70
+  },
+  {
+    id: "Claims",
+    Header: "Claims",
+    accessor: (task: any) => {
+      return task.entries.length;
+    },
+    minWidth: 90
+  },
+  {
+    id: "Total Amount",
+    Header: "Total Amount",
+    accessor: (task: any) => {
+      return formatCurrency(
+        task.entries.reduce(
+          (total: any, entry: any) => total + entry.claimedCost,
+          0
+        )
+      );
+    },
+    minWidth: 70
+  },
+  {
+    id: "State",
+    Header: "State",
+    accessor: (task: any) => {
+      return (STATE_DESCRIPTIONS as any)[task.state];
+    },
+    minWidth: 60
+  }
+];
+
 interface RemoteProps {
   realPayments: boolean;
 }
 interface State {
   relatedTasks?: Task[];
+  showPreviousClaims: boolean;
 }
 
 class ConfigurablePayorDetails extends React.Component<
   DetailsComponentProps & RemoteProps,
   State
 > {
-  state: State = {};
+  state: State = {
+    showPreviousClaims: false
+  };
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
@@ -80,36 +149,17 @@ class ConfigurablePayorDetails extends React.Component<
   };
 
   _toggleShowPreviousClaims = () => {
-    if (!this.state.relatedTasks) {
+    if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
       loadPreviousTasks(
         this.props.task.site.name,
         this.props.task.id
       ).then(relatedTasks => this.setState({ relatedTasks }));
     }
+    this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
-  render() {
-    const { task, notesux } = this.props;
-    const claimsTotal = _getReimbursementTotal(task);
-
-    let cleanedData: any[] = [];
-    let rejectedData: any[] = [];
-    task.entries.sort((a, b) => a.timestamp - b.timestamp);
-    task.entries.forEach((entry: ClaimEntry) => {
-      let row: any = {};
-      row["Date"] = new Date(entry.timestamp).toLocaleDateString();
-      row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
-      row["Item"] = entry.item;
-      row["Reimbursement"] = formatCurrency(entry.claimedCost);
-      row["Notes"] = entry.notes;
-      if (!!entry.rejected) {
-        rejectedData.push(row);
-      } else {
-        cleanedData.push(row);
-      }
-    });
-
-    let relatedTaskRows: any[] | null = this.state.relatedTasks
+  _formatRelatedTasks = () => {
+    return this.state.relatedTasks
       ? this.state.relatedTasks.map(relatedTask => {
           return {
             Date: relatedTask.updatedAt
@@ -129,9 +179,16 @@ class ConfigurablePayorDetails extends React.Component<
           };
         })
       : null;
+  };
+
+  render() {
+    const { task, notesux } = this.props;
+    const claimsTotal = _getReimbursementTotal(task);
+    const patientClaims = task.entries;
+    const relatedTasks = this.state.relatedTasks;
 
     return (
-      <LabelWrapper className="mainview_details" label="DETAILS">
+      <LabelWrapper className="mainview_details">
         <PharmacyInfo site={task.site} />
         {!!task.site.phone && (
           <TextItem
@@ -142,29 +199,62 @@ class ConfigurablePayorDetails extends React.Component<
             }}
           />
         )}
-        <TextItem
-          data={{
-            displayKey: "Total Reimbursement",
-            searchKey: "reimbursement",
-            value: formatCurrency(claimsTotal)
-          }}
-        />
-        <DataTable data={cleanedData} />
+        <div className="mainview_padded">
+          <TextItem
+            data={{
+              displayKey: "Total Reimbursement",
+              searchKey: "reimbursement",
+              value: formatCurrency(claimsTotal)
+            }}
+          />
 
-        <ExpandableDiv
-          label="Previous Tasks"
-          onExpand={this._toggleShowPreviousClaims}
-        >
-          {relatedTaskRows ? (
-            relatedTaskRows.length ? (
-              <DataTable data={relatedTaskRows} />
+          <ReactTable
+            className="-striped -highlight"
+            data={patientClaims}
+            columns={PATIENT_CLAIMS_TABLE_COLUMNS}
+            defaultPageSize={
+              patientClaims.length <= 5 ? patientClaims.length : 5
+            }
+            defaultSorted={[
+              {
+                id: "Date",
+                desc: true
+              }
+            ]}
+          />
+        </div>
+        <Button
+          className="mainview_show_more_button"
+          label={
+            this.state.showPreviousClaims
+              ? "- Hide Previous Claims"
+              : "+ Show Previous Claims"
+          }
+          onClick={this._toggleShowPreviousClaims}
+        />
+        {this.state.showPreviousClaims &&
+          (relatedTasks ? (
+            relatedTasks.length > 0 ? (
+              <ReactTable
+                className="-striped -highlight"
+                data={relatedTasks}
+                columns={RELATED_TASKS_TABLE_COLUMNS}
+                defaultPageSize={
+                  relatedTasks.length <= 5 ? relatedTasks.length : 5
+                }
+                defaultSorted={[
+                  {
+                    id: "Date",
+                    desc: true
+                  }
+                ]}
+              />
             ) : (
               <div className="mainview_details_text">No Previous Claims</div>
             )
           ) : (
             <div className="mainview_details_text">Loading...</div>
-          )}
-        </ExpandableDiv>
+          ))}
         {notesux}
         {this.props.children}
       </LabelWrapper>
