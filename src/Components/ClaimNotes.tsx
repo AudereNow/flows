@@ -43,7 +43,7 @@ class ClaimNotes extends React.Component<Props, State> {
     const { notes, editing } = this.state;
     return (
       <div className="claimnotes_row">
-        {!!editing ? (
+        {editing ? (
           <Fragment>
             <textarea
               className="claimnotes_textarea"
