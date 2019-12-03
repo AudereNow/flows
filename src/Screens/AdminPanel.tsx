@@ -1,5 +1,5 @@
 import moment from "moment";
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
@@ -11,9 +11,9 @@ import {
   getAdminLogs,
   getAllChanges,
   getBestUserName,
+  issuePayments,
   setRoles,
-  updatePatientsTaskLists,
-  issuePayments
+  updatePatientsTaskLists
 } from "../store/corestore";
 import { setConfig } from "../store/remoteconfig";
 import { configuredComponent } from "../util/configuredComponent";
@@ -248,8 +248,10 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
-  _remoteConfigToggle = async (k: string) => {
-    const key = k as keyof RemoteConfig;
+  _remoteConfigToggle = async (e: ChangeEvent<HTMLInputElement>) => {
+    const key = e.currentTarget.getAttribute(
+      "data-value"
+    ) as keyof RemoteConfig;
     await setConfig(key, !this.props.config[key]);
   };
 

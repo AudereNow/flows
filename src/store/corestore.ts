@@ -5,9 +5,9 @@ import "firebase/functions";
 import {
   ACTIVE_TASK_COLLECTION,
   AdminLogEvent,
+  ADMIN_LOG_EVENT_COLLECTION,
   Patient,
   PATIENTS_COLLECTION,
-  ADMIN_LOG_EVENT_COLLECTION,
   PaymentRecipient,
   Pharmacy,
   PHARMACY_COLLECTION,
@@ -159,11 +159,13 @@ export async function loadPreviousTasks(
   currentId: string
 ): Promise<Task[]> {
   const states = Object.values(TaskState);
-  return (await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .where("site.name", "==", siteName)
-    .get()).docs
+  return (
+    await firebase
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .where("site.name", "==", siteName)
+      .get()
+  ).docs
     .map(doc => doc.data() as Task)
     .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
     .filter(t => t.id !== currentId);
@@ -234,7 +236,7 @@ async function logAdminEvent(desc: string) {
     user,
     desc
   };
-  console.log(desc);
+
   await firebase
     .firestore()
     .collection(ADMIN_LOG_EVENT_COLLECTION)
@@ -332,11 +334,13 @@ export function subscribeToPharmacyDetails(
 export async function getPharmacyDetails(
   pharmacyId: string
 ): Promise<Pharmacy> {
-  return (await firebase
-    .firestore()
-    .collection(PHARMACY_COLLECTION)
-    .doc(pharmacyId)
-    .get()).data() as Pharmacy;
+  return (
+    await firebase
+      .firestore()
+      .collection(PHARMACY_COLLECTION)
+      .doc(pharmacyId)
+      .get()
+  ).data() as Pharmacy;
 }
 
 export async function setPharmacyDetails(
@@ -368,21 +372,25 @@ async function getAllDocsIn<T>(
     return [];
   }
 
-  return (await Promise.all(
-    new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
-      async (_, index) =>
-        (await firebase
-          .firestore()
-          .collection(collection)
-          .where(
-            attribute,
-            //@ts-ignore
-            "in",
-            attributeValues.slice(index * 10, (index + 1) * 10)
-          )
-          .get()).docs.map((doc: any) => doc.data()) as T[]
+  return (
+    await Promise.all(
+      new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
+        async (_, index) =>
+          (
+            await firebase
+              .firestore()
+              .collection(collection)
+              .where(
+                attribute,
+                //@ts-ignore
+                "in",
+                attributeValues.slice(index * 10, (index + 1) * 10)
+              )
+              .get()
+          ).docs.map((doc: any) => doc.data()) as T[]
+      )
     )
-  )).reduce((a, b) => a.concat(b), []);
+  ).reduce((a, b) => a.concat(b), []);
 }
 
 export async function getPatientHistories(patientIds: string[]) {
@@ -433,9 +441,6 @@ export async function getPatientHistories(patientIds: string[]) {
 }
 
 export async function getPharmacyClaims(siteName: string) {
-  // TODO: Possibly filter for claim state?
-  // TODO: Add the current task's id
-
   return await firebase
     .firestore()
     .collection(TASKS_COLLECTION)
@@ -448,4 +453,33 @@ export async function getPharmacyClaims(siteName: string) {
       });
       return data;
     });
+}
+
+export async function setClaimNotes(
+  task: Task,
+  claimIndex: number,
+  notes: string
+) {
+  task.entries[claimIndex].notes = notes;
+  return await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .doc(task.id)
+    .set(task);
+}
+
+export async function setRejectedClaim(
+  task: Task,
+  claimIndex: number,
+  rejected: boolean
+) {
+  task.entries[claimIndex].rejected = rejected;
+
+  await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .doc(task.id)
+    .set(task);
+
+  return;
 }

@@ -1,31 +1,33 @@
-import React from "react";
+import React, { ChangeEvent, Fragment } from "react";
 import "./CheckBox.css";
 
 interface Props {
-  onCheckBoxSelect: (value: string) => void;
+  onCheckBoxSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   checked: boolean;
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 class CheckBox extends React.Component<Props> {
-  _onClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    this.props.onCheckBoxSelect(
-      event.currentTarget.attributes.getNamedItem("data-value")!.value
-    );
-  };
-
   render() {
-    const { checked, label, value } = this.props;
+    const { checked, onCheckBoxSelect, label, value } = this.props;
     return (
-      <div
-        className="checkbox_container"
-        data-value={value}
-        onClick={this._onClick}
-      >
-        <input type="checkbox" name={label} readOnly checked={checked} />
-        <div className="checkbox_input_label">{label}</div>
-      </div>
+      <Fragment>
+        <input
+          style={{ display: "inline" }}
+          data-value={value}
+          type="checkbox"
+          name={label}
+          readOnly
+          checked={checked}
+          onChange={onCheckBoxSelect}
+          disabled={this.props.disabled}
+        />
+        <div style={{ display: "inline" }} className="checkbox_input_label">
+          {label}
+        </div>
+      </Fragment>
     );
   }
 }

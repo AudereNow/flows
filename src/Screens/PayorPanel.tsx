@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
@@ -96,6 +96,7 @@ class ConfigurablePayorDetails extends React.Component<
     const claimsTotal = _getReimbursementTotal(task);
 
     let cleanedData: any[] = [];
+    let rejectedData: any[] = [];
     task.entries.sort((a, b) => a.timestamp - b.timestamp);
     task.entries.forEach((entry: ClaimEntry) => {
       let row: any = {};
@@ -103,7 +104,12 @@ class ConfigurablePayorDetails extends React.Component<
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
-      cleanedData.push(row);
+      row["Notes"] = entry.notes;
+      if (!!entry.rejected) {
+        rejectedData.push(row);
+      } else {
+        cleanedData.push(row);
+      }
     });
 
     let relatedTaskRows: any[] | null = this.state.relatedTasks
@@ -147,6 +153,14 @@ class ConfigurablePayorDetails extends React.Component<
           }}
         />
         <DataTable data={cleanedData} />
+        {rejectedData.length > 0 && (
+          <Fragment>
+            <span>
+              <b>Rejected Claims</b>
+            </span>
+            <DataTable data={rejectedData} />
+          </Fragment>
+        )}
         <Button
           label={
             this.state.showPreviousClaims
@@ -181,7 +195,7 @@ export const PayorDetails = configuredComponent<
 
 function _getReimbursementTotal(task: Task): number {
   const claimAmounts = task.entries.map(entry => {
-    return entry.claimedCost;
+    return entry.rejected ? 0 : entry.claimedCost;
   });
   return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
 }

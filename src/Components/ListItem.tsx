@@ -11,7 +11,7 @@ export class ListItem extends React.Component<{
     const { task, isSelected } = this.props;
     const previewName = "listitem" + (isSelected ? " selected" : "");
     const claimAmounts = task.entries.map(entry => {
-      return entry.claimedCost;
+      return !entry.rejected ? entry.claimedCost : 0;
     });
     const claimsTotal = claimAmounts.reduce(
       (sum, claimedCost) => sum + claimedCost

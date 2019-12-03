@@ -1,10 +1,10 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 import {
+  DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
-  REMOTE_CONFIG_DOC,
   RemoteConfig,
-  DEFAULT_REMOTE_CONFIG
+  REMOTE_CONFIG_DOC
 } from "../sharedtypes";
 
 const REFRESH_MSEC = 60 * 60 * 1000; // Refresh settings once an hour
