@@ -15,7 +15,6 @@ export interface ActionConfig {
   label: string;
   labelClassName?: string;
   labelImg?: string;
-  postLabelElement?: JSX.Element;
   nextTaskState: TaskState;
   enableOnConfig?: keyof RemoteConfig;
   disableOnConfig?: keyof RemoteConfig;

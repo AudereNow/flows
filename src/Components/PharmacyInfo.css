@@ -27,6 +27,7 @@
 }
 
 .pharmacy_claims_header_text {
+  color: var(--primary-color-dark);
   font-weight: bold;
   margin-right: 10px;
 }

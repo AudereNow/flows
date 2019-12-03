@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import ReactTable from "react-table";
 import { TaskTotal } from "../Screens/AuditorPanel";
 import { Pharmacy, Site } from "../sharedtypes";
@@ -235,27 +235,24 @@ class PharmacyInfo extends React.Component<Props, State> {
         </div>
         <div className="pharmacy_half">
           {!!previousClaims && !!showPreviousClaims && (
-            <ExpandableDiv label="Previous Claims by Pharmacy">
-              <div className="pharmacy_claims_header">
-                <span className="pharmacy_claims_header_text">
-                  Previous Pharmacy Claims
-                </span>
-                >>>>>>> Redesign of application
-                {!!showIncreaseWarning && (
-                  <ToolTipIcon
-                    label={"⚠"}
-                    tooltip="Greater than 50% increase in claims. Please check for possible fraud"
-                  ></ToolTipIcon>
-                )}
-              </div>
-
-              <ReactTable
-                className="-striped -highlight"
-                data={previousClaims}
-                columns={PREVIOUS_CLAIMS_TABLE_COLUMNS}
-                minRows={0}
-                showPagination={false}
-              />
+            <ExpandableDiv label="Previous Pharmacy Claims">
+              <Fragment>
+                <div className="pharmacy_claims_header">
+                  {!!showIncreaseWarning && (
+                    <ToolTipIcon
+                      label={"⚠"}
+                      tooltip="Greater than 50% increase in claims. Please check for possible fraud"
+                    ></ToolTipIcon>
+                  )}
+                </div>
+                <ReactTable
+                  className="-striped -highlight"
+                  data={previousClaims}
+                  columns={PREVIOUS_CLAIMS_TABLE_COLUMNS}
+                  minRows={0}
+                  showPagination={false}
+                />
+              </Fragment>
             </ExpandableDiv>
           )}
         </div>

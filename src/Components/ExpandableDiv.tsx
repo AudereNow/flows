@@ -22,7 +22,7 @@ const ExpandableDiv = (props: Props) => {
     >
       {
         <span className="expandableDiv_label">{`${
-          !expanded ? "▶" : "▼"
+          !expanded ? "+ Show " : "- Hide "
         } ${props.label || ""}`}</span>
       }
       {!!expanded && props.children}

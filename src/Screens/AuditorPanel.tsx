@@ -5,6 +5,7 @@ import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
+import DownloadCSVImg from "../assets/downloadcsv.png";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -188,7 +189,6 @@ export class AuditorDetails extends React.Component<
 
   _renderPatientDetails = (patient: PatientInfo, index: number) => {
     const { searchTermDetails, showImages } = this.state;
-    const { task } = this.props;
     let patientProps = [];
     const entry = patient.currentClaims[0];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -325,7 +325,9 @@ export class AuditorDetails extends React.Component<
           showPreviousClaims={this.props.showPreviousClaims}
         />
         <Button
+          className="mainview_button"
           label="Download Pharmacy Report"
+          labelImg={DownloadCSVImg}
           onClick={this._downloadPharmacyReport}
         />
         <div className="mainview_spaced_row">

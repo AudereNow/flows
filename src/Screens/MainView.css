@@ -155,6 +155,12 @@ button:active {
   flex-direction: row;
 }
 
+.mainview_button {
+  color: var(--primary-color-dark);
+  border: 1px solid var(--primary-color-dark);
+  background-color: white;
+}
+
 .mainview_padded {
   padding: 10px;
 }
