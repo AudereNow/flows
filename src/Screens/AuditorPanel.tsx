@@ -8,6 +8,7 @@ import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import ClaimNotes from "../Components/ClaimNotes";
+import ExpandableDiv from "../Components/ExpandableDiv";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -264,15 +265,14 @@ export class AuditorDetails extends React.Component<
         ))}
 
         {patient.history && patient.history.tasks.length > 0 && (
-          <React.Fragment>
-            <div>Previous claims from this patient:</div>
+          <ExpandableDiv label="Previous claims from this patient">
             <ReactTable
               data={patient.history.tasks}
               columns={PATIENT_HISTORY_TABLE_COLUMNS}
               minRows={0}
               showPagination={false}
             />
-          </React.Fragment>
+          </ExpandableDiv>
         )}
       </LabelWrapper>
     );

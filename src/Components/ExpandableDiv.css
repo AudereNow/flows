@@ -1,0 +1,7 @@
+.expandableDiv_container {
+  cursor: pointer;
+}
+
+.expandableDiv_label {
+  font-weight: bold;
+}

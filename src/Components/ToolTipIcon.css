@@ -1,5 +1,7 @@
 .tooltipicon_container {
   position: relative;
+  width: 25px;
+  height: 25px;
 }
 
 .tooltipicon_label {
