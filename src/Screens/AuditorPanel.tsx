@@ -203,8 +203,6 @@ export class AuditorDetails extends React.Component<
     } ${patientInfo} ${entry.phone || ""}`;
 
     let checkEntry = Object.assign({}, entry, date, patient);
-    const disabledCheckbox =
-      task.state === "REJECTED" || "COMPLETED" ? true : false;
 
     if (
       !!searchTermDetails &&
