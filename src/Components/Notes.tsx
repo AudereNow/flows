@@ -29,7 +29,9 @@ const Notes = (props: Props) => {
             >
               <option value="">--Canned Responses--</option>
               {cannedNotes.map(cannedNote => (
-                <option value={cannedNote}>{cannedNote}</option>
+                <option key={cannedNote} value={cannedNote}>
+                  {cannedNote}
+                </option>
               ))}
             </select>
           )}

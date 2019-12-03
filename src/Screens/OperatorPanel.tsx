@@ -73,7 +73,7 @@ export class OperatorDetails extends React.Component<
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper key={patientInfo}>
+      <LabelWrapper key={claimIndex}>
         <TextItem
           data={{
             displayKey: "Date",
