@@ -300,8 +300,6 @@ export class AuditorDetails extends React.Component<
     const patients = getPatients(task.entries).slice(0, this.state.numPatients);
     const remaining = this.state.patients.length - this.state.numPatients;
 
-    console.log("PROPS: ", this.props);
-
     return (
       <LabelWrapper
         key={searchTermGlobal}
