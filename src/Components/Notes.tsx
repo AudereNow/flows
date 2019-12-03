@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import { TaskChangeRecord } from "../sharedtypes";
-import NotesAudit from "./NotesAudit";
 import LabelTextInput from "./LabelTextInput";
+import NotesAudit from "./NotesAudit";
 
 interface Props {
   changes: TaskChangeRecord[];

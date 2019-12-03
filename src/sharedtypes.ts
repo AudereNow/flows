@@ -45,7 +45,7 @@ export enum UserRole {
 
 export type Site = {
   name: string;
-  phone?: string;
+  phone: string;
 };
 
 export type ClaimEntry = {
@@ -63,6 +63,8 @@ export type ClaimEntry = {
   photoMedBatchUri?: string;
   timestamp: number;
   reviewed?: boolean;
+  notes?: string;
+  rejected?: boolean;
 };
 
 export type TaskChangeRecord = {

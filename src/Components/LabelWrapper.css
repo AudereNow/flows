@@ -1,6 +1,7 @@
 .labelwrapper_container {
   margin: 5px;
   border: 1px solid black;
+  min-width: 40%;
 }
 
 .labelwrapper_header {

@@ -1,10 +1,10 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 import {
+  DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
-  REMOTE_CONFIG_DOC,
   RemoteConfig,
-  DEFAULT_REMOTE_CONFIG
+  REMOTE_CONFIG_DOC
 } from "../sharedtypes";
 
 const REFRESH_MSEC = 60 * 60 * 1000; // Refresh settings once an hour
@@ -38,6 +38,23 @@ export async function getConfig(key: string) {
     return config[key];
   }
   console.error(`Didn't find key ${key} in remoteConfig!`);
+}
+
+export async function setConfig(key: keyof RemoteConfig, value: any) {
+  config[key] = value;
+
+  const snap = await firebase
+    .firestore()
+    .collection(METADATA_COLLECTION)
+    .doc(REMOTE_CONFIG_DOC)
+    .get();
+  const doc = snap.data() as RemoteConfig;
+  doc[key] = value;
+  await firebase
+    .firestore()
+    .collection(METADATA_COLLECTION)
+    .doc(REMOTE_CONFIG_DOC)
+    .set(doc);
 }
 
 export function subscribeToConfigs(

@@ -1,7 +1,7 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
-import Button from "../Components/Button";
 import DataTable from "../Components/DataTable";
+import ExpandableDiv from "../Components/ExpandableDiv";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
@@ -30,16 +30,13 @@ interface RemoteProps {
 }
 interface State {
   relatedTasks?: Task[];
-  showPreviousClaims: boolean;
 }
 
 class ConfigurablePayorDetails extends React.Component<
   DetailsComponentProps & RemoteProps,
   State
 > {
-  state: State = {
-    showPreviousClaims: false
-  };
+  state: State = {};
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
@@ -60,7 +57,7 @@ class ConfigurablePayorDetails extends React.Component<
     const result = await issuePayments([
       {
         name: task.site.name,
-        phoneNumber: task.site.phone || "+254739994489",
+        phoneNumber: task.site.phone,
         currencyCode: "KES",
         amount: reimburseAmount,
         reason: "PromotionPayment",
@@ -83,13 +80,12 @@ class ConfigurablePayorDetails extends React.Component<
   };
 
   _toggleShowPreviousClaims = () => {
-    if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
+    if (!this.state.relatedTasks) {
       loadPreviousTasks(
         this.props.task.site.name,
         this.props.task.id
       ).then(relatedTasks => this.setState({ relatedTasks }));
     }
-    this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   render() {
@@ -97,6 +93,7 @@ class ConfigurablePayorDetails extends React.Component<
     const claimsTotal = _getReimbursementTotal(task);
 
     let cleanedData: any[] = [];
+    let rejectedData: any[] = [];
     task.entries.sort((a, b) => a.timestamp - b.timestamp);
     task.entries.forEach((entry: ClaimEntry) => {
       let row: any = {};
@@ -104,7 +101,12 @@ class ConfigurablePayorDetails extends React.Component<
       row["Patient"] = `${entry.patientFirstName} ${entry.patientLastName}`;
       row["Item"] = entry.item;
       row["Reimbursement"] = formatCurrency(entry.claimedCost);
-      cleanedData.push(row);
+      row["Notes"] = entry.notes;
+      if (!!entry.rejected) {
+        rejectedData.push(row);
+      } else {
+        cleanedData.push(row);
+      }
     });
 
     let relatedTaskRows: any[] | null = this.state.relatedTasks
@@ -130,7 +132,7 @@ class ConfigurablePayorDetails extends React.Component<
 
     return (
       <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo name={task.site.name} />
+        <PharmacyInfo site={task.site} />
         {!!task.site.phone && (
           <TextItem
             data={{
@@ -148,16 +150,12 @@ class ConfigurablePayorDetails extends React.Component<
           }}
         />
         <DataTable data={cleanedData} />
-        <Button
-          label={
-            this.state.showPreviousClaims
-              ? "Hide Previous Claims ▲"
-              : "Show Previous Claims ▼"
-          }
-          onClick={this._toggleShowPreviousClaims}
-        />
-        {this.state.showPreviousClaims &&
-          (relatedTaskRows ? (
+
+        <ExpandableDiv
+          label="Previous Tasks"
+          onExpand={this._toggleShowPreviousClaims}
+        >
+          {relatedTaskRows ? (
             relatedTaskRows.length ? (
               <DataTable data={relatedTaskRows} />
             ) : (
@@ -165,7 +163,8 @@ class ConfigurablePayorDetails extends React.Component<
             )
           ) : (
             <div className="mainview_details_text">Loading...</div>
-          ))}
+          )}
+        </ExpandableDiv>
         {notesux}
         {this.props.children}
       </LabelWrapper>
@@ -182,7 +181,7 @@ export const PayorDetails = configuredComponent<
 
 function _getReimbursementTotal(task: Task): number {
   const claimAmounts = task.entries.map(entry => {
-    return entry.claimedCost;
+    return entry.rejected ? 0 : entry.claimedCost;
   });
   return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
 }

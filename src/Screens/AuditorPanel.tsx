@@ -1,10 +1,14 @@
+import { json2csv } from "json-2-csv";
 import moment from "moment";
-import React from "react";
+import React, { ChangeEvent } from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import CheckBox from "../Components/CheckBox";
+import ClaimNotes from "../Components/ClaimNotes";
+import ExpandableDiv from "../Components/ExpandableDiv";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -14,7 +18,8 @@ import {
   formatCurrency,
   getPatientHistories,
   getPharmacyClaims,
-  PatientHistory
+  PatientHistory,
+  setRejectedClaim
 } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
@@ -185,8 +190,17 @@ export class AuditorDetails extends React.Component<
     return claimImages;
   };
 
+  _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    const claimIndex = event.currentTarget.getAttribute("data-value");
+    if (!claimIndex) return;
+
+    await setRejectedClaim(this.props.task, parseInt(claimIndex), checked);
+  };
+
   _renderPatientDetails = (patient: PatientInfo) => {
     const { searchTermDetails, showImages } = this.state;
+    const { task } = this.props;
     let patientProps = [];
     const entry = patient.currentClaims[0];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -201,6 +215,8 @@ export class AuditorDetails extends React.Component<
     } ${patientInfo} ${entry.phone || ""}`;
 
     let checkEntry = Object.assign({}, entry, date, patient);
+    const disabledCheckbox =
+      task.state === "REJECTED" || "COMPLETED" ? true : false;
 
     if (
       !!searchTermDetails &&
@@ -233,18 +249,30 @@ export class AuditorDetails extends React.Component<
               showImages={showImages}
               images={this._extractImages(claim)}
             />
+            <CheckBox
+              checked={claim.rejected === undefined ? false : claim.rejected}
+              label={"Rejected"}
+              value={(claim as any).originalIndex}
+              onCheckBoxSelect={this._toggleRejectClaim}
+              disabled={disabledCheckbox}
+            />
+            <ClaimNotes
+              claimIndex={(claim as any).originalIndex}
+              task={task}
+              notes={claim.notes || ""}
+            />
           </React.Fragment>
         ))}
+
         {patient.history && patient.history.tasks.length > 0 && (
-          <React.Fragment>
-            <div>Previous claims from this patient:</div>
+          <ExpandableDiv label="Previous claims from this patient">
             <ReactTable
               data={patient.history.tasks}
               columns={PATIENT_HISTORY_TABLE_COLUMNS}
               minRows={0}
               showPagination={false}
             />
-          </React.Fragment>
+          </ExpandableDiv>
         )}
       </LabelWrapper>
     );
@@ -265,12 +293,46 @@ export class AuditorDetails extends React.Component<
     this.setState({ showImages: !this.state.showImages });
   };
 
+  _downloadPharmacyReport = () => {
+    const { task } = this.props;
+
+    let rows: any[] = [];
+
+    task.entries.forEach(entry => {
+      rows.push({
+        date: new Date(entry.timestamp).toLocaleDateString(),
+        first: entry.patientFirstName,
+        last: entry.patientLastName,
+        id: entry.patientID,
+        sex: entry.patientSex,
+        phone: entry.phone,
+        item: entry.item,
+        "claimed cost": entry.claimedCost,
+        notes: (entry as any).notes || "",
+        rejected: (entry as any).rejected || false
+      });
+    });
+
+    json2csv(rows, (err, csv) => {
+      if (!csv || err) {
+        alert("Something went wrong when trying to download your csv");
+      }
+
+      const dataString = "data:text/csv;charset=utf-8," + csv;
+      const encodedURI = encodeURI(dataString);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedURI);
+      link.setAttribute("download", `${task.site.name}.csv`);
+      link.click();
+    });
+  };
+
   render() {
     const { searchTermGlobal } = this.context;
     const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { task, notesux } = this.props;
     const { showImages } = this.state;
-    const patients = this.state.patients.slice(0, this.state.numPatients);
+    const patients = getPatients(task.entries).slice(0, this.state.numPatients);
     const remaining = this.state.patients.length - this.state.numPatients;
 
     return (
@@ -283,9 +345,13 @@ export class AuditorDetails extends React.Component<
           showImages={showImages}
           onToggleImages={this._toggleImages}
           previousClaims={this.state.previousClaims}
-          name={task.site.name}
+          site={task.site}
           claimCount={task.entries.length}
           showPreviousClaims={this.props.showPreviousClaims}
+        />
+        <Button
+          label="Download Pharmacy Report"
+          onClick={this._downloadPharmacyReport}
         />
         <div className="mainview_spaced_row">
           <input
@@ -294,7 +360,9 @@ export class AuditorDetails extends React.Component<
             placeholder="Filter Claims"
           />
         </div>
-        {patients.map(this._renderPatientDetails)}
+        {patients.map(patient => {
+          return this._renderPatientDetails(patient);
+        })}
         {remaining > 0 && (
           <div className="mainview_button_row">
             <Button
@@ -309,7 +377,9 @@ export class AuditorDetails extends React.Component<
           showAllEntries &&
           this.state.patients
             .slice(this.state.numPatients, task.entries.length)
-            .map(this._renderPatientDetails)}
+            .map(patient => {
+              return this._renderPatientDetails(patient);
+            })}
         {notesux}
         {this.props.children}
       </LabelWrapper>
@@ -321,6 +391,7 @@ function getPatients(entries: ClaimEntry[]) {
   const entriesByPatient: { [id: string]: PatientInfo } = {};
   entries.forEach((entry, index) => {
     const id = entry.patientID || `Patient ${index}`;
+    (entry as any).originalIndex = index;
     if (entriesByPatient[id]) {
       entriesByPatient[id].currentClaims.push(entry);
     } else {

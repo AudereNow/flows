@@ -5,9 +5,9 @@ import "firebase/functions";
 import {
   ACTIVE_TASK_COLLECTION,
   AdminLogEvent,
+  ADMIN_LOG_EVENT_COLLECTION,
   Patient,
   PATIENTS_COLLECTION,
-  ADMIN_LOG_EVENT_COLLECTION,
   CANNED_NOTES_COLLECTION,
   PaymentRecipient,
   Pharmacy,
@@ -235,7 +235,7 @@ async function logAdminEvent(desc: string) {
     user,
     desc
   };
-  console.log(desc);
+
   await firebase
     .firestore()
     .collection(ADMIN_LOG_EVENT_COLLECTION)
@@ -434,9 +434,6 @@ export async function getPatientHistories(patientIds: string[]) {
 }
 
 export async function getPharmacyClaims(siteName: string) {
-  // TODO: Possibly filter for claim state?
-  // TODO: Add the current task's id
-
   return await firebase
     .firestore()
     .collection(TASKS_COLLECTION)
@@ -480,4 +477,33 @@ export function subscribeToNotes(
       const data = snapshot.data();
       callback(data ? data.notes : []);
     });
+}
+
+export async function setClaimNotes(
+  task: Task,
+  claimIndex: number,
+  notes: string
+) {
+  task.entries[claimIndex].notes = notes;
+  return await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .doc(task.id)
+    .set(task);
+}
+
+export async function setRejectedClaim(
+  task: Task,
+  claimIndex: number,
+  rejected: boolean
+) {
+  task.entries[claimIndex].rejected = rejected;
+
+  await firebase
+    .firestore()
+    .collection(TASKS_COLLECTION)
+    .doc(task.id)
+    .set(task);
+
+  return;
 }
