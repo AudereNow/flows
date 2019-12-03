@@ -195,7 +195,7 @@ class ConfigurablePayorDetails extends React.Component<
             data={{
               displayKey: "Phone",
               searchKey: "pharmacy",
-              value: task.site.phone
+              value: task.site.phone || ""
             }}
           />
         )}

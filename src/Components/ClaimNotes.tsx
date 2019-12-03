@@ -50,12 +50,20 @@ class ClaimNotes extends React.Component<Props, State> {
               onChange={this._onNotesChange}
               defaultValue={notes}
             />
-            <Button label="Save Notes" onClick={this._onSave}></Button>
+            <Button
+              className="claimnotes_button"
+              label="Save Notes"
+              onClick={this._onSave}
+            ></Button>
           </Fragment>
         ) : (
           <Fragment>
             <span>{`Notes: ${notes}`}</span>
-            <Button label="Edit" onClick={this._onEdit} />
+            <Button
+              className="claimnotes_button"
+              label="Edit"
+              onClick={this._onEdit}
+            />
           </Fragment>
         )}
       </div>

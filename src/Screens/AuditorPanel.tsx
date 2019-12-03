@@ -1,12 +1,14 @@
 import { json2csv } from "json-2-csv";
 import moment from "moment";
-import React from "react";
+import React, { ChangeEvent } from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import Button from "../Components/Button";
+import CheckBox from "../Components/CheckBox";
+import ClaimNotes from "../Components/ClaimNotes";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -16,7 +18,8 @@ import {
   formatCurrency,
   getPatientHistories,
   getPharmacyClaims,
-  PatientHistory
+  PatientHistory,
+  setRejectedClaim
 } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
@@ -187,10 +190,24 @@ export class AuditorDetails extends React.Component<
     return claimImages;
   };
 
+  _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    const claimIndex = event.currentTarget.getAttribute("data-value");
+
+    if (!claimIndex) {
+      return;
+    }
+
+    await setRejectedClaim(this.props.task, parseInt(claimIndex), checked);
+  };
+
   _renderPatientDetails = (patient: PatientInfo, index: number) => {
     const { searchTermDetails, showImages } = this.state;
+    const { task } = this.props;
     let patientProps = [];
     const entry = patient.currentClaims[0];
+    const disabledCheckbox =
+      task.state === "REJECTED" || task.state === "COMPLETED" ? true : false;
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
       patientProps.push(entry.patientSex);
@@ -236,8 +253,22 @@ export class AuditorDetails extends React.Component<
                 showImages={showImages}
                 images={this._extractImages(claim)}
               />
+              <CheckBox
+                checked={claim.rejected === undefined ? false : claim.rejected}
+                label={"Rejected"}
+                value={(claim as any).originalIndex}
+                onCheckBoxSelect={this._toggleRejectClaim}
+                disabled={disabledCheckbox}
+                key={index}
+              />
+              <ClaimNotes
+                claimIndex={(claim as any).originalIndex}
+                task={task}
+                notes={claim.notes || ""}
+              />
             </React.Fragment>
           ))}
+
           {patient.history && patient.history.tasks.length > 0 && (
             <React.Fragment>
               <div className="mainview_padded_row mainview_bold mainview_header_text">
