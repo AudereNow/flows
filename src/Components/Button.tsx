@@ -48,7 +48,7 @@ class Button extends React.PureComponent<Props> {
         onClick={this._onClick}
       >
         {!!labelImg && (
-          <img className="button_image_label" alt={labelImg} src={labelImg} />
+          <img className="button_image_label" alt={label} src={labelImg} />
         )}
         {label}
       </button>
