@@ -131,6 +131,11 @@ button:active {
   margin: 10px;
 }
 
+.mainview_instructions_header {
+  margin: 10px;
+  font-weight: bold;
+}
+
 .mainview_actions_so_far_header {
   color: var(--primary-color-dark);
   margin-top: 12px;
@@ -196,4 +201,10 @@ button:active {
 .ReactTable .rt-thead .rt-th.-sort-asc,
 .ReactTable .rt-thead .rt-td.-sort-asc {
   box-shadow: inset 0 3px 0 0 var(--primary-color-dark);
+}
+
+.mainview_instructions_edit {
+  margin: 10px;
+  width: 250px;
+  height: 100px;
 }

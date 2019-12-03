@@ -1,5 +1,6 @@
 import React from "react";
 import "react-tabs/style/react-tabs.css";
+import ReactMarkdown from "react-markdown";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -8,16 +9,21 @@ import TextItem from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
+import { configuredComponent } from "../util/configuredComponent";
 
 interface State {
   showImages: boolean;
 }
 
-export class OperatorDetails extends React.Component<
-  DetailsComponentProps,
+interface Props {
+  instructions: string;
+}
+
+class ConfigurableOperatorDetails extends React.Component<
+  DetailsComponentProps & Props,
   State
 > {
-  constructor(props: DetailsComponentProps) {
+  constructor(props: DetailsComponentProps & Props) {
     super(props);
     this.state = { showImages: true };
   }
@@ -104,9 +110,18 @@ export class OperatorDetails extends React.Component<
         {this.props.task.entries.map((entry, index) => {
           return this._renderClaimEntryDetails(entry, index);
         })}
+        <div className="mainview_instructions_header">Instructions:</div>
+        <ReactMarkdown source={this.props.instructions} />
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>
     );
   }
 }
+
+export const OperatorDetails = configuredComponent<
+  DetailsComponentProps,
+  Props
+>(ConfigurableOperatorDetails, config => ({
+  instructions: config.opsInstructions
+}));
