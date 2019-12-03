@@ -132,6 +132,7 @@ button:active {
 }
 
 .mainview_actions_so_far_header {
+  color: var(--primary-color-dark);
   margin-top: 12px;
   margin: 10px;
   font-weight: bold;
@@ -159,6 +160,10 @@ button:active {
   color: var(--primary-color-dark);
   border: 1px solid var(--primary-color-dark);
   background-color: white;
+}
+
+.mainview_header_text {
+  color: var(--primary-color-dark);
 }
 
 .mainview_padded {

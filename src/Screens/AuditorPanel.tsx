@@ -240,7 +240,7 @@ export class AuditorDetails extends React.Component<
           ))}
           {patient.history && patient.history.tasks.length > 0 && (
             <React.Fragment>
-              <div className="mainview_padded_row mainview_bold">
+              <div className="mainview_padded_row mainview_bold mainview_header_text">
                 Previous Patient Claims:
               </div>
               <ReactTable
