@@ -3,5 +3,5 @@
 }
 
 .expandableDiv_label {
-  font-weight: bold;
+  color: var(--primary-color-dark);
 }

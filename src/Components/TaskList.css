@@ -1,13 +1,3 @@
-.tasklist_header {
-  background-color: #888888;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: small;
-  text-align: center;
-  height: 24px;
-  line-height: 24px;
-}
-
 .tasklist_active {
   outline-color: orange;
   outline-style: solid;

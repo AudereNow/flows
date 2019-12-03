@@ -1,51 +1,27 @@
 .labelwrapper_container {
   margin: 5px;
-  border: 1px solid black;
-  min-width: 40%;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
 }
 
 .labelwrapper_header {
-  background-color: #888888;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: small;
-  text-align: center;
-  height: 24px;
-  line-height: 24px;
+  background-color: var(--primary-color);
   display: flex;
   flex-direction: row;
-}
-
-.labelwrapper_header_item {
-  flex: 1;
-}
-
-.labelwrapper_header_center {
-  flex: 3;
+  justify-content: space-between;
+  line-height: 24px;
 }
 
 .labelwrapper_label {
-  align-self: center;
+  padding: 10px;
 }
 
 .labelwrapper_inner {
   max-height: 85vh;
   overflow-y: scroll;
-  padding: 5px;
 }
 
 .labelwrapper_header_icon {
   cursor: pointer;
-  text-align: right;
-}
-
-.labelwrapper_dropdown_text {
-  cursor: pointer;
-  color: #000000;
-  text-align: center;
-  font-weight: normal;
-  font-size: medium;
-  width: 100%;
-  height: 100%;
   padding: 10px;
 }

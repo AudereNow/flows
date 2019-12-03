@@ -53,18 +53,18 @@ export type HistoryRow = {
 const HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "id", minWidth: 90 },
   {
-    Header: "Time",
+    Header: "DATE",
     accessor: "time",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
     minWidth: 60
   },
   {
-    Header: "Description",
+    Header: "DESCRIPTION",
     accessor: "description",
     minWidth: 150
   },
   {
-    Header: "Notes",
+    Header: "NOTES",
     accessor: "notes",
     minWidth: 200,
     style: { whiteSpace: "unset" }

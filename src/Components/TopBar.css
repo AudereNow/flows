@@ -1,46 +1,61 @@
+.topbar_arrow {
+  margin-left: 5px;
+}
+
+.topbar_details {
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+  text-align: right;
+  margin-right: 10px;
+}
+
+.topbar_divider {
+  border-right: 1px solid var(--text-color);
+  height: 20px;
+  margin: 0px 7px;
+}
+
 .topbar_input {
   width: 100px;
+}
+
+.topbar_item {
+  color: var(--primary-color-dark);
+}
+
+.topbar_logo {
+  margin-left: 20px;
+  height: 40px;
 }
 
 .topbar_main {
   width: 100%;
   height: 36px;
-  background-color: #888888;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.topbar_logo {
-  margin-left: 20px;
-  height: 32px;
 }
 
 .topbar_row {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: center;
+  margin: 5px 0px;
 }
 
 .topbar_upload_icon {
-  height: 32px;
-  padding: 5px;
+  height: 18px;
+  width: 28px;
+  margin-right: 5px;
 }
 
-.topbar_user {
-  color: #ffffff;
-  font-weight: bold;
-  margin-right: 20px;
-}
-
-.nav_menu_item {
+.topbar_pointer {
   cursor: pointer;
-  color: #000000;
-  text-align: center;
-  font-weight: normal;
-  font-size: medium;
-  width: 100%;
-  height: 100%;
-  padding: 10px;
+}
+
+.topbar_logout {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: var(--primary-color-dark);
 }
