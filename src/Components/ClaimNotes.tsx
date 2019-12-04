@@ -1,6 +1,6 @@
 import React, { ChangeEvent, Fragment } from "react";
 import { Task } from "../sharedtypes";
-import { setClaimNotes } from "../store/corestore";
+import { getNotes, setClaimNotes } from "../store/corestore";
 import Button from "./Button";
 import "./ClaimNotes.css";
 
@@ -13,6 +13,7 @@ interface Props {
 interface State {
   notes: string;
   editing: boolean;
+  cannedClaimNotes?: string[];
 }
 
 class ClaimNotes extends React.Component<Props, State> {
@@ -22,6 +23,10 @@ class ClaimNotes extends React.Component<Props, State> {
       notes: props.notes,
       editing: false
     };
+  }
+
+  async componentDidMount() {
+    this.setState({ cannedClaimNotes: await getNotes("claim") });
   }
 
   _onSave = async () => {
@@ -39,8 +44,13 @@ class ClaimNotes extends React.Component<Props, State> {
     this.setState({ notes: event.currentTarget.value });
   };
 
+  _onCannedNoteSelected = (event: ChangeEvent<HTMLSelectElement>) => {
+    const { notes } = this.state;
+    this.setState({ notes: notes + (notes ? "\n" : "") + event.target.value });
+  };
+
   render() {
-    const { notes, editing } = this.state;
+    const { notes, editing, cannedClaimNotes } = this.state;
     return (
       <div className="claimnotes_row">
         {editing ? (
@@ -48,13 +58,25 @@ class ClaimNotes extends React.Component<Props, State> {
             <textarea
               className="claimnotes_textarea"
               onChange={this._onNotesChange}
-              defaultValue={notes}
+              value={notes}
             />
             <Button
               className="claimnotes_button"
               label="Save Notes"
               onClick={this._onSave}
-            ></Button>
+            />
+            {cannedClaimNotes && (
+              <div>
+                <select onChange={this._onCannedNoteSelected}>
+                  <option value="">--Canned Responses--</option>
+                  {cannedClaimNotes.map(cannedNote => (
+                    <option key={cannedNote} value={cannedNote}>
+                      {cannedNote}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </Fragment>
         ) : (
           <Fragment>

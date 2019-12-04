@@ -5,6 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
 import ReactMarkdown from "react-markdown";
 import Button from "../Components/Button";
+import CannedNotesEditor from "../Components/CannedNotesEditor";
 import CheckBox from "../Components/CheckBox";
 import SearchableTable from "../Components/SearchableTable";
 import { RemoteConfig, TaskChangeRecord, UserRole } from "../sharedtypes";
@@ -285,6 +286,7 @@ class AdminPanel extends React.Component<Props, State> {
             <Tab>History</Tab>
             <Tab>Instructions</Tab>
             <Tab>User Roles</Tab>
+            <Tab>Canned Responses</Tab>
             <Tab>Advanced</Tab>
           </TabList>
           <TabPanel>
@@ -339,6 +341,16 @@ class AdminPanel extends React.Component<Props, State> {
               {this._renderRoles()}
               <input type="submit" value="Submit" />
             </form>
+          </TabPanel>
+          <TabPanel>
+            <div>
+              <div>Edit Canned Claim Notes:</div>
+              <CannedNotesEditor categoryName="claim" />
+            </div>
+            <div>
+              <div>Edit Canned Task Notes:</div>
+              <CannedNotesEditor categoryName="task" />
+            </div>
           </TabPanel>
           <TabPanel>
             <div>

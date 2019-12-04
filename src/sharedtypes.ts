@@ -8,6 +8,7 @@
 */
 export const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
 export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
+export const CANNED_NOTES_COLLECTION = "canned_notes";
 export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
 export const TASKS_COLLECTION = "tasks";

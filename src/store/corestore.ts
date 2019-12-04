@@ -8,6 +8,7 @@ import {
   ADMIN_LOG_EVENT_COLLECTION,
   Patient,
   PATIENTS_COLLECTION,
+  CANNED_NOTES_COLLECTION,
   PaymentRecipient,
   Pharmacy,
   PHARMACY_COLLECTION,
@@ -444,6 +445,37 @@ export async function getPharmacyClaims(siteName: string) {
         data.push(snap.data() as Task);
       });
       return data;
+    });
+}
+
+export function saveNotes(categoryName: string, notes: string[]) {
+  return firebase
+    .firestore()
+    .collection(CANNED_NOTES_COLLECTION)
+    .doc(categoryName)
+    .set({ notes });
+}
+
+export async function getNotes(categoryName: string): Promise<string[]> {
+  const data = (await firebase
+    .firestore()
+    .collection(CANNED_NOTES_COLLECTION)
+    .doc(categoryName)
+    .get()).data();
+  return data ? data.notes : [];
+}
+
+export function subscribeToNotes(
+  categoryName: string,
+  callback: (notes: string[]) => void
+): () => void {
+  return firebase
+    .firestore()
+    .collection(CANNED_NOTES_COLLECTION)
+    .doc(categoryName)
+    .onSnapshot(snapshot => {
+      const data = snapshot.data();
+      callback(data ? data.notes : []);
     });
 }
 
