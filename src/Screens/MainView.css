@@ -110,6 +110,7 @@ button:active {
   border-radius: var(--border-radius);
   padding: 3px;
   max-width: 300px;
+  margin: 10px;
 }
 
 .mainview_hide_search {
@@ -159,6 +160,7 @@ button:active {
 .mainview_row {
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 .mainview_button {

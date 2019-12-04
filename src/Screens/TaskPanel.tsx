@@ -258,18 +258,28 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
-    return this.state.allTasks.filter(task => {
-      return (
-        this._checkOwner(task.site.name) &&
-        task.entries.some(entry => {
+    let newTasks: any[] = [];
+
+    this.state.allTasks.forEach(task => {
+      if (this._checkOwner(task.site.name)) {
+        let foundCount = 0;
+        task.entries.forEach(entry => {
           (entry as any).pharmacy = task.site.name;
-          return containsSearchTerm(searchTerm, entry);
-        }) &&
-        task.entries.some(entry => {
-          return withinDateRange(dateRange, entry);
-        })
-      );
+          if (
+            withinDateRange(dateRange, entry) &&
+            containsSearchTerm(searchTerm, entry) &&
+            searchTerm.trim().length > 0
+          ) {
+            foundCount += 1;
+          }
+        });
+        if (foundCount > 0 || searchTerm.trim().length === 0) {
+          (task as any).foundCount = foundCount === 0 ? undefined : foundCount;
+          newTasks.push(task);
+        }
+      }
     });
+    return newTasks;
   };
 
   _handleSearchTermGlobalChange = debounce(async (searchTermGlobal: string) => {
