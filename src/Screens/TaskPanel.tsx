@@ -591,14 +591,16 @@ class DetailsWrapper extends React.Component<
     }));
     let task: Task = this.props.task;
     if (this._actionCallbacks[key]) {
-      await this._actionCallbacks[key]();
+      let result = await this._actionCallbacks[key]();
       this.setState(state => ({
         buttonsBusy: {
           ...state.buttonsBusy,
           [key]: false
         }
       }));
+      task = result.task || task;
     }
+
     await changeTaskState(
       task,
       this.props.actions[key].nextTaskState,
