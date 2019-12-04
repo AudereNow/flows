@@ -88,7 +88,10 @@ class TopBar extends React.Component<{}, State> {
     const { roles, showFileSelector, uploading } = this.state;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
-        <div className="topbar_row topbar_pointer">
+        <div
+          onClick={this._onUploadIconClick}
+          className="topbar_row topbar_pointer"
+        >
           <img className="topbar_upload_icon" src={uploadIcon} alt="upload" />
           <div className="topbar_item">Upload CSV</div>
         </div>
