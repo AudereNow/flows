@@ -277,6 +277,23 @@ class TaskPanel extends React.Component<Props, State> {
 
   _updateTasks = async () => {
     const { selectedTaskIndex, tasks } = this.state;
+    const pharmacyNames: { [name: string]: boolean } = {};
+    tasks.forEach(task => (pharmacyNames[task.site.name] = true));
+    const pharmacies: { [name: string]: Pharmacy } = {};
+    await Promise.all(
+      Object.keys(pharmacyNames).map(async siteName => {
+        if (this.state.pharmacies.hasOwnProperty(siteName)) {
+          return;
+        }
+        pharmacies[siteName] = await getPharmacyDetails(siteName);
+      })
+    );
+    await new Promise(res =>
+      this.setState(
+        { pharmacies: { ...this.state.pharmacies, ...pharmacies } },
+        res
+      )
+    );
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
     const filteredTasks = this._computeFilteredTasks(
@@ -289,26 +306,11 @@ class TaskPanel extends React.Component<Props, State> {
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
-    const pharmacyNames: { [name: string]: boolean } = {};
-    filteredTasks.forEach(task => (pharmacyNames[task.site.name] = true));
-    const pharmacies: { [name: string]: Pharmacy } = {};
-    await Promise.all(
-      Object.keys(pharmacyNames).map(async siteName => {
-        if (this.state.pharmacies.hasOwnProperty(siteName)) {
-          return;
-        }
-        pharmacies[siteName] = await getPharmacyDetails(siteName);
-      })
-    );
 
     this.setState(
       {
         tasks: filteredTasks,
         selectedTaskIndex: selectedIndex,
-        pharmacies: {
-          ...this.state.pharmacies,
-          ...pharmacies
-        },
         notes: "",
         changes
       },

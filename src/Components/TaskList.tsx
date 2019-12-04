@@ -108,7 +108,7 @@ class TaskList extends React.Component<Props, State> {
           return (
             <div
               className={activeClass}
-              key={index}
+              key={task.id}
               data-tip={activeDataTip}
               data-name={index}
               onClick={this._onItemPressed}

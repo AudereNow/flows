@@ -125,6 +125,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       owners: (this.state.editedOwners || "")
         .split(",")
         .map(owner => owner.trim())
+        .filter(owner => owner)
     });
     this.setState({ editedOwners: undefined, saving: false });
   };
