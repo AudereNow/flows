@@ -29,11 +29,13 @@ export const REMOTE_CONFIG_DOC = "remoteConfig";
 export type RemoteConfig = {
   enableRealPayments: boolean;
   allowDuplicateUploads: boolean;
+  opsInstructions: string;
 };
 
 export const DEFAULT_REMOTE_CONFIG: RemoteConfig = {
   enableRealPayments: false,
-  allowDuplicateUploads: false
+  allowDuplicateUploads: false,
+  opsInstructions: ""
 };
 
 export enum UserRole {

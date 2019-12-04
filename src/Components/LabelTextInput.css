@@ -7,12 +7,15 @@
 .labeltextinput_label {
   align-self: flex-start;
   display: block;
-  font-weight: bold;
+
   margin: 10px 0 10px 0;
+  font-style: italic;
 }
 
 .labeltextinput_input {
   min-height: 50px;
-
   display: block;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  background-color: var(--hover-bg);
 }

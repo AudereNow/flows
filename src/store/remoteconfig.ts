@@ -40,7 +40,10 @@ export async function getConfig(key: string) {
   console.error(`Didn't find key ${key} in remoteConfig!`);
 }
 
-export async function setConfig(key: keyof RemoteConfig, value: any) {
+export async function setConfig<K extends keyof RemoteConfig>(
+  key: K,
+  value: RemoteConfig[K]
+) {
   config[key] = value;
 
   const snap = await firebase

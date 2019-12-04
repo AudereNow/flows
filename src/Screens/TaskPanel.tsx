@@ -4,6 +4,9 @@ import React, { Fragment, ReactNode } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import { RouteComponentProps, withRouter } from "react-router";
 import "react-tabs/style/react-tabs.css";
+import ClearSearchImg from "../assets/close.png";
+import DownloadImg from "../assets/downloadcsv.png";
+import SearchIcon from "../assets/search.png";
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -210,10 +213,15 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _renderLabelItems = () => {
+    const searchImg = this.state.showSearch ? ClearSearchImg : SearchIcon;
     return (
       <Fragment>
         <div className="labelwrapper_header_icon" onClick={this._onSearchClick}>
-          &nbsp;&#x1F50E;
+          <img
+            className="labelwrapper_search_icon"
+            src={searchImg}
+            alt="labelwrapper_search_icon"
+          />
         </div>
       </Fragment>
     );
@@ -274,6 +282,23 @@ class TaskPanel extends React.Component<Props, State> {
 
   _updateTasks = async () => {
     const { selectedTaskIndex, tasks } = this.state;
+    const pharmacyNames: { [name: string]: boolean } = {};
+    tasks.forEach(task => (pharmacyNames[task.site.name] = true));
+    const pharmacies: { [name: string]: Pharmacy } = {};
+    await Promise.all(
+      Object.keys(pharmacyNames).map(async siteName => {
+        if (this.state.pharmacies.hasOwnProperty(siteName)) {
+          return;
+        }
+        pharmacies[siteName] = await getPharmacyDetails(siteName);
+      })
+    );
+    await new Promise(res =>
+      this.setState(
+        { pharmacies: { ...this.state.pharmacies, ...pharmacies } },
+        res
+      )
+    );
     const selectedId =
       selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
     const filteredTasks = this._computeFilteredTasks(
@@ -286,26 +311,11 @@ class TaskPanel extends React.Component<Props, State> {
     const selectedIndex = filteredTasks.findIndex(task => {
       return task.id === selectedId;
     });
-    const pharmacyNames: { [name: string]: boolean } = {};
-    filteredTasks.forEach(task => (pharmacyNames[task.site.name] = true));
-    const pharmacies: { [name: string]: Pharmacy } = {};
-    await Promise.all(
-      Object.keys(pharmacyNames).map(async siteName => {
-        if (this.state.pharmacies.hasOwnProperty(siteName)) {
-          return;
-        }
-        pharmacies[siteName] = await getPharmacyDetails(siteName);
-      })
-    );
 
     this.setState(
       {
         tasks: filteredTasks,
         selectedTaskIndex: selectedIndex,
-        pharmacies: {
-          ...this.state.pharmacies,
-          ...pharmacies
-        },
         notes: "",
         changes
       },
@@ -356,10 +366,16 @@ class TaskPanel extends React.Component<Props, State> {
     tasks.forEach(task => {
       task.entries.forEach(entry => {
         let entryCopy = Object.assign(
-          { id: task.id, siteName: task.site.name },
+          {
+            id: task.id,
+            siteName: task.site.name,
+            notes: entry.notes || "",
+            pharmacy: task.site.name || "",
+            rejected: entry.rejected === undefined ? false : entry.rejected
+          },
           entry
         );
-
+        delete (entryCopy as any)["originalIndex"];
         rows.push(entryCopy);
       });
     });
@@ -410,8 +426,15 @@ class TaskPanel extends React.Component<Props, State> {
             />
           )}
         </div>
-        <div className="labelwrapper_row">
+        <div>
           <div className="mainview_search_row">
+            <input
+              className="mainview_search_input"
+              ref={this._inputRef}
+              type="text"
+              onChange={this._onSearchTermChange}
+              placeholder="Search by keyword(s)"
+            />
             <ToolTipIcon
               label={"ⓘ"}
               iconClassName="tooltipicon_information"
@@ -419,14 +442,9 @@ class TaskPanel extends React.Component<Props, State> {
                 "Available search keys: 'patient', 'pharmacy', 'item'. Example query: item:e, patient:ru"
               }
             />
-            <input
-              className="mainview_search_input"
-              ref={this._inputRef}
-              type="text"
-              onChange={this._onSearchTermChange}
-              placeholder="Search by keyword"
-            />
-
+          </div>
+          <div className="mainview_search_row">
+            <div className="mainview_padded_row">Date Range: </div>
             <div className="mainview_date_picker">
               <DateRangePicker
                 startDate={searchDates.startDate}
@@ -442,15 +460,21 @@ class TaskPanel extends React.Component<Props, State> {
               />
             </div>
           </div>
-          <div className="mainview_spaced_row">
-            <Button
-              className="mainview_clear_search_button"
-              label="Clear Search"
-              onClick={this._clearSearch}
-            />
+        </div>
+        <div className="mainview_spaced_row">
+          <Button
+            className="mainview_clear_search_button"
+            label="Clear Search"
+            labelImg={ClearSearchImg}
+            onClick={this._clearSearch}
+          />
 
-            <Button label={"Download CSV"} onClick={this._downloadCSV} />
-          </div>
+          <Button
+            className="mainview_clear_search_button"
+            labelImg={DownloadImg}
+            label={"Download CSV"}
+            onClick={this._downloadCSV}
+          />
         </div>
       </div>
     );
@@ -482,7 +506,10 @@ class TaskPanel extends React.Component<Props, State> {
       >
         <div className="mainview_content">
           <LabelWrapper
-            label={`${this.props.listLabel}: ${this.state.tasks.length}`}
+            label={`${this.props.listLabel}:`}
+            postLabelElement={
+              <span className="mainview_text_primary">{`(${this.state.tasks.length})`}</span>
+            }
             renderLabelItems={this._renderLabelItems}
             searchPanel={this._renderSearchPanel()}
           >
@@ -607,8 +634,10 @@ class DetailsWrapper extends React.Component<
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (
             <Button
+              className={actionConfig.labelClassName}
               disabled={this.state.buttonsBusy[key]}
               label={actionConfig.label}
+              labelImg={actionConfig.labelImg}
               onClick={this._onActionClick}
               callbackKey={key}
               key={key}

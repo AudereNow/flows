@@ -60,7 +60,11 @@ class ClaimNotes extends React.Component<Props, State> {
               onChange={this._onNotesChange}
               value={notes}
             />
-            <Button label="Save Notes" onClick={this._onSave}></Button>
+            <Button
+              className="claimnotes_button"
+              label="Save Notes"
+              onClick={this._onSave}
+            />
             {cannedClaimNotes && (
               <div>
                 <select onChange={this._onCannedNoteSelected}>
@@ -77,7 +81,11 @@ class ClaimNotes extends React.Component<Props, State> {
         ) : (
           <Fragment>
             <span>{`Notes: ${notes}`}</span>
-            <Button label="Edit" onClick={this._onEdit} />
+            <Button
+              className="claimnotes_button"
+              label="Edit"
+              onClick={this._onEdit}
+            />
           </Fragment>
         )}
       </div>

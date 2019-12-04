@@ -1,6 +1,47 @@
 * {
   font-family: "Open Sans", sans-serif;
-  color: #2b2b2b;
+  color: var(--text-color);
+  font-size: var(--body-size);
+}
+
+button:focus {
+  outline: 0;
+}
+
+button:active {
+  background-color: white;
+}
+
+.mainview_admin_panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.mainview_approve_button {
+  background-color: var(--primary-color-light);
+  color: white;
+}
+
+.mainview_decline_button {
+  background-color: var(--primary-color-grey);
+  color: white;
+}
+
+.mainview_neutral_button {
+  background-color: white;
+  color: var(--primary-color-dark);
+  border: 1px solid var(--primary-color-dark);
+}
+
+.mainview_show_more_button {
+  color: var(--primary-color-dark);
+  background-color: white;
+  border: none;
+}
+
+.mainview_bold {
+  font-weight: bold;
 }
 
 .mainview_container {
@@ -12,6 +53,11 @@
   width: 100%;
 }
 
+.mainview_padded_row {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 .mainview_tasklist {
   min-width: 25vw;
   display: flex;
@@ -21,7 +67,6 @@
 .mainview_button_row {
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
 }
 
 .mainview_spaced_row {
@@ -40,11 +85,13 @@
 
 .mainview_search_container {
   padding: 7px;
-  background-color: #888888;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .mainview_clear_search_button {
-  width: 100px;
+  border: none;
+  color: var(--primary-color-light);
+  min-width: 150px;
   height: 20px;
 }
 
@@ -52,12 +99,17 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin: 10px 0px;
 }
 
 .mainview_search_input {
   display: flex;
   flex: 1;
   height: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 3px;
+  max-width: 300px;
 }
 
 .mainview_hide_search {
@@ -79,7 +131,13 @@
   margin: 10px;
 }
 
+.mainview_instructions_header {
+  margin: 10px;
+  font-weight: bold;
+}
+
 .mainview_actions_so_far_header {
+  color: var(--primary-color-dark);
   margin-top: 12px;
   margin: 10px;
   font-weight: bold;
@@ -93,8 +151,60 @@
   min-height: 100%;
 }
 
-.mainview_admin_panel {
+.mainview_text_primary {
+  color: var(--primary-color-light);
+  font-weight: bold;
+}
+
+.mainview_row {
   display: flex;
-  flex: 1;
-  flex-direction: column;
+  flex-direction: row;
+}
+
+.mainview_button {
+  color: var(--primary-color-dark);
+  border: 1px solid var(--primary-color-dark);
+  background-color: white;
+}
+
+.mainview_header_text {
+  color: var(--primary-color-dark);
+}
+
+.mainview_padded {
+  padding: 10px;
+}
+
+.react-tabs__tab {
+  border: none;
+}
+
+.ReactTable {
+  border: none;
+}
+
+.react-tabs__tab--selected {
+  border-bottom: 5px solid var(--primary-color-light);
+  color: var(--primary-color-dark);
+}
+
+.ReactTable .rt-thead .rt-resizable-header-content {
+  text-align: left;
+  color: var(--primary-color-grey);
+}
+
+.ReactTable .rt-thead .rt-th.-sort-desc,
+.ReactTable .rt-thead .rt-td.-sort-desc {
+  box-shadow: inset 0 -3px 0 0 var(--primary-color-dark);
+}
+
+.ReactTable .rt-thead .rt-th.-sort-asc,
+.ReactTable .rt-thead .rt-td.-sort-asc {
+  box-shadow: inset 0 3px 0 0 var(--primary-color-dark);
+}
+
+.mainview_instructions_edit {
+  margin: 10px;
+  width: 250px;
+  height: 100px;
 }
