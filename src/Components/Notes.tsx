@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { TaskChangeRecord } from "../sharedtypes";
 import LabelTextInput from "./LabelTextInput";
 import "./Notes.css";
