@@ -63,6 +63,11 @@ export const defaultConfig: AppConfig = {
           nextTaskState: TaskState.PAY,
           labelClassName: "mainview_approve_button",
           labelImg: ApproveImg
+        },
+        save: {
+          label: "SAVE NOTE",
+          nextTaskState: TaskState.AUDIT,
+          labelClassName: "mainview_button"
         }
       }
     },
@@ -120,6 +125,11 @@ export const defaultConfig: AppConfig = {
           label: "SEND TO PRIMARY REVIEWER",
           nextTaskState: TaskState.AUDIT,
           labelClassName: "mainview_neutral_button"
+        },
+        save: {
+          label: "SAVE NOTE",
+          nextTaskState: TaskState.FOLLOWUP,
+          labelClassName: "mainview_button"
         }
       }
     },

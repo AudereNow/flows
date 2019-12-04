@@ -24,8 +24,8 @@ import {
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
   changeTaskState,
-  getNotes,
   getChanges,
+  getNotes,
   getPharmacyDetails,
   getUserEmail,
   subscribeToTasks
@@ -601,18 +601,16 @@ class DetailsWrapper extends React.Component<
     }));
     let task: Task = this.props.task;
     if (this._actionCallbacks[key]) {
-      const result = await this._actionCallbacks[key]();
-      if (!result.success) {
-        this.setState(state => ({
-          buttonsBusy: {
-            ...state.buttonsBusy,
-            [key]: false
-          }
-        }));
-        return;
-      }
+      let result = await this._actionCallbacks[key]();
+      this.setState(state => ({
+        buttonsBusy: {
+          ...state.buttonsBusy,
+          [key]: false
+        }
+      }));
       task = result.task || task;
     }
+
     await changeTaskState(
       task,
       this.props.actions[key].nextTaskState,

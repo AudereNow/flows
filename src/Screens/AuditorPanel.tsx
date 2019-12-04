@@ -86,6 +86,7 @@ export class AuditorDetails extends React.Component<
 
   async componentDidMount() {
     this.props.registerActionCallback("approve", this._onApprove);
+    this.props.registerActionCallback("save", this._onApprove);
     this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
@@ -318,8 +319,8 @@ export class AuditorDetails extends React.Component<
         phone: entry.phone,
         item: entry.item,
         "claimed cost": entry.claimedCost,
-        notes: (entry as any).notes || "",
-        rejected: (entry as any).rejected || false
+        rejected: (entry as any).rejected || false,
+        notes: (entry as any).notes || ""
       });
     });
 
