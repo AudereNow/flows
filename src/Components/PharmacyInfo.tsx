@@ -150,15 +150,15 @@ class PharmacyInfo extends React.Component<Props, State> {
           <TextItem
             data={{
               displayKey: "Pharmacy",
-              searchKey: "name",
-              value: this.props.site.name
+              searchKey: "pharmacy",
+              value: this.props.site.name || ""
             }}
           />
           <TextItem
             data={{
               displayKey: "Phone Number",
               searchKey: "phone",
-              value: this.props.site.phone
+              value: this.props.site.phone || ""
             }}
           />
           {this.state.pharmacy && (

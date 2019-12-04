@@ -361,10 +361,16 @@ class TaskPanel extends React.Component<Props, State> {
     tasks.forEach(task => {
       task.entries.forEach(entry => {
         let entryCopy = Object.assign(
-          { id: task.id, siteName: task.site.name },
+          {
+            id: task.id,
+            siteName: task.site.name,
+            notes: entry.notes || "",
+            pharmacy: task.site.name || "",
+            rejected: entry.rejected === undefined ? false : entry.rejected
+          },
           entry
         );
-
+        delete (entryCopy as any)["originalIndex"];
         rows.push(entryCopy);
       });
     });
