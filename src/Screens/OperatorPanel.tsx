@@ -1,15 +1,15 @@
 import React from "react";
-import "react-tabs/style/react-tabs.css";
 import ReactMarkdown from "react-markdown";
+import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
+import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
-import { configuredComponent } from "../util/configuredComponent";
 
 interface State {
   showImages: boolean;
@@ -27,6 +27,14 @@ class ConfigurableOperatorDetails extends React.Component<
     super(props);
     this.state = { showImages: true };
   }
+
+  componentDidMount() {
+    this.props.registerActionCallback("save", this._onSave);
+  }
+
+  _onSave = async () => {
+    return { success: true, task: this.props.task };
+  };
 
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];

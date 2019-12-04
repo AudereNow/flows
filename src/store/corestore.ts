@@ -69,7 +69,7 @@ export async function changeTaskState(
     notes
   };
 
-  task.notes = notes;
+  task.updatedAt = new Date().getMilliseconds();
 
   const updatedTask = {
     ...task,

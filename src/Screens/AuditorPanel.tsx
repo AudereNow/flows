@@ -319,7 +319,6 @@ export class AuditorDetails extends React.Component<
         phone: entry.phone,
         item: entry.item,
         "claimed cost": entry.claimedCost,
-        notes: (entry as any).notes || "",
         rejected: (entry as any).rejected || false
       });
     });
