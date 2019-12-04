@@ -85,6 +85,7 @@ export type Task = {
   site: Site;
   createdAt: number; // timestamp
   updatedAt?: number; // timestamp
+  notes?: string;
 };
 
 export type PaymentRecipient = {

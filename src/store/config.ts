@@ -63,6 +63,11 @@ export const defaultConfig: AppConfig = {
           nextTaskState: TaskState.PAY,
           labelClassName: "mainview_approve_button",
           labelImg: ApproveImg
+        },
+        save: {
+          label: "SAVE NOTE",
+          nextTaskState: TaskState.AUDIT,
+          labelClassName: "mainview_button"
         }
       }
     },
