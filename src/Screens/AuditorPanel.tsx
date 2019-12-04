@@ -361,13 +361,18 @@ export class AuditorDetails extends React.Component<
           labelImg={DownloadCSVImg}
           onClick={this._downloadPharmacyReport}
         />
-        <div className="mainview_spaced_row">
+        <div className="mainview_row">
           <input
             className="mainview_search_input"
             type="text"
             onChange={this._handleSearchTermDetailsChange}
             placeholder="Filter Claims"
           />
+          {!!(task as any).foundCount && (
+            <span className="mainview_header_text">{`Search Results: (${
+              (task as any).foundCount
+            })`}</span>
+          )}
         </div>
         {patients.map((patient, index) => {
           return this._renderPatientDetails(patient, index);

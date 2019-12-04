@@ -1,6 +1,6 @@
 .button_container {
   border-radius: var(--border-radius);
-  height: 28px;
+  min-height: 30px;
   line-height: 0px;
   min-width: 150px;
   margin: 7px 10px;
