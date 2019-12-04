@@ -37,7 +37,8 @@ export default class CannedNotesEditor extends React.Component<Props> {
     }
   }
 
-  _editNote = (index: number) => {
+  _editNote = (key: string) => {
+    const index = parseInt(key);
     if (!this.state.notes) {
       return;
     }
@@ -62,7 +63,8 @@ export default class CannedNotesEditor extends React.Component<Props> {
     });
   };
 
-  _saveNote = async (index: number) => {
+  _saveNote = async (key: string) => {
+    const index = parseInt(key);
     if (!this.state.notes) {
       return;
     }
@@ -82,15 +84,14 @@ export default class CannedNotesEditor extends React.Component<Props> {
     });
   };
 
-  _deleteNote = async (index: number) => {
+  _deleteNote = async (key: string) => {
+    const index = parseInt(key);
     if (!this.state.notes) {
       return;
     }
-    console.log(this.state);
     const newNotes = this.state.notes
       .slice(0, index)
       .concat(this.state.notes.slice(index + 1));
-    console.log(newNotes);
     this.setState({
       saving: true
     });
@@ -128,7 +129,11 @@ export default class CannedNotesEditor extends React.Component<Props> {
           this.state.editing[index] === undefined ? (
             <li key={index}>
               {note}
-              <Button label="Edit" onClick={() => this._editNote(index)} />
+              <Button
+                label="Edit"
+                callbackKey={index.toString()}
+                onClick={this._editNote}
+              />
             </li>
           ) : (
             <li key={index}>
@@ -140,12 +145,14 @@ export default class CannedNotesEditor extends React.Component<Props> {
               />
               <Button
                 label="Save"
-                onClick={() => this._saveNote(index)}
+                callbackKey={index.toString()}
+                onClick={this._saveNote}
                 disabled={this.state.saving}
               />
               <Button
                 label="Delete"
-                onClick={() => this._deleteNote(index)}
+                callbackKey={index.toString()}
+                onClick={this._deleteNote}
                 disabled={this.state.saving}
               />
             </li>

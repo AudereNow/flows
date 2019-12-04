@@ -22,7 +22,8 @@ service cloud.firestore {
       allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
     }
     match /canned_notes/{category} {
-      allow read, write: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
+      allow read: if request.auth.token.roles.hasAny(['Admin', 'Auditor', 'Payor', 'Operator'])
+      allow write: if request.auth.token.roles.hasAny(['Admin'])
     }
     match /metadata/remoteConfig {
       allow read: if true;
