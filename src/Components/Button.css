@@ -1,10 +1,12 @@
 .button_container {
-  border: 1px solid black;
-  height: 26px;
+  border-radius: var(--border-radius);
+  min-height: 30px;
   line-height: 0px;
   min-width: 150px;
-  margin: 7px;
-  padding: 10px;
+  margin: 7px 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .button_container:enabled:hover {
@@ -12,8 +14,7 @@
 }
 
 .button_container:enabled:active {
-  background-color: grey;
-  color: white;
+  background-color: var(--border-color);
 }
 
 .button_container:disabled {
@@ -22,4 +23,14 @@
 
 .button_container:disabled:hover {
   cursor: wait;
+}
+
+.button_image_label {
+  margin-right: 5px;
+  height: 15px;
+}
+
+.button_label_text {
+  color: white;
+  font-size: 16px;
 }

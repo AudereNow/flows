@@ -62,8 +62,18 @@ class MainView extends React.Component<Props, State> {
         tab => tab.baseUrl === this.props.startingTab
       );
     }
-
     this.setState({ roles, selectedTabIndex });
+  }
+
+  componentDidUpdate() {
+    if (!!this.props.startingTab) {
+      let selectedTabIndex = Object.values(defaultConfig.tabs).findIndex(
+        tab => tab.baseUrl === this.props.startingTab
+      );
+      if (selectedTabIndex !== this.state.selectedTabIndex) {
+        this.setState({ selectedTabIndex });
+      }
+    }
   }
 
   _onTabSelect = (index: number): boolean => {

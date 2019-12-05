@@ -8,6 +8,7 @@
 */
 export const ACTIVE_TASK_COLLECTION = "actively_viewed_tasks";
 export const ADMIN_LOG_EVENT_COLLECTION = "admin_log_event";
+export const CANNED_NOTES_COLLECTION = "canned_notes";
 export const TASK_CHANGE_COLLECTION = "task_changes";
 export const METADATA_COLLECTION = "metadata";
 export const TASKS_COLLECTION = "tasks";
@@ -28,11 +29,13 @@ export const REMOTE_CONFIG_DOC = "remoteConfig";
 export type RemoteConfig = {
   enableRealPayments: boolean;
   allowDuplicateUploads: boolean;
+  opsInstructions: string;
 };
 
 export const DEFAULT_REMOTE_CONFIG: RemoteConfig = {
   enableRealPayments: false,
-  allowDuplicateUploads: false
+  allowDuplicateUploads: false,
+  opsInstructions: ""
 };
 
 export enum UserRole {
@@ -44,7 +47,7 @@ export enum UserRole {
 
 export type Site = {
   name: string;
-  phone?: string;
+  phone: string;
 };
 
 export type ClaimEntry = {
@@ -62,6 +65,8 @@ export type ClaimEntry = {
   photoMedBatchUri?: string;
   timestamp: number;
   reviewed?: boolean;
+  notes?: string;
+  rejected?: boolean;
 };
 
 export type TaskChangeRecord = {

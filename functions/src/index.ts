@@ -1,7 +1,8 @@
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import csvtojson from "csvtojson";
 import axios, { AxiosResponse } from "axios";
+import csvtojson from "csvtojson";
+import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
+import { UserRecord } from "firebase-functions/lib/providers/auth";
 import africasTalkingOptions from "./africas-talking-options.json";
 import {
   AdminLogEvent,
@@ -10,18 +11,18 @@ import {
   METADATA_COLLECTION,
   Patient,
   PATIENTS_COLLECTION,
-  REMOTE_CONFIG_DOC,
+  PaymentRecipient,
   RemoteConfig,
+  REMOTE_CONFIG_DOC,
   removeEmptyFieldsInPlace,
   Task,
-  TASK_CHANGE_COLLECTION,
   TaskChangeRecord,
-  User,
-  UserRole,
   TaskState,
-  TASKS_COLLECTION
+  TASKS_COLLECTION,
+  TASK_CHANGE_COLLECTION,
+  User,
+  UserRole
 } from "./sharedtypes";
-import { UserRecord } from "firebase-functions/lib/providers/auth";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
@@ -64,6 +65,11 @@ exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
     if (!data || !data.recipients) {
       throw Error("No recipients specified");
     }
+
+    data.recipients = data.recipients.map((recipient: PaymentRecipient) => ({
+      ...recipient,
+      phoneNumber: canonicalizePhoneNumber(recipient.phoneNumber)
+    }));
 
     const response = await axios.post(
       africasTalkingOptions.endpoint,
@@ -233,11 +239,13 @@ async function updatePatientsForTask(task: Task) {
       if (!entry.patientID) {
         return;
       }
-      let patient: Patient = (await admin
-        .firestore()
-        .collection(PATIENTS_COLLECTION)
-        .doc(entry.patientID)
-        .get()).data() as Patient;
+      let patient: Patient = (
+        await admin
+          .firestore()
+          .collection(PATIENTS_COLLECTION)
+          .doc(entry.patientID)
+          .get()
+      ).data() as Patient;
       if (!patient) {
         patient = { id: entry.patientID, taskIds: [task.id] };
       } else {
@@ -328,7 +336,8 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         entries: patients,
         createdAt: Date.now(),
         site: {
-          name: pharm.values[0]["Pharmacy Name FULL"]
+          name: pharm.values[0]["Pharmacy Name FULL"],
+          phone: pharm.values[0]["Pharmacy Contact and MPESA"]
         }
       };
       const record: TaskChangeRecord = {
@@ -454,4 +463,14 @@ function shuffleArray(arr: any[]): any[] {
     .map(a => ({ sort: Math.random(), value: a }))
     .sort((a, b) => a.sort - b.sort)
     .map(a => a.value);
+}
+
+function canonicalizePhoneNumber(phone: string): string {
+  if (phone.length === 9) {
+    return `+254${phone}`;
+  }
+  if (phone.length === 12) {
+    return `+${phone}`;
+  }
+  return phone;
 }

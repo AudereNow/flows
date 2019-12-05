@@ -1,16 +1,20 @@
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React from "react";
+import { RouteComponentProps, withRouter } from "react-router";
 import ReactTable from "react-table";
 import "react-table/react-table.css";
+import ClearSearchImg from "../assets/close.png";
+import DownloadCSVImg from "../assets/downloadcsv.png";
 import { HistoryRow } from "../Screens/AdminPanel";
+import { defaultConfig } from "../store/config";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import Button from "./Button";
 import "./SearchableTable.css";
 import { ToolTipIcon } from "./ToolTipIcon";
 
-type Props = {
+type Props = RouteComponentProps & {
   tableColumns: any[];
   allData: HistoryRow[];
   downloadPrefix: string;
@@ -20,6 +24,17 @@ type State = {
   data: any[];
   searchTerm: string;
 };
+
+const STATE_TO_PANEL = Object.keys(defaultConfig.tabs).reduce(
+  (res: any, item: any) => {
+    const tab = defaultConfig.tabs[item];
+    if ((tab as any).taskState) {
+      res[(tab as any).taskState] = tab.baseUrl;
+    }
+    return res;
+  },
+  {}
+);
 
 class SearchableTable extends React.Component<Props, State> {
   state: State = {
@@ -75,37 +90,65 @@ class SearchableTable extends React.Component<Props, State> {
     });
   };
 
+  _onRowClick = (state: any, rowInfo: any, column: any, instance: any) => {
+    return {
+      onClick: (e: any) => {
+        const columnName = column.Header;
+        const id = rowInfo.original.id;
+        const state = rowInfo.original.state;
+
+        if (
+          columnName.toLowerCase() === "id" &&
+          STATE_TO_PANEL.hasOwnProperty(state)
+        ) {
+          this.props.history.push(`/${(STATE_TO_PANEL as any)[state]}/${id}`);
+        }
+      }
+    };
+  };
+
   render() {
     const { data } = this.state;
     const { tableColumns } = this.props;
 
     return (
       <div>
-        <div className="searchabletable_checkbox_row">
-          <div className="searchabletable_checkbox_search">
-            <div>
-              <ToolTipIcon
-                label={"ⓘ"}
-                iconClassName="tooltipicon_information"
-                tooltip={
-                  "Available search keys: 'id', 'time', 'description', 'notes'. Example query: id:xvc, time:11/24"
-                }
-              />
-              <input
-                ref={this._inputRef}
-                type="text"
-                onChange={this._onSearchTermChange}
-              />
-              <Button onClick={this._clearSearch} label="Clear Search" />
-            </div>
-            <Button onClick={this._downloadCSV} label="Download CSV" />
-          </div>
+        <div className="searchabletable_row">
+          <input
+            className="searchabletable_input"
+            placeholder="Search by keyword(s)"
+            ref={this._inputRef}
+            type="text"
+            onChange={this._onSearchTermChange}
+          />
+          <ToolTipIcon
+            label={"ⓘ"}
+            iconClassName="tooltipicon_information"
+            tooltip={
+              "Available search keys: 'id', 'time', 'description', 'notes'. Example query: id:xvc, time:11/24"
+            }
+          />
+          <Button
+            className="searchabletable_button"
+            labelImg={ClearSearchImg}
+            onClick={this._clearSearch}
+            label="Clear Search"
+          />
+          <Button
+            className="searchabletable_button"
+            labelImg={DownloadCSVImg}
+            onClick={this._downloadCSV}
+            label="Download CSV"
+          />
         </div>
+
         {data.length === 0 ? (
           "No changes found"
         ) : (
           <ReactTable
+            className="-striped -highlight"
             data={data}
+            getTdProps={this._onRowClick}
             columns={tableColumns}
             defaultPageSize={50}
             defaultSorted={[
@@ -121,4 +164,4 @@ class SearchableTable extends React.Component<Props, State> {
   }
 }
 
-export default SearchableTable;
+export default withRouter(SearchableTable);

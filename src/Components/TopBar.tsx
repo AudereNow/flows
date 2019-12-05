@@ -1,15 +1,15 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
-import React, { Fragment } from "react";
-import uploadIcon from "../assets/cloud_upload.svg";
-import logo from "../assets/maishalogo.png";
-import Dropdown from "../Components/Dropdown";
-import { userRoles, uploadCSV } from "../store/corestore";
-import "./TopBar.css";
-import { UserRole } from "../sharedtypes";
+import React from "react";
 // @ts-ignore
 import LoadingOverlay from "react-loading-overlay"; // no available type data
+import logoutIcon from "../assets/logout.png";
+import logo from "../assets/maishalogo.png";
+import uploadIcon from "../assets/uploadcsv.png";
+import { UserRole } from "../sharedtypes";
+import { uploadCSV, userRoles } from "../store/corestore";
+import "./TopBar.css";
 
 type State = {
   roles: UserRole[];
@@ -88,9 +88,12 @@ class TopBar extends React.Component<{}, State> {
     const { roles, showFileSelector, uploading } = this.state;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
-        <div className="topbar_row" onClick={this._onUploadIconClick}>
+        <div
+          onClick={this._onUploadIconClick}
+          className="topbar_row topbar_pointer"
+        >
           <img className="topbar_upload_icon" src={uploadIcon} alt="upload" />
-          <div>Upload CSV</div>
+          <div className="topbar_item">Upload CSV</div>
         </div>
       ) : null;
     const uploader = showFileSelector ? (
@@ -119,21 +122,26 @@ class TopBar extends React.Component<{}, State> {
         <a href="/">
           <img className="topbar_logo" src={logo} alt="logo" />
         </a>
-        <div className="topbar_user">
-          {firebase.auth().currentUser!.displayName}
-        </div>
 
-        <div className="topbar_row">
-          <Dropdown pinned={this.state.selectingFile}>
-            <Fragment>
-              {overlay}
-              {uploadButton}
-              {uploader}
-            </Fragment>
-            <div className="nav_menu_item" onClick={this._handleLogout}>
+        <div className="topbar_details">
+          <span>{firebase.auth().currentUser!.displayName}</span>
+          <div className="topbar_row">
+            {overlay}
+            {uploadButton}
+            {uploader}
+            <span className="topbar_divider topbar_item" />
+            <div
+              className="topbar_logout topbar_pointer"
+              onClick={this._handleLogout}
+            >
               Logout
+              <img
+                className="topbar_arrow"
+                src={logoutIcon}
+                alt="logout_arrow"
+              />
             </div>
-          </Dropdown>
+          </div>
         </div>
       </div>
     );

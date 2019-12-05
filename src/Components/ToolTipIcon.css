@@ -1,5 +1,7 @@
 .tooltipicon_container {
   position: relative;
+  width: 25px;
+  height: 25px;
 }
 
 .tooltipicon_label {
@@ -10,12 +12,13 @@
   position: absolute;
   top: 20px;
   left: 10px;
-  min-width: 250px;
+  min-width: 300px;
   background-color: white;
   padding: 10px;
+  z-index: 999;
 }
 
 .tooltipicon_information {
   margin: 5px;
-  color: white;
+  color: var(--primary-color-dark);
 }

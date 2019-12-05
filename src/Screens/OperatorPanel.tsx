@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
 import ImageRow from "../Components/ImageRow";
@@ -6,6 +7,7 @@ import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
 import { ClaimEntry } from "../sharedtypes";
+import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 import { DetailsComponentProps } from "./TaskPanel";
 
@@ -13,14 +15,26 @@ interface State {
   showImages: boolean;
 }
 
-export class OperatorDetails extends React.Component<
-  DetailsComponentProps,
+interface Props {
+  instructions: string;
+}
+
+class ConfigurableOperatorDetails extends React.Component<
+  DetailsComponentProps & Props,
   State
 > {
-  constructor(props: DetailsComponentProps) {
+  constructor(props: DetailsComponentProps & Props) {
     super(props);
     this.state = { showImages: true };
   }
+
+  componentDidMount() {
+    this.props.registerActionCallback("save", this._onSave);
+  }
+
+  _onSave = async () => {
+    return { success: true, task: this.props.task };
+  };
 
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
@@ -53,7 +67,7 @@ export class OperatorDetails extends React.Component<
     this.setState({ showImages: !this.state.showImages });
   };
 
-  _renderClaimEntryDetails = (entry: ClaimEntry) => {
+  _renderClaimEntryDetails = (entry: ClaimEntry, index: number) => {
     let patientProps = [];
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
     if (!!entry.patientSex && entry.patientSex!.length > 0)
@@ -62,46 +76,60 @@ export class OperatorDetails extends React.Component<
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
     return (
-      <LabelWrapper key={patientInfo}>
-        <TextItem
-          data={{
-            displayKey: "Date",
-            searchKey: "date",
-            value: new Date(entry.timestamp).toLocaleDateString()
-          }}
-        />
-        <TextItem
-          data={{
-            displayKey: "Patient",
-            searchKey: "patient",
-            value: `${entry.patientFirstName} ${
-              entry.patientLastName
-            } ${patientInfo} ${entry.phone || ""}`
-          }}
-        />
-        <ImageRow
-          showImages={this.state.showImages}
-          images={this._extractImages(entry)}
-        />
+      <LabelWrapper key={patientInfo + "_" + index}>
+        <div className="mainview_padded">
+          <TextItem
+            data={{
+              displayKey: "Date",
+              searchKey: "date",
+              value: new Date(entry.timestamp).toLocaleDateString()
+            }}
+          />
+          <TextItem
+            data={{
+              displayKey: "Patient",
+              searchKey: "patient",
+              value: `${entry.patientFirstName} ${
+                entry.patientLastName
+              } ${patientInfo} ${entry.phone || ""}`
+            }}
+          />
+          <ImageRow
+            showImages={this.state.showImages}
+            images={this._extractImages(entry)}
+          />
+        </div>
       </LabelWrapper>
     );
   };
 
   render() {
     return (
-      <LabelWrapper className="mainview_details" label="DETAILS">
-        <PharmacyInfo name={this.props.task.site.name}>
+      <LabelWrapper className="mainview_details">
+        <PharmacyInfo site={this.props.task.site}>
           <div className="pharmacy_toggle_image_container">
             <Button
+              className={"pharmacy_button"}
               onClick={this._toggleImages}
               label={!!this.state.showImages ? "Hide Images" : "Show Images"}
             />
           </div>
         </PharmacyInfo>
-        {this.props.task.entries.map(this._renderClaimEntryDetails)}
+        {this.props.task.entries.map((entry, index) => {
+          return this._renderClaimEntryDetails(entry, index);
+        })}
+        <div className="mainview_instructions_header">Instructions:</div>
+        <ReactMarkdown source={this.props.instructions} />
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>
     );
   }
 }
+
+export const OperatorDetails = configuredComponent<
+  DetailsComponentProps,
+  Props
+>(ConfigurableOperatorDetails, config => ({
+  instructions: config.opsInstructions
+}));

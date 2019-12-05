@@ -1,12 +1,13 @@
 import React, { Fragment } from "react";
+import ReactTable from "react-table";
 import { TaskTotal } from "../Screens/AuditorPanel";
-import { Pharmacy } from "../sharedtypes";
+import { Pharmacy, Site } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails
 } from "../store/corestore";
 import Button from "./Button";
-import DataTable from "./DataTable";
+import ExpandableDiv from "./ExpandableDiv";
 import "./PharmacyInfo.css";
 import TextItem from "./TextItem";
 import { ToolTipIcon } from "./ToolTipIcon";
@@ -17,7 +18,7 @@ const DEFAULT_PHARMACY: Pharmacy = {
 };
 
 interface Props {
-  name: string;
+  site: Site;
   onToggleImages?: () => void;
   showImages?: boolean;
   previousClaims?: TaskTotal[];
@@ -31,6 +32,23 @@ interface State {
   editedOwners?: string;
   saving: boolean;
 }
+
+const PREVIOUS_CLAIMS_TABLE_COLUMNS = [
+  { id: "id", Header: "ID", accessor: "id", minWidth: 90 },
+  { id: "total", Header: "Total", accessor: "total", minWidth: 70 },
+  {
+    id: "Count",
+    Header: "Count",
+    accessor: "count",
+    minWidth: 60
+  },
+  {
+    Header: "Date",
+    id: "date",
+    accessor: (row: any) => new Date(row.date).toLocaleDateString(),
+    minWidth: 70
+  }
+];
 class PharmacyInfo extends React.Component<Props, State> {
   state: State = {
     saving: false
@@ -40,7 +58,7 @@ class PharmacyInfo extends React.Component<Props, State> {
 
   componentDidMount() {
     this._unsubscribe = subscribeToPharmacyDetails(
-      this.props.name,
+      this.props.site.name,
       pharmacy => {
         if (pharmacy === undefined) {
           pharmacy = DEFAULT_PHARMACY;
@@ -51,8 +69,8 @@ class PharmacyInfo extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.name !== this.props.name) {
-      subscribeToPharmacyDetails(this.props.name, pharmacy => {
+    if (prevProps.site.name !== this.props.site.name) {
+      subscribeToPharmacyDetails(this.props.site.name, pharmacy => {
         if (pharmacy === undefined) {
           pharmacy = DEFAULT_PHARMACY;
         }
@@ -77,7 +95,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.name, {
+    await setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       notes: this.state.editedNotes || ""
     });
@@ -102,11 +120,12 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.name, {
+    await setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       owners: (this.state.editedOwners || "")
         .split(",")
         .map(owner => owner.trim())
+        .filter(owner => owner)
     });
     this.setState({ editedOwners: undefined, saving: false });
   };
@@ -119,7 +138,6 @@ class PharmacyInfo extends React.Component<Props, State> {
 
   render() {
     const { previousClaims, showPreviousClaims, claimCount } = this.props;
-
     const showIncreaseWarning =
       !!previousClaims && previousClaims.length > 0 && !!claimCount
         ? (claimCount - previousClaims[0]["count"]) /
@@ -132,22 +150,31 @@ class PharmacyInfo extends React.Component<Props, State> {
           <TextItem
             data={{
               displayKey: "Pharmacy",
-              searchKey: "name",
-              value: this.props.name
+              searchKey: "pharmacy",
+              value: this.props.site.name || ""
+            }}
+          />
+          <TextItem
+            data={{
+              displayKey: "Phone Number",
+              searchKey: "phone",
+              value: this.props.site.phone || ""
             }}
           />
           {this.state.pharmacy && (
             <div className="pharmacy_detail">
               {this.state.editedNotes !== undefined ? (
                 <div>
-                  <div>Notes:</div>
+                  <div className="pharmacy_text">Notes:</div>
                   <textarea
+                    className="pharmacy_textarea"
                     readOnly={this.state.saving}
                     onChange={this._onNotesChange}
                     defaultValue={this.state.editedNotes}
                   />
                   <div>
                     <Button
+                      className="pharmacy_button"
                       onClick={this._onNotesSave}
                       disabled={this.state.saving}
                       label="Save"
@@ -156,9 +183,10 @@ class PharmacyInfo extends React.Component<Props, State> {
                 </div>
               ) : (
                 <div>
-                  <div>
+                  <div className="pharmacy_text">
                     {`Notes: ${this.state.pharmacy.notes} `}
                     <Button
+                      className="pharmacy_button"
                       onClick={this._onNotesEdit}
                       label={
                         !!this.state.pharmacy.notes &&
@@ -171,7 +199,7 @@ class PharmacyInfo extends React.Component<Props, State> {
                 </div>
               )}
               {this.state.editedOwners !== undefined ? (
-                <div>
+                <div className="pharmacy_text">
                   {"Owners: "}
                   <input
                     readOnly={this.state.saving}
@@ -179,6 +207,7 @@ class PharmacyInfo extends React.Component<Props, State> {
                     defaultValue={this.state.editedOwners}
                   />
                   <Button
+                    className="pharmacy_button"
                     onClick={this._onOwnersSave}
                     disabled={this.state.saving}
                     label="Save"
@@ -188,9 +217,10 @@ class PharmacyInfo extends React.Component<Props, State> {
                   </span>
                 </div>
               ) : (
-                <div>
+                <div className="pharmacy_text">
                   {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
                   <Button
+                    className="pharmacy_button"
                     onClick={this._onOwnersEdit}
                     label={
                       this.state.pharmacy.owners.length > 0
@@ -206,20 +236,25 @@ class PharmacyInfo extends React.Component<Props, State> {
         </div>
         <div className="pharmacy_half">
           {!!previousClaims && !!showPreviousClaims && (
-            <Fragment>
-              <div className="pharmacy_claims_header">
-                <span className="pharmacy_claims_header_text">
-                  Previous Claims
-                </span>
-                {!!showIncreaseWarning && (
-                  <ToolTipIcon
-                    label={"⚠"}
-                    tooltip="Greater than 50% increase in claims. Please check for possible fraud"
-                  ></ToolTipIcon>
-                )}
-              </div>
-              <DataTable data={previousClaims} />
-            </Fragment>
+            <ExpandableDiv label="Previous Pharmacy Claims">
+              <Fragment>
+                <div className="pharmacy_claims_header">
+                  {!!showIncreaseWarning && (
+                    <ToolTipIcon
+                      label={"⚠"}
+                      tooltip="Greater than 50% increase in claims. Please check for possible fraud"
+                    ></ToolTipIcon>
+                  )}
+                </div>
+                <ReactTable
+                  className="-striped -highlight"
+                  data={previousClaims}
+                  columns={PREVIOUS_CLAIMS_TABLE_COLUMNS}
+                  minRows={0}
+                  showPagination={false}
+                />
+              </Fragment>
+            </ExpandableDiv>
           )}
         </div>
       </div>

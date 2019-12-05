@@ -1,19 +1,29 @@
 import moment from "moment";
-import React from "react";
+import React, { ChangeEvent } from "react";
+import ReactMarkdown from "react-markdown";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
 import Button from "../Components/Button";
+import CannedNotesEditor from "../Components/CannedNotesEditor";
+import CheckBox from "../Components/CheckBox";
 import SearchableTable from "../Components/SearchableTable";
-import { TaskChangeRecord, UserRole } from "../sharedtypes";
+import {
+  RemoteConfig,
+  TaskChangeRecord,
+  TaskState,
+  UserRole
+} from "../sharedtypes";
 import {
   getAdminLogs,
   getAllChanges,
   getBestUserName,
+  issuePayments,
   setRoles,
-  updatePatientsTaskLists,
-  issuePayments
+  updatePatientsTaskLists
 } from "../store/corestore";
+import { setConfig } from "../store/remoteconfig";
+import { configuredComponent } from "../util/configuredComponent";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -26,7 +36,9 @@ const NO_ROLES_MAP: RoleMap = {
   Admin: false
 };
 
-type Props = {};
+type Props = {
+  config: RemoteConfig;
+};
 type State = {
   allHistory: HistoryRow[];
   email: string;
@@ -36,6 +48,8 @@ type State = {
     phoneNumber?: string;
     amount?: number;
   };
+  opsInstructions?: string;
+  savingOpsInstructions: boolean;
 };
 
 export type HistoryRow = {
@@ -43,27 +57,33 @@ export type HistoryRow = {
   time: string;
   description: string;
   notes?: string;
+  state?: TaskState;
 };
 
 const HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "id", minWidth: 90 },
   {
-    Header: "Time",
+    Header: "TIME",
     accessor: "time",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
     minWidth: 60
   },
   {
-    Header: "Description",
+    Header: "DESCRIPTION",
     accessor: "description",
     minWidth: 150
   },
   {
-    Header: "Notes",
+    Header: "NOTES",
     accessor: "notes",
     minWidth: 200,
     style: { whiteSpace: "unset" }
   }
+];
+
+const REMOTE_CONFIG_TOGGLES: { key: keyof RemoteConfig; label: string }[] = [
+  { key: "allowDuplicateUploads", label: "Allow duplicate uploads" },
+  { key: "enableRealPayments", label: "Enable Africa's talking payments" }
 ];
 
 class AdminPanel extends React.Component<Props, State> {
@@ -71,7 +91,8 @@ class AdminPanel extends React.Component<Props, State> {
     allHistory: [],
     email: "",
     roleMap: NO_ROLES_MAP,
-    paymentForm: {}
+    paymentForm: {},
+    savingOpsInstructions: false
   };
 
   _fetchedAllData = false;
@@ -169,7 +190,8 @@ class AdminPanel extends React.Component<Props, State> {
         description: !!r.fromState
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
-        notes: r.notes || ""
+        notes: r.notes || "",
+        state: r.state
       };
     });
   };
@@ -238,6 +260,29 @@ class AdminPanel extends React.Component<Props, State> {
     });
   };
 
+  _onOpsInstructionsEdit = () => {
+    this.setState({ opsInstructions: this.props.config.opsInstructions });
+  };
+
+  _onOpsInstructionsChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    this.setState({ opsInstructions: event.target.value });
+  };
+
+  _onOpsInstructionsSave = async () => {
+    this.setState({ savingOpsInstructions: true });
+    await setConfig("opsInstructions", this.state.opsInstructions || "");
+    this.setState({ savingOpsInstructions: false, opsInstructions: undefined });
+  };
+
+  _remoteConfigToggle = async (e: ChangeEvent<HTMLInputElement>) => {
+    const key = e.currentTarget.getAttribute(
+      "data-value"
+    ) as keyof RemoteConfig;
+    await setConfig(key, !this.props.config[key]);
+  };
+
   render() {
     const { allHistory } = this.state;
 
@@ -246,7 +291,9 @@ class AdminPanel extends React.Component<Props, State> {
         <Tabs>
           <TabList>
             <Tab>History</Tab>
+            <Tab>Instructions</Tab>
             <Tab>User Roles</Tab>
+            <Tab>Canned Responses</Tab>
             <Tab>Advanced</Tab>
           </TabList>
           <TabPanel>
@@ -257,6 +304,38 @@ class AdminPanel extends React.Component<Props, State> {
                 tableColumns={HISTORY_TABLE_COLUMNS}
               />
             )}
+          </TabPanel>
+          <TabPanel>
+            <div>Instructions for secondary review:</div>
+            {this.state.opsInstructions !== undefined && (
+              <div>
+                <textarea
+                  defaultValue={this.props.config.opsInstructions}
+                  onChange={this._onOpsInstructionsChange}
+                  className="mainview_instructions_edit"
+                />
+              </div>
+            )}
+            <div>
+              <ReactMarkdown
+                source={
+                  this.state.opsInstructions !== undefined
+                    ? this.state.opsInstructions
+                    : this.props.config.opsInstructions
+                }
+              />
+            </div>
+            <div>
+              {this.state.opsInstructions === undefined ? (
+                <Button label="Edit" onClick={this._onOpsInstructionsEdit} />
+              ) : (
+                <Button
+                  label="Save"
+                  onClick={this._onOpsInstructionsSave}
+                  disabled={this.state.savingOpsInstructions}
+                />
+              )}
+            </div>
           </TabPanel>
           <TabPanel>
             <form onSubmit={this._setUserRoles}>
@@ -271,6 +350,28 @@ class AdminPanel extends React.Component<Props, State> {
             </form>
           </TabPanel>
           <TabPanel>
+            <div>
+              <div>Edit Canned Claim Notes:</div>
+              <CannedNotesEditor categoryName="claim" />
+            </div>
+            <div>
+              <div>Edit Canned Task Notes:</div>
+              <CannedNotesEditor categoryName="task" />
+            </div>
+          </TabPanel>
+          <TabPanel>
+            <div>
+              <div>Config Options:</div>
+              {REMOTE_CONFIG_TOGGLES.map(toggle => (
+                <CheckBox
+                  checked={!!this.props.config[toggle.key]}
+                  label={toggle.label}
+                  value={toggle.key}
+                  onCheckBoxSelect={this._remoteConfigToggle}
+                  key={toggle.key}
+                />
+              ))}
+            </div>
             <div>
               <div>Issue Payment:</div>
               <input
@@ -314,4 +415,6 @@ function renderTooltippedTime(timestamp: string) {
   );
 }
 
-export default AdminPanel;
+export default configuredComponent<{}, Props>(AdminPanel, config => ({
+  config
+}));
