@@ -1,14 +1,19 @@
 import moment from "moment";
 import React, { ChangeEvent } from "react";
+import ReactMarkdown from "react-markdown";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
-import ReactMarkdown from "react-markdown";
 import Button from "../Components/Button";
 import CannedNotesEditor from "../Components/CannedNotesEditor";
 import CheckBox from "../Components/CheckBox";
 import SearchableTable from "../Components/SearchableTable";
-import { RemoteConfig, TaskChangeRecord, UserRole } from "../sharedtypes";
+import {
+  RemoteConfig,
+  TaskChangeRecord,
+  TaskState,
+  UserRole
+} from "../sharedtypes";
 import {
   getAdminLogs,
   getAllChanges,
@@ -52,6 +57,7 @@ export type HistoryRow = {
   time: string;
   description: string;
   notes?: string;
+  state?: TaskState;
 };
 
 const HISTORY_TABLE_COLUMNS = [
@@ -184,7 +190,8 @@ class AdminPanel extends React.Component<Props, State> {
         description: !!r.fromState
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
-        notes: r.notes || ""
+        notes: r.notes || "",
+        state: r.state
       };
     });
   };
