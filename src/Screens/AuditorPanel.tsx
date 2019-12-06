@@ -31,7 +31,13 @@ const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
-  { Header: "TOTAL AMOUNT", accessor: "totalAmount", minWidth: 60 },
+
+  {
+    Header: "TOTAL AMOUNT",
+    id: "totalAmount",
+    accessor: (row: any) => formatCurrency(parseFloat(row.totalAmount)),
+    minWidth: 60
+  },
   { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 }
 ];
 
