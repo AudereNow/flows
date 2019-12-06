@@ -182,6 +182,10 @@ button:active {
   border: none;
 }
 
+.mainview_table_id {
+  cursor: pointer;
+}
+
 .ReactTable {
   border: none;
 }
