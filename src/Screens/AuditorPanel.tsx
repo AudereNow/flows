@@ -1,9 +1,9 @@
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React, { ChangeEvent } from "react";
-import ReactTable from "react-table";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
+import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import Button from "../Components/Button";
@@ -178,7 +178,7 @@ export class AuditorDetails extends React.Component<
         label: {
           displayKey: "ID",
           value: claim.patientID || "",
-          searchKey: "patientID"
+          searchKey: "patient"
         }
       });
     }

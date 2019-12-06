@@ -50,7 +50,7 @@ class ConfigurableOperatorDetails extends React.Component<
         label: {
           displayKey: "ID",
           value: claim.patientID || "",
-          searchKey: "patientID"
+          searchKey: "patient"
         }
       });
     }

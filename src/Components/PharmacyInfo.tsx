@@ -157,7 +157,7 @@ class PharmacyInfo extends React.Component<Props, State> {
           <TextItem
             data={{
               displayKey: "Phone Number",
-              searchKey: "phone",
+              searchKey: "pharmacy",
               value: this.props.site.phone || ""
             }}
           />
