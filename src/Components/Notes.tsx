@@ -24,6 +24,7 @@ const Notes = (props: Props) => {
         <Fragment>
           {cannedNotes && (
             <select
+              className="notes_canned_responses"
               onChange={event =>
                 onNotesChanged(notes + (notes ? "\n" : "") + event.target.value)
               }

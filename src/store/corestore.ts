@@ -158,11 +158,13 @@ export async function loadPreviousTasks(
   currentIds: string[]
 ): Promise<Task[]> {
   const states = Object.values(TaskState);
-  return (await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .where("site.name", "==", siteName)
-    .get()).docs
+  return (
+    await firebase
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .where("site.name", "==", siteName)
+      .get()
+  ).docs
     .map(doc => doc.data() as Task)
     .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
     .filter(t => !currentIds.includes(t.id));
@@ -331,11 +333,13 @@ export function subscribeToPharmacyDetails(
 export async function getPharmacyDetails(
   pharmacyId: string
 ): Promise<Pharmacy> {
-  return (await firebase
-    .firestore()
-    .collection(PHARMACY_COLLECTION)
-    .doc(pharmacyId)
-    .get()).data() as Pharmacy;
+  return (
+    await firebase
+      .firestore()
+      .collection(PHARMACY_COLLECTION)
+      .doc(pharmacyId)
+      .get()
+  ).data() as Pharmacy;
 }
 
 export async function setPharmacyDetails(
@@ -367,21 +371,25 @@ async function getAllDocsIn<T>(
     return [];
   }
 
-  return (await Promise.all(
-    new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
-      async (_, index) =>
-        (await firebase
-          .firestore()
-          .collection(collection)
-          .where(
-            attribute,
-            //@ts-ignore
-            "in",
-            attributeValues.slice(index * 10, (index + 1) * 10)
-          )
-          .get()).docs.map((doc: any) => doc.data()) as T[]
+  return (
+    await Promise.all(
+      new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
+        async (_, index) =>
+          (
+            await firebase
+              .firestore()
+              .collection(collection)
+              .where(
+                attribute,
+                //@ts-ignore
+                "in",
+                attributeValues.slice(index * 10, (index + 1) * 10)
+              )
+              .get()
+          ).docs.map((doc: any) => doc.data()) as T[]
+      )
     )
-  )).flat();
+  ).flat();
 }
 
 export async function getPatientHistories(patientIds: string[]) {
@@ -393,11 +401,9 @@ export async function getPatientHistories(patientIds: string[]) {
   const patientHistories: { [id: string]: PatientHistory } = {};
   await Promise.all(
     patients.map(async patient => {
-      const tasks = (await getAllDocsIn<Task>(
-        TASKS_COLLECTION,
-        "id",
-        patient.taskIds
-      ))
+      const tasks = (
+        await getAllDocsIn<Task>(TASKS_COLLECTION, "id", patient.taskIds)
+      )
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 5);
       const history = tasks.map(task => {
@@ -446,11 +452,13 @@ export function saveNotes(categoryName: string, notes: string[]) {
 }
 
 export async function getNotes(categoryName: string): Promise<string[]> {
-  const data = (await firebase
-    .firestore()
-    .collection(CANNED_NOTES_COLLECTION)
-    .doc(categoryName)
-    .get()).data();
+  const data = (
+    await firebase
+      .firestore()
+      .collection(CANNED_NOTES_COLLECTION)
+      .doc(categoryName)
+      .get()
+  ).data();
   return data ? data.notes : [];
 }
 
@@ -473,6 +481,7 @@ export async function setClaimNotes(
   claimIndex: number,
   notes: string
 ) {
+  removeEmptyFieldsInPlace(task);
   task.entries[claimIndex].notes = notes;
   return await saveTask(task, task.id);
 }

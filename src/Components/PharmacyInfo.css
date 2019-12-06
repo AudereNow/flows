@@ -21,7 +21,7 @@
   flex-direction: column;
   flex: 1;
 }
-.pharmacy_claims_header {
+.pharmacy_row {
   display: flex;
   flex-direction: row;
 }
@@ -43,4 +43,8 @@
 
 .pharmacy_textarea {
   border: 1px solid var(--border-color);
+}
+
+.pharmacy_left_space {
+  margin-left: 10px;
 }

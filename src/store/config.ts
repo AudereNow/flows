@@ -90,6 +90,7 @@ export const defaultConfig: AppConfig = {
         },
         approve: {
           label: "ISSUE PAYMENT",
+          labelClassName: "mainview_approve_button",
           nextTaskState: TaskState.COMPLETED,
           labelImg: ApproveImg,
           enableOnConfig: "enableRealPayments"

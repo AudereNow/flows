@@ -183,19 +183,22 @@ class PharmacyInfo extends React.Component<Props, State> {
                 </div>
               ) : (
                 <div>
-                  <div className="pharmacy_text">
-                    {`Notes: ${this.state.pharmacy.notes} `}
-                    <Button
-                      className="pharmacy_button"
-                      onClick={this._onNotesEdit}
-                      label={
-                        !!this.state.pharmacy.notes &&
-                        this.state.pharmacy.notes.length > 0
-                          ? "Edit"
-                          : "Add Notes"
-                      }
-                    />
+                  <div className="pharmacy_row">
+                    <span className="pharmacy_text">Notes:</span>
+                    <span className="pharmacy_left_space">
+                      {this.state.pharmacy.notes}
+                    </span>
                   </div>
+                  <Button
+                    className="pharmacy_button"
+                    onClick={this._onNotesEdit}
+                    label={
+                      !!this.state.pharmacy.notes &&
+                      this.state.pharmacy.notes.length > 0
+                        ? "Edit"
+                        : "Add Notes"
+                    }
+                  />
                 </div>
               )}
               {this.state.editedOwners !== undefined ? (
@@ -217,8 +220,13 @@ class PharmacyInfo extends React.Component<Props, State> {
                   </span>
                 </div>
               ) : (
-                <div className="pharmacy_text">
-                  {`Owners: ${this.state.pharmacy.owners.join(", ")} `}
+                <div>
+                  <div className="pharmacy_row">
+                    <span className="pharmacy_text">Owners:</span>
+                    <span className="pharmacy_left_space">
+                      {this.state.pharmacy.owners.join(",")}
+                    </span>
+                  </div>
                   <Button
                     className="pharmacy_button"
                     onClick={this._onOwnersEdit}
@@ -238,7 +246,7 @@ class PharmacyInfo extends React.Component<Props, State> {
           {!!previousClaims && !!showPreviousClaims && (
             <ExpandableDiv label="Previous Pharmacy Claims">
               <Fragment>
-                <div className="pharmacy_claims_header">
+                <div className="pharmacy_row">
                   {!!showIncreaseWarning && (
                     <ToolTipIcon
                       label={"⚠"}
