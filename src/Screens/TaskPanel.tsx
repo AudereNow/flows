@@ -36,7 +36,7 @@ import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";
 import "./MainView.css";
 
 export interface DetailsComponentProps {
-  task: Task;
+  tasks: Task[];
   notesux: ReactNode;
   actionable?: boolean;
   registerActionCallback: (
@@ -48,11 +48,12 @@ export interface DetailsComponentProps {
 }
 
 type Props = RouteComponentProps & {
+  config: TaskConfig;
   initialSelectedTaskID?: string;
   taskState: TaskState;
   listLabel: string;
   baseUrl: string;
-  itemComponent: React.ComponentType<{ task: Task; isSelected: boolean }>;
+  itemComponent: React.ComponentType<{ tasks: Task[]; isSelected: boolean }>;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
@@ -198,8 +199,8 @@ class TaskPanel extends React.Component<Props, State> {
     return result;
   };
 
-  _renderTaskListItem = (task: Task, isSelected: boolean) => {
-    return <this.props.itemComponent task={task} isSelected={isSelected} />;
+  _renderTaskListItem = (tasks: Task[], isSelected: boolean) => {
+    return <this.props.itemComponent tasks={tasks} isSelected={isSelected} />;
   };
 
   _onSearchClick = () => {
@@ -247,7 +248,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _checkOwner = (siteName: string) => {
-    if (this.state.disableOwnersFilter) {
+    if (!this.props.filterByOwners || this.state.disableOwnersFilter) {
       return true;
     }
     const pharmacy = this.state.pharmacies[siteName];
@@ -494,6 +495,14 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
+  _groupTasks = () => {
+    if (this.props.config.groupTasksByPharmacy) {
+      return groupTasksByPharmacy(this.state.tasks);
+    } else {
+      return this.state.tasks.map(task => [task]);
+    }
+  };
+
   render() {
     const { searchTermGlobal, selectedTaskIndex, notes } = this.state;
     const actionable = Object.keys(this.props.actions).length > 0;
@@ -525,7 +534,7 @@ class TaskPanel extends React.Component<Props, State> {
           >
             <TaskList
               onSelect={this._onTaskSelect}
-              tasks={this.state.tasks}
+              tasks={this._groupTasks()}
               renderItem={this._renderTaskListItem}
               selectedItem={selectedTaskIndex}
               className="mainview_tasklist"
@@ -536,7 +545,7 @@ class TaskPanel extends React.Component<Props, State> {
               <ConfiguredDetailsWrapper
                 hideImagesDefault={this.props.hideImagesDefault}
                 showPreviousClaims={this.props.showPreviousClaims}
-                task={this.state.tasks[selectedTaskIndex]}
+                tasks={this._groupTasks()[selectedTaskIndex]}
                 notesux={notesux}
                 notes={notes}
                 detailsComponent={this.props.detailsComponent}
@@ -554,7 +563,7 @@ class TaskPanel extends React.Component<Props, State> {
 export default withRouter(TaskPanel);
 
 interface DetailsWrapperProps {
-  task: Task;
+  tasks: Task[];
   notes: string;
   notesux: ReactNode;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
@@ -570,7 +579,7 @@ interface DetailsWrapperState {
 
 interface ActionCallbackResult {
   success: boolean;
-  task?: Task;
+  tasks?: Task[];
 }
 
 class DetailsWrapper extends React.Component<
@@ -599,7 +608,7 @@ class DetailsWrapper extends React.Component<
         [key]: true
       }
     }));
-    let task: Task = this.props.task;
+    let tasks: Task[] = this.props.tasks;
     if (this._actionCallbacks[key]) {
       let result = await this._actionCallbacks[key]();
       this.setState(state => ({
@@ -608,13 +617,17 @@ class DetailsWrapper extends React.Component<
           [key]: false
         }
       }));
-      task = result.task || task;
+      tasks = result.tasks || tasks;
     }
 
-    await changeTaskState(
-      task,
-      this.props.actions[key].nextTaskState,
-      this.props.notes
+    await Promise.all(
+      tasks.map(task =>
+        changeTaskState(
+          task,
+          this.props.actions[key].nextTaskState,
+          this.props.notes
+        )
+      )
     );
   };
 
@@ -634,9 +647,9 @@ class DetailsWrapper extends React.Component<
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
         showPreviousClaims={this.props.showPreviousClaims}
-        task={this.props.task}
+        tasks={this.props.tasks}
         notesux={this.props.notesux}
-        key={this.props.task.id}
+        key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}
       >
         <div className="mainview_button_row">
@@ -671,3 +684,15 @@ const ConfiguredDetailsWrapper = configuredComponent<
     });
   return { remoteConfig: configProps };
 });
+
+function groupTasksByPharmacy(tasks: Task[]) {
+  const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
+  tasks.forEach(task => {
+    if (tasksByPharmacy[task.site.name]) {
+      tasksByPharmacy[task.site.name].push(task);
+    } else {
+      tasksByPharmacy[task.site.name] = [task];
+    }
+  });
+  return Object.values(tasksByPharmacy);
+}

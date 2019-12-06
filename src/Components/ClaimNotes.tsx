@@ -32,6 +32,7 @@ class ClaimNotes extends React.Component<Props, State> {
   _onSave = async () => {
     const { notes } = this.state;
     const { claimIndex, task } = this.props;
+    delete (task as any).foundCount;
     await setClaimNotes(task, claimIndex, notes);
     this.setState({ editing: false });
   };

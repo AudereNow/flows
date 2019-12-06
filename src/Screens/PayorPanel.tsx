@@ -116,8 +116,8 @@ class ConfigurablePayorDetails extends React.Component<
       await new Promise(res => setTimeout(res, 1000));
       return { success: true };
     }
-    const { task } = this.props;
-    const reimburseAmount = _getReimbursementTotal(task);
+    const { tasks } = this.props;
+    const reimburseAmount = _getReimbursementTotal(tasks);
 
     if (reimburseAmount <= 0) {
       alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
@@ -125,15 +125,15 @@ class ConfigurablePayorDetails extends React.Component<
     }
     const result = await issuePayments([
       {
-        name: task.site.name,
-        phoneNumber: task.site.phone,
+        name: tasks[0].site.name,
+        phoneNumber: tasks[0].site.phone,
         currencyCode: "KES",
         amount: reimburseAmount,
         reason: "PromotionPayment",
         metadata: {
-          taskID: task.id,
+          taskIDs: tasks.map(task => task.id),
           payorName: getBestUserName(),
-          payeeName: task.site.name
+          payeeName: tasks[0].site.name
         }
       }
     ]);
@@ -151,8 +151,8 @@ class ConfigurablePayorDetails extends React.Component<
   _toggleShowPreviousClaims = () => {
     if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
       loadPreviousTasks(
-        this.props.task.site.name,
-        this.props.task.id
+        this.props.tasks[0].site.name,
+        this.props.tasks.map(task => task.id)
       ).then(relatedTasks => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
@@ -182,20 +182,20 @@ class ConfigurablePayorDetails extends React.Component<
   };
 
   render() {
-    const { task, notesux } = this.props;
-    const claimsTotal = _getReimbursementTotal(task);
-    const patientClaims = task.entries;
+    const { tasks, notesux } = this.props;
+    const claimsTotal = _getReimbursementTotal(tasks);
+    const patientClaims = tasks.map(task => task.entries).flat();
     const relatedTasks = this.state.relatedTasks;
 
     return (
       <LabelWrapper className="mainview_details">
-        <PharmacyInfo site={task.site} />
-        {!!task.site.phone && (
+        <PharmacyInfo site={tasks[0].site} />
+        {!!tasks[0].site.phone && (
           <TextItem
             data={{
               displayKey: "Phone",
               searchKey: "pharmacy",
-              value: task.site.phone || ""
+              value: tasks[0].site.phone || ""
             }}
           />
         )}
@@ -269,9 +269,13 @@ export const PayorDetails = configuredComponent<
   realPayments: config.enableRealPayments
 }));
 
-function _getReimbursementTotal(task: Task): number {
-  const claimAmounts = task.entries.map(entry => {
-    return entry.rejected ? 0 : entry.claimedCost;
-  });
+function _getReimbursementTotal(tasks: Task[]): number {
+  const claimAmounts = tasks
+    .map(task =>
+      task.entries.map(entry => {
+        return entry.rejected ? 0 : entry.claimedCost;
+      })
+    )
+    .flat();
   return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
 }
