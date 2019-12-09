@@ -31,12 +31,7 @@ const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
-  {
-    Header: "TOTAL AMOUNT",
-    id: "totalAmount",
-    accessor: (row: any) => formatCurrency(row.totalAmount),
-    minWidth: 60
-  },
+  { Header: "TOTAL AMOUNT", accessor: "totalAmount", minWidth: 60 },
   { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 }
 ];
 
@@ -199,7 +194,7 @@ export class AuditorDetails extends React.Component<
   _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
     const claimKey = event.currentTarget.getAttribute("data-value");
-    const [taskIndex, claimIndex] = (claimKey || "").split(".").map(parseInt);
+    const { taskIndex, claimIndex } = JSON.parse(claimKey || "");
 
     if (!claimIndex) {
       return;
@@ -268,7 +263,10 @@ export class AuditorDetails extends React.Component<
                     claim.rejected === undefined ? false : claim.rejected
                   }
                   label={"Rejected"}
-                  value={(claim as any).originalIndex}
+                  value={JSON.stringify({
+                    claimIndex: (claim as any).originalIndex,
+                    taskIndex
+                  })}
                   onCheckBoxSelect={this._toggleRejectClaim}
                   disabled={disabledCheckbox}
                   key={index}
