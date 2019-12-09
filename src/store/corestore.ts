@@ -77,11 +77,7 @@ export async function changeTaskState(
   };
   removeEmptyFieldsInPlace(updatedTask);
   return Promise.all([
-    firebase
-      .firestore()
-      .collection(TASKS_COLLECTION)
-      .doc(task.id)
-      .set(updatedTask),
+    saveTask(updatedTask, task.id),
     firebase
       .firestore()
       .collection(TASK_CHANGE_COLLECTION)
@@ -478,11 +474,7 @@ export async function setClaimNotes(
   notes: string
 ) {
   task.entries[claimIndex].notes = notes;
-  return await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .doc(task.id)
-    .set(task);
+  return await saveTask(task, task.id);
 }
 
 export async function setRejectedClaim(
@@ -492,9 +484,14 @@ export async function setRejectedClaim(
 ) {
   task.entries[claimIndex].rejected = rejected;
 
-  return await firebase
+  return await saveTask(task, task.id);
+}
+
+function saveTask(task: Task, id: string) {
+  const { foundCount, ...cleanedTask } = task as any;
+  return firebase
     .firestore()
     .collection(TASKS_COLLECTION)
-    .doc(task.id)
-    .set(task);
+    .doc(id)
+    .set(cleanedTask);
 }
