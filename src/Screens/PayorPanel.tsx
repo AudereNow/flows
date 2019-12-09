@@ -184,21 +184,14 @@ class ConfigurablePayorDetails extends React.Component<
   render() {
     const { tasks, notesux } = this.props;
     const claimsTotal = _getReimbursementTotal(tasks);
-    const patientClaims = tasks.map(task => task.entries).flat();
+    const patientClaims = tasks.map((task: Task) => task.entries).flat();
     const relatedTasks = this.state.relatedTasks;
 
     return (
       <LabelWrapper className="mainview_details">
         <PharmacyInfo site={tasks[0].site} />
-        {!!tasks[0].site.phone && (
-          <TextItem
-            data={{
-              displayKey: "Phone",
-              searchKey: "pharmacy",
-              value: tasks[0].site.phone || ""
-            }}
-          />
-        )}
+
+        <PharmacyInfo site={tasks[0].site} />
         <div className="mainview_padded">
           <TextItem
             data={{

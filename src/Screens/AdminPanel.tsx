@@ -61,7 +61,14 @@ export type HistoryRow = {
 };
 
 const HISTORY_TABLE_COLUMNS = [
-  { Header: "ID", accessor: "id", minWidth: 90 },
+  {
+    Header: "ID",
+    accessor: "id",
+    minWidth: 90,
+    Cell: (props: RowRenderProps) => (
+      <span className="mainview_table_id">{props.value}</span>
+    )
+  },
   {
     Header: "TIME",
     accessor: "time",

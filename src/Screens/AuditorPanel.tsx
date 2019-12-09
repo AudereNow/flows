@@ -1,9 +1,9 @@
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React, { ChangeEvent } from "react";
-import ReactTable from "react-table";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
+import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import Button from "../Components/Button";
@@ -31,7 +31,13 @@ const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
-  { Header: "TOTAL AMOUNT", accessor: "totalAmount", minWidth: 60 },
+
+  {
+    Header: "TOTAL AMOUNT",
+    id: "totalAmount",
+    accessor: (row: any) => formatCurrency(parseFloat(row.totalAmount)),
+    minWidth: 60
+  },
   { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 }
 ];
 
@@ -178,7 +184,7 @@ export class AuditorDetails extends React.Component<
         label: {
           displayKey: "ID",
           value: claim.patientID || "",
-          searchKey: "patientID"
+          searchKey: "patient"
         }
       });
     }

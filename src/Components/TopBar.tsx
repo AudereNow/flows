@@ -71,7 +71,7 @@ class TopBar extends React.Component<{}, State> {
     }
     const result = await uploadCSV(e.target.result);
 
-    this.setState({ uploading: false });
+    this.setState({ uploading: false, showFileSelector: false });
 
     if (!result.data || !(result.data.result || result.data.error)) {
       alert("Encountered unknown error processing CSV");
