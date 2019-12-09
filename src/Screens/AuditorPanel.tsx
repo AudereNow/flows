@@ -196,10 +196,6 @@ export class AuditorDetails extends React.Component<
     const claimKey = event.currentTarget.getAttribute("data-value");
     const { taskIndex, claimIndex } = JSON.parse(claimKey || "");
 
-    if (!claimIndex) {
-      return;
-    }
-
     await setRejectedClaim(this.props.tasks[taskIndex], claimIndex, checked);
   };
 
