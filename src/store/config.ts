@@ -29,6 +29,7 @@ export interface TaskConfig extends TabConfig {
   actions: { [key: string]: ActionConfig };
   hideImagesDefault?: boolean;
   showPreviousClaims?: boolean;
+  groupTasksByPharmacy?: boolean;
 }
 
 export interface AppConfig {
@@ -51,6 +52,7 @@ export const defaultConfig: AppConfig = {
       roles: [UserRole.AUDITOR],
       baseUrl: "auditor",
       showPreviousClaims: true,
+      groupTasksByPharmacy: true,
       actions: {
         decline: {
           label: "DECLINE",
@@ -78,6 +80,7 @@ export const defaultConfig: AppConfig = {
       listLabel: "ITEMS TO REVIEW",
       roles: [UserRole.PAYOR],
       baseUrl: "payor",
+      groupTasksByPharmacy: true,
       actions: {
         decline: {
           label: "DECLINE PAYMENT",

@@ -33,7 +33,7 @@ const PanelComponents: {
 };
 
 const ItemComponents: {
-  [key: string]: React.ComponentType<{ task: Task; isSelected: boolean }>;
+  [key: string]: React.ComponentType<{ tasks: Task[]; isSelected: boolean }>;
 } = {
   default: ListItem
 };
@@ -136,6 +136,7 @@ class MainView extends React.Component<Props, State> {
           } else {
             panelElement = (
               <TaskPanel
+                config={tabConfig}
                 initialSelectedTaskID={this.props.selectedTaskID}
                 taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}

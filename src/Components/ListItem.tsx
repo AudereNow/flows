@@ -4,24 +4,31 @@ import { formatCurrency } from "../store/corestore";
 import "./ListItem.css";
 
 export class ListItem extends React.Component<{
-  task: Task;
+  tasks: Task[];
   isSelected: boolean;
 }> {
   render() {
-    const { task, isSelected } = this.props;
+    const { tasks, isSelected } = this.props;
     const previewName = "listitem" + (isSelected ? " selected" : "");
-    const claimAmounts = task.entries.map(entry => {
-      return !entry.rejected ? entry.claimedCost : 0;
-    });
+    const claimAmounts = tasks
+      .map(task =>
+        task.entries.map(entry => {
+          return !entry.rejected ? entry.claimedCost : 0;
+        })
+      )
+      .flat();
     const claimsTotal = claimAmounts.reduce(
       (sum, claimedCost) => sum + claimedCost
     );
+    const claimCount = tasks
+      .map(task => task.entries.length)
+      .reduce((a, b) => a + b, 0);
     return (
       <div className={previewName}>
         <div className="listitem_header">
-          <span>{task.site.name}</span>
+          <span>{tasks[0].site.name}</span>
           <span>
-            {task.entries.length} Claim{task.entries.length !== 1 ? "s" : ""}
+            {claimCount} Claim{claimCount !== 1 ? "s" : ""}
           </span>
         </div>
         <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>

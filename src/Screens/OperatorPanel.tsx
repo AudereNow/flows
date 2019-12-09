@@ -33,7 +33,7 @@ class ConfigurableOperatorDetails extends React.Component<
   }
 
   _onSave = async () => {
-    return { success: true, task: this.props.task };
+    return { success: true, tasks: this.props.tasks };
   };
 
   _extractImages = (claim: ClaimEntry) => {
@@ -106,7 +106,7 @@ class ConfigurableOperatorDetails extends React.Component<
   render() {
     return (
       <LabelWrapper className="mainview_details">
-        <PharmacyInfo site={this.props.task.site}>
+        <PharmacyInfo site={this.props.tasks[0].site}>
           <div className="pharmacy_toggle_image_container">
             <Button
               className={"pharmacy_button"}
@@ -115,9 +115,11 @@ class ConfigurableOperatorDetails extends React.Component<
             />
           </div>
         </PharmacyInfo>
-        {this.props.task.entries.map((entry, index) => {
-          return this._renderClaimEntryDetails(entry, index);
-        })}
+        {this.props.tasks.map(task =>
+          task.entries.map((entry, index) => {
+            return this._renderClaimEntryDetails(entry, index);
+          })
+        )}
         <div className="mainview_instructions_header">Instructions:</div>
         <ReactMarkdown source={this.props.instructions} />
         {this.props.notesux}

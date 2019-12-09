@@ -13,8 +13,8 @@ import "./TaskList.css";
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 
 type Props = {
-  tasks: Task[];
-  renderItem: (task: Task, isSelected: boolean) => JSX.Element;
+  tasks: Task[][];
+  renderItem: (tasks: Task[], isSelected: boolean) => JSX.Element;
   className?: string;
   onSelect?: (index: number) => boolean;
   selectedItem?: number;
@@ -73,18 +73,18 @@ class TaskList extends React.Component<Props, State> {
 
     if (okToSelect) {
       // Let this drift by without await because nothing after it depends on it
-      logActiveTaskView(this.props.tasks[index].id);
+      logActiveTaskView(this.props.tasks[index][0].id);
 
       this.setState({ selectedIndex: index });
     }
   };
 
-  _getActiveViewers(task: Task) {
+  _getActiveViewers(tasks: Task[]) {
     const now = Date.now();
     const activeViewers = this.state.activeTasks
       .filter(
         t =>
-          t.id === task.id &&
+          tasks.some(task => t.id === task.id) &&
           now - dateFromServerTimestamp(t.since).getTime() <= MAX_ACTIVE_MSEC &&
           t.name !== getBestUserName()
       )
@@ -108,7 +108,7 @@ class TaskList extends React.Component<Props, State> {
           return (
             <div
               className={activeClass}
-              key={task.id}
+              key={task[0].id}
               data-tip={activeDataTip}
               data-name={index}
               onClick={this._onItemPressed}
