@@ -21,17 +21,12 @@ import {
   User,
   UserRole
 } from "../sharedtypes";
+import firebaseConfig from "./firebaseconfig.json";
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD3zIYqbtoU7JfhvlV2hf9LvJb2krKAYqM",
-  authDomain: "flows-app-production.firebaseapp.com",
-  databaseURL: "https://flows-app-production.firebaseio.com",
-  projectId: "flows-app-production",
-  storageBucket: "flows-app-production.appspot.com",
-  messagingSenderId: "636569518889",
-  appId: "1:636569518889:web:282ad524eb8f7bed6f6d38",
-  measurementId: "G-3N0TW6DGXQ"
-};
+const FIREBASE_CONFIG =
+  !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+    ? firebaseConfig.staging
+    : firebaseConfig.production;
 
 export type ActiveTask = {
   id: string;

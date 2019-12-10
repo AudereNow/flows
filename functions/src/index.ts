@@ -26,7 +26,10 @@ import {
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
-const serviceAccount = require("../flows-app-production-key.json");
+const serviceAccount =
+  !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+    ? require("../flows-app-staging-key.json")
+    : require("../flows-app-production-key.json");
 
 const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
