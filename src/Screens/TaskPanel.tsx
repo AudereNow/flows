@@ -131,7 +131,10 @@ class TaskPanel extends React.Component<Props, State> {
         });
       }
 
-      selectedTaskIndex = tasks.findIndex(task => task.id === selectedTaskId);
+      const groupedTasks = groupTasksByPharmacy(tasks);
+      selectedTaskIndex = groupedTasks.findIndex(tasks =>
+        tasks.some(task => task.id === selectedTaskId)
+      );
       if (selectedTaskIndex === -1) {
         selectedTaskIndex = 0;
         selectedTaskId = tasks[0].id;
@@ -140,7 +143,7 @@ class TaskPanel extends React.Component<Props, State> {
         if (selectedTaskIndex === -1) {
           selectedTaskIndex = Math.min(
             this.state.selectedTaskIndex,
-            tasks.length - 1
+            groupedTasks.length - 1
           );
           selectedTaskId = tasks[selectedTaskIndex].id;
           notes = "";
@@ -188,7 +191,9 @@ class TaskPanel extends React.Component<Props, State> {
     const result = this._okToSwitchAway();
     if (result) {
       const selectedTaskId =
-        index === -1 ? undefined : this.state.tasks[index].id;
+        index === -1
+          ? undefined
+          : groupTasksByPharmacy(this.state.tasks)[index][0].id;
       this.setState({
         selectedTaskIndex: index,
         selectedTaskId,
