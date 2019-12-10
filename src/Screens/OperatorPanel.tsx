@@ -2,6 +2,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import "react-tabs/style/react-tabs.css";
 import Button from "../Components/Button";
+import ClaimNotes from "../Components/ClaimNotes";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
@@ -97,6 +98,11 @@ class ConfigurableOperatorDetails extends React.Component<
           <ImageRow
             showImages={this.state.showImages}
             images={this._extractImages(entry)}
+          />
+          <ClaimNotes
+            claimIndex={(entry as any).originalIndex}
+            task={this.props.tasks[index]}
+            notes={entry.notes || ""}
           />
         </div>
       </LabelWrapper>
