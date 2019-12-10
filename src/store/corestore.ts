@@ -23,14 +23,13 @@ import {
 } from "../sharedtypes";
 
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD3zIYqbtoU7JfhvlV2hf9LvJb2krKAYqM",
-  authDomain: "flows-app-production.firebaseapp.com",
-  databaseURL: "https://flows-app-production.firebaseio.com",
-  projectId: "flows-app-production",
-  storageBucket: "flows-app-production.appspot.com",
-  messagingSenderId: "636569518889",
-  appId: "1:636569518889:web:282ad524eb8f7bed6f6d38",
-  measurementId: "G-3N0TW6DGXQ"
+  apiKey: "AIzaSyCspibVcd3GcAk01xHndZEJX8zuxwPIt-Y",
+  authDomain: "flows-app-staging.firebaseapp.com",
+  databaseURL: "https://flows-app-staging.firebaseio.com",
+  projectId: "flows-app-staging",
+  storageBucket: "flows-app-staging.appspot.com",
+  messagingSenderId: "785605389839",
+  appId: "1:785605389839:web:dedec19abb81b7df8a3d7a"
 };
 
 export type ActiveTask = {
