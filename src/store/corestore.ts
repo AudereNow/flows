@@ -492,12 +492,8 @@ export async function setRejectedClaim(
   rejected: boolean
 ) {
   task.entries[claimIndex].rejected = rejected;
-
-  return await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .doc(task.id)
-    .set(task);
+  removeEmptyFieldsInPlace(task);
+  return await saveTask(task, task.id);
 }
 
 function saveTask(task: Task, id: string) {
