@@ -39,11 +39,18 @@ const PATIENT_CLAIMS_TABLE_COLUMNS = [
       `${entry.patientFirstName} ${entry.patientLastName}`,
     minWidth: 90
   },
-  { id: "Item", Header: "ITEM", accessor: "item", minWidth: 70 },
+  { id: "Item", Header: "ITEM", accessor: "item", minWidth: 60 },
   {
     id: "Reimbursement",
     Header: "REIMBURSEMENT",
     accessor: (entry: any) => formatCurrency(entry.claimedCost),
+    minWidth: 50
+  },
+  {
+    id: "Rejected",
+    Header: "REJECTED",
+    accessor: (entry: any) =>
+      entry.hasOwnProperty("rejected") ? entry.rejected.toString() : "",
     minWidth: 60
   }
 ];
@@ -189,8 +196,6 @@ class ConfigurablePayorDetails extends React.Component<
 
     return (
       <LabelWrapper className="mainview_details">
-        <PharmacyInfo site={tasks[0].site} />
-
         <PharmacyInfo site={tasks[0].site} />
         <div className="mainview_padded">
           <TextItem
