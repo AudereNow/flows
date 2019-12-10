@@ -77,6 +77,11 @@ class SearchableTable extends React.Component<Props, State> {
     }
     const fileName = downloadPrefix + "_" + moment().format("YYYYMMDD_HHmmss");
 
+    data.map(row => {
+      row.time = new Date(row.time).toLocaleDateString();
+      return row;
+    });
+
     json2csv(data, (err, csv) => {
       if (!csv || err) {
         alert("Something went wrong when trying to download your csv");
