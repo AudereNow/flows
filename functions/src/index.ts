@@ -71,7 +71,7 @@ const storage = new Storage({
 });
 
 exports.scheduledFirestoreExport = functions.pubsub
-  .schedule("every 24 hours") // Revert to "every monday 10:00"
+  .schedule("every monday 10:00")
   .onRun(async context => {
     const databaseName = client.databasePath(
       "flows-app-production",
