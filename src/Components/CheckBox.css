@@ -1,4 +1,9 @@
-.checkbox_input_label {
+.checkbox_input {
   font-size: small;
   cursor: pointer;
+}
+
+.checkbox_row {
+  display: flex;
+  align-items: center;
 }

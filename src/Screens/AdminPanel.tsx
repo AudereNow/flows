@@ -1,5 +1,5 @@
 import moment from "moment";
-import React, { ChangeEvent } from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import { RowRenderProps } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
@@ -120,11 +120,11 @@ class AdminPanel extends React.Component<Props, State> {
     this.setState({ email: event.target.value });
   };
 
-  _onRoleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  _onRoleChange = (value: string, checked: boolean) => {
     const roleMap = Object.assign({}, this.state.roleMap);
 
     // @ts-ignore
-    roleMap[event.target.name] = event.target.checked;
+    roleMap[value] = checked;
     this.setState({ roleMap });
   };
 
@@ -172,18 +172,13 @@ class AdminPanel extends React.Component<Props, State> {
 
   _renderRoles() {
     const roleBoxes = Object.keys(this.state.roleMap).map(role => (
-      <div key={role}>
-        <label>
-          {role as string}:
-          <input
-            type="checkbox"
-            name={role}
-            // @ts-ignore
-            checked={this.state.roleMap[role]}
-            onChange={this._onRoleChange}
-          />
-        </label>
-      </div>
+      <CheckBox
+        key={role}
+        label={role as string}
+        onCheckBoxSelect={this._onRoleChange}
+        checked={(this.state.roleMap as any)[role]}
+        value={role}
+      />
     ));
 
     return <div>{roleBoxes}</div>;
@@ -283,11 +278,11 @@ class AdminPanel extends React.Component<Props, State> {
     this.setState({ savingOpsInstructions: false, opsInstructions: undefined });
   };
 
-  _remoteConfigToggle = async (e: ChangeEvent<HTMLInputElement>) => {
-    const key = e.currentTarget.getAttribute(
-      "data-value"
-    ) as keyof RemoteConfig;
-    await setConfig(key, !this.props.config[key]);
+  _remoteConfigToggle = async (value: string, checked: boolean) => {
+    await setConfig(
+      value as keyof RemoteConfig,
+      !this.props.config[value as keyof RemoteConfig]
+    );
   };
 
   render() {

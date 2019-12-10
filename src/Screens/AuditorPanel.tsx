@@ -1,6 +1,6 @@
 import { json2csv } from "json-2-csv";
 import moment from "moment";
-import React, { ChangeEvent } from "react";
+import React from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import ReactTable from "react-table";
@@ -197,11 +197,8 @@ export class AuditorDetails extends React.Component<
     return claimImages;
   };
 
-  _toggleRejectClaim = async (event: ChangeEvent<HTMLInputElement>) => {
-    const checked = event.target.checked;
-    const claimKey = event.currentTarget.getAttribute("data-value");
-    const { taskIndex, claimIndex } = JSON.parse(claimKey || "");
-
+  _toggleRejectClaim = async (value: string, checked: boolean) => {
+    const { taskIndex, claimIndex } = JSON.parse(value || "");
     await setRejectedClaim(this.props.tasks[taskIndex], claimIndex, checked);
   };
 
