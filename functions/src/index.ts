@@ -34,6 +34,10 @@ const ROW_GROUP_BY_KEY = "Pharmacy Name FULL";
 const RECORD_ID_FIELD = "meta:instanceID";
 
 const TASKS_LOOP_PAGE_SIZE = 100;
+const MS_IN_DAY = 1000 * 60 * 60 * 24;
+
+const firestore = require("@google-cloud/firestore");
+const client = new firestore.v1.FirestoreAdminClient();
 
 type RecordUploadLog = {
   csvID: string;
@@ -56,6 +60,58 @@ type CallResult =
   | {
       result: string;
     };
+
+const bucketName = "gs://flows-app-production-backup";
+const { Storage } = require("@google-cloud/storage");
+const storage = new Storage({
+  projectId: "flows-app-production"
+});
+
+exports.scheduledFirestoreExport = functions.pubsub
+  .schedule("every 24 hours") // Revert to "every monday 10:00"
+  .onRun(async context => {
+    const databaseName = client.databasePath(
+      "flows-app-production",
+      "(default)"
+    );
+
+    await removeOldBackups();
+
+    return client
+      .exportDocuments({
+        name: databaseName,
+        outputUriPrefix: bucketName,
+        collectionIds: []
+      })
+      .then((responses: any) => {
+        const response = responses[0];
+        console.log(`Operation Name: ${response["name"]}`);
+        return response;
+      })
+      .catch((err: any) => {
+        console.error(err);
+        throw new Error("Export operation failed");
+      });
+  });
+
+async function removeOldBackups() {
+  const bucket = storage.bucket(bucketName);
+  const [folders] = await bucket.getFiles();
+
+  for (const folder of folders) {
+    const folderDate = new Date(folder.name.split("T")[0]).getTime();
+    const currentDate = new Date().getTime();
+    const diffDays = (currentDate - folderDate) / MS_IN_DAY;
+
+    if (diffDays > 45) {
+      await storage
+        .bucket(bucketName)
+        .file(folder.name)
+        .delete();
+      console.log(`FILE ${folder.name} deleted`);
+    }
+  }
+}
 
 exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
   async (data, context): Promise<AxiosResponse> => {
