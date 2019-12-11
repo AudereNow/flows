@@ -55,21 +55,16 @@ class MainView extends React.Component<Props, State> {
 
   async componentDidMount() {
     const roles = await userRoles();
-    let selectedTabIndex = 0;
 
-    if (!!this.props.startingTab) {
-      selectedTabIndex = Object.values(defaultConfig.tabs).findIndex(
-        tab => tab.baseUrl === this.props.startingTab
-      );
-    }
-    this.setState({ roles, selectedTabIndex });
+    this.setState({
+      roles,
+      selectedTabIndex: this._getSelectedTabIndex(defaultConfig, roles)
+    });
   }
 
   componentDidUpdate(nextProps: Props) {
     if (!!this.props.startingTab) {
-      let selectedTabIndex = Object.values(defaultConfig.tabs).findIndex(
-        tab => tab.baseUrl === this.props.startingTab
-      );
+      const selectedTabIndex = this._getSelectedTabIndex(defaultConfig);
       if (
         selectedTabIndex !== this.state.selectedTabIndex &&
         !nextProps.hasOwnProperty("startingTab")
@@ -104,6 +99,19 @@ class MainView extends React.Component<Props, State> {
     return Object.keys(taskConfigs).filter(taskName =>
       taskConfigs[taskName].roles.some(role => this.state.roles.includes(role))
     );
+  }
+
+  _getSelectedTabIndex(config: AppConfig, roles = this.state.roles) {
+    if (!this.props.startingTab) {
+      return 0;
+    }
+    return Object.entries(config.tabs)
+      .filter(([name, tabConfig]) =>
+        tabConfig.roles.some(role => roles.includes(role))
+      )
+      .findIndex(
+        ([name, tabConfig]) => tabConfig.baseUrl === this.props.startingTab
+      );
   }
 
   _renderBody() {
