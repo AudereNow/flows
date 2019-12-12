@@ -21,16 +21,9 @@ import {
   User,
   UserRole
 } from "../sharedtypes";
+import firebaseConfig from "./firebaseconfig.json";
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCspibVcd3GcAk01xHndZEJX8zuxwPIt-Y",
-  authDomain: "flows-app-staging.firebaseapp.com",
-  databaseURL: "https://flows-app-staging.firebaseio.com",
-  projectId: "flows-app-staging",
-  storageBucket: "flows-app-staging.appspot.com",
-  messagingSenderId: "785605389839",
-  appId: "1:785605389839:web:dedec19abb81b7df8a3d7a"
-};
+const FIREBASE_CONFIG = firebaseConfig;
 
 export type ActiveTask = {
   id: string;
@@ -481,7 +474,6 @@ export async function setClaimNotes(
   claimIndex: number,
   notes: string
 ) {
-  removeEmptyFieldsInPlace(task);
   task.entries[claimIndex].notes = notes;
   return await saveTask(task, task.id);
 }
@@ -492,7 +484,7 @@ export async function setRejectedClaim(
   rejected: boolean
 ) {
   task.entries[claimIndex].rejected = rejected;
-
+  removeEmptyFieldsInPlace(task);
   return await saveTask(task, task.id);
 }
 
