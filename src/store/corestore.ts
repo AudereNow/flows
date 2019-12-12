@@ -23,10 +23,7 @@ import {
 } from "../sharedtypes";
 import firebaseConfig from "./firebaseconfig.json";
 
-const FIREBASE_CONFIG =
-  !process.env.NODE_ENV || process.env.NODE_ENV === "development"
-    ? firebaseConfig.staging
-    : firebaseConfig.production;
+const FIREBASE_CONFIG = firebaseConfig;
 
 export type ActiveTask = {
   id: string;

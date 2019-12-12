@@ -26,10 +26,7 @@ import {
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
-const serviceAccount =
-  !process.env.NODE_ENV || process.env.NODE_ENV === "development"
-    ? require("../flows-app-staging-key.json")
-    : require("../flows-app-production-key.json");
+const serviceAccount = require(`../${process.env.GCLOUD_PROJECT}-key.json`);
 
 const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
@@ -64,17 +61,17 @@ type CallResult =
       result: string;
     };
 
-const bucketName = "gs://flows-app-production-backup";
+const bucketName = `gs://${serviceAccount.projectId}-backup`;
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage({
-  projectId: "flows-app-production"
+  projectId: serviceAccount.projectId
 });
 
 exports.scheduledFirestoreExport = functions.pubsub
   .schedule("every monday 10:00")
   .onRun(async context => {
     const databaseName = client.databasePath(
-      "flows-app-production",
+      serviceAccount.projectId,
       "(default)"
     );
 
