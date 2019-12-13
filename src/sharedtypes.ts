@@ -76,7 +76,22 @@ export type TaskChangeRecord = {
   timestamp: number;
   by: string;
   notes?: string;
+  payment?: PaymentRecord;
 };
+
+export type PaymentRecord = {
+  paymentType: PaymentType;
+  amount: number;
+  bundledUnderTaskId?: string;
+  bundledTaskIds?: string[];
+  recipient?: PaymentRecipient;
+};
+
+export enum PaymentType {
+  MANUAL,
+  AFRICAS_TALKING,
+  BUNDLED
+}
 
 export type Task = {
   id: string;

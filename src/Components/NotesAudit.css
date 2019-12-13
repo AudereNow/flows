@@ -2,3 +2,9 @@
   margin: 10px;
   overflow-wrap: break-word;
 }
+
+.notesaudit_tasklink {
+  text-decoration: underline;
+  font-weight: bold;
+  cursor: pointer;
+}

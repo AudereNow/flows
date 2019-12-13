@@ -5,7 +5,7 @@ import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
 import TextItem from "../Components/TextItem";
-import { Task, TaskState } from "../sharedtypes";
+import { PaymentRecord, PaymentType, Task, TaskState } from "../sharedtypes";
 import {
   formatCurrency,
   getBestUserName,
@@ -14,7 +14,7 @@ import {
 } from "../store/corestore";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
-import { DetailsComponentProps } from "./TaskPanel";
+import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";
 
 const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
@@ -116,34 +116,55 @@ class ConfigurablePayorDetails extends React.Component<
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
+    this.props.registerActionCallback("markApprove", this._issuePayment);
   }
 
-  _issuePayment = async () => {
-    if (!this.props.realPayments) {
-      await new Promise(res => setTimeout(res, 1000));
-      return { success: true };
-    }
+  _issuePayment = async (): Promise<ActionCallbackResult> => {
+    debugger;
     const { tasks } = this.props;
     const reimburseAmount = _getReimbursementTotal(tasks);
+
+    const bundledTaskIds: string[] = [];
+    const bundledPayments: PaymentRecord[] = tasks.slice(1).map(task => {
+      bundledTaskIds.push(task.id);
+      return {
+        paymentType: PaymentType.BUNDLED,
+        bundledUnderTaskId: tasks[0].id,
+        amount: 0
+      };
+    });
+
+    if (!this.props.realPayments) {
+      const payment: PaymentRecord = {
+        paymentType: PaymentType.MANUAL,
+        amount: reimburseAmount
+      };
+      if (tasks.length > 1) {
+        payment.bundledTaskIds = bundledTaskIds;
+      }
+      return {
+        success: true,
+        payments: [payment, ...bundledPayments]
+      };
+    }
 
     if (reimburseAmount <= 0) {
       alert(`Unexpected reimbursement amount: ${reimburseAmount}`);
       return { success: false };
     }
-    const result = await issuePayments([
-      {
-        name: tasks[0].site.name,
-        phoneNumber: tasks[0].site.phone,
-        currencyCode: "KES",
-        amount: reimburseAmount,
-        reason: "PromotionPayment",
-        metadata: {
-          taskIDs: tasks.map(task => task.id),
-          payorName: getBestUserName(),
-          payeeName: tasks[0].site.name
-        }
+    const recipient = {
+      name: tasks[0].site.name,
+      phoneNumber: tasks[0].site.phone,
+      currencyCode: "KES",
+      amount: reimburseAmount,
+      reason: "PromotionPayment",
+      metadata: {
+        taskIDs: tasks.map(task => task.id),
+        payorName: getBestUserName(),
+        payeeName: tasks[0].site.name
       }
-    ]);
+    };
+    const result = await issuePayments([recipient]);
     console.log("Response gotten:", result);
 
     // numQueued should be exactly 1 if the payment was successful
@@ -152,7 +173,18 @@ class ConfigurablePayorDetails extends React.Component<
       return { success: false };
     }
 
-    return { success: true };
+    const payment: PaymentRecord = {
+      paymentType: PaymentType.AFRICAS_TALKING,
+      amount: reimburseAmount,
+      recipient
+    };
+    if (tasks.length > 1) {
+      payment.bundledTaskIds = bundledTaskIds;
+    }
+    return {
+      success: true,
+      payments: [payment, ...bundledPayments]
+    };
   };
 
   _toggleShowPreviousClaims = () => {

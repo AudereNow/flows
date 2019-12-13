@@ -15,6 +15,7 @@ import TaskList from "../Components/TaskList";
 import { SearchContext } from "../Components/TextItem";
 import { ToolTipIcon } from "../Components/ToolTipIcon";
 import {
+  PaymentRecord,
   Pharmacy,
   RemoteConfig,
   Task,
@@ -111,6 +112,8 @@ class TaskPanel extends React.Component<Props, State> {
   componentWillUnmount() {
     this._unsubscribe();
   }
+
+  _getSelectedTaskId() {}
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
@@ -582,9 +585,10 @@ interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
 }
 
-interface ActionCallbackResult {
+export interface ActionCallbackResult {
   success: boolean;
   tasks?: Task[];
+  payments?: PaymentRecord[];
 }
 
 class DetailsWrapper extends React.Component<
@@ -614,8 +618,9 @@ class DetailsWrapper extends React.Component<
       }
     }));
     let tasks: Task[] = this.props.tasks;
+    let result: ActionCallbackResult;
     if (this._actionCallbacks[key]) {
-      let result = await this._actionCallbacks[key]();
+      result = await this._actionCallbacks[key]();
       this.setState(state => ({
         buttonsBusy: {
           ...state.buttonsBusy,
@@ -626,11 +631,12 @@ class DetailsWrapper extends React.Component<
     }
 
     await Promise.all(
-      tasks.map(task =>
+      tasks.map((task, index) =>
         changeTaskState(
           task,
           this.props.actions[key].nextTaskState,
-          this.props.notes
+          this.props.notes,
+          result && result.payments ? result.payments[index] : undefined
         )
       )
     );
