@@ -194,9 +194,7 @@ class TaskPanel extends React.Component<Props, State> {
     const result = this._okToSwitchAway();
     if (result) {
       const selectedTaskId =
-        index === -1
-          ? undefined
-          : groupTasksByPharmacy(this.state.tasks)[index][0].id;
+        index === -1 ? undefined : this._groupTasks()[index][0].id;
       this.setState({
         selectedTaskIndex: index,
         selectedTaskId,

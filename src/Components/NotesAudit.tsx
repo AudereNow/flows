@@ -28,7 +28,7 @@ const CHANGE_MESSAGES: {
   },
   [TaskState.AUDIT]: {
     [TaskState.AUDIT]: "added a note",
-    [TaskState.FOLLOWUP]: "sent for followup",
+    [TaskState.FOLLOWUP]: "sent for secondary followup",
     [TaskState.PAY]: "approved for payment"
   },
   [TaskState.FOLLOWUP]: {
@@ -38,6 +38,7 @@ const CHANGE_MESSAGES: {
     [TaskState.AUDIT]: "sent back to primary review"
   },
   [TaskState.PAY]: {
+    [TaskState.FOLLOWUP]: "sent back for secondary followup",
     [TaskState.COMPLETED]: (change, by, when, tasks) => {
       if (!change.payment) {
         return `${by} paid ${when}`;
