@@ -134,7 +134,7 @@ class TaskPanel extends React.Component<Props, State> {
         });
       }
 
-      const groupedTasks = groupTasksByPharmacy(tasks);
+      const groupedTasks = this._groupTasks(tasks);
       selectedTaskIndex = groupedTasks.findIndex(tasks =>
         tasks.some(task => task.id === selectedTaskId)
       );
@@ -503,11 +503,11 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _groupTasks = () => {
+  _groupTasks = (tasks: Task[] = this.state.tasks) => {
     if (this.props.config.groupTasksByPharmacy) {
-      return groupTasksByPharmacy(this.state.tasks);
+      return groupTasksByPharmacy(tasks);
     } else {
-      return this.state.tasks.map(task => [task]);
+      return tasks.map(task => [task]);
     }
   };
 
