@@ -49,7 +49,7 @@ const CHANGE_MESSAGES: {
           tasks[change.payment.bundledUnderTaskId];
         return (
           <Fragment>
-            {by} paid. See:{" "}
+            {by} paid {when}. See:{" "}
             <TaskLink
               taskId={change.payment.bundledUnderTaskId!}
               state="completed"
