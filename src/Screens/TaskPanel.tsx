@@ -1,5 +1,6 @@
 import { json2csv } from "json-2-csv";
 import moment, { Moment } from "moment";
+import memoize from "memoize-one";
 import React, { Fragment, ReactNode } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import { RouteComponentProps, withRouter } from "react-router";
@@ -694,7 +695,7 @@ const ConfiguredDetailsWrapper = configuredComponent<
   return { remoteConfig: configProps };
 });
 
-function groupTasksByPharmacy(tasks: Task[]) {
+const groupTasksByPharmacy = memoize((tasks: Task[]) => {
   const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
   tasks.forEach(task => {
     if (tasksByPharmacy[task.site.name]) {
@@ -704,4 +705,4 @@ function groupTasksByPharmacy(tasks: Task[]) {
     }
   });
   return Object.values(tasksByPharmacy);
-}
+});
