@@ -161,6 +161,13 @@ class PharmacyInfo extends React.Component<Props, State> {
               value: this.props.site.phone || ""
             }}
           />
+          <TextItem
+            data={{
+              displayKey: "Location",
+              searchKey: "pharmacy",
+              value: this.props.site.location || ""
+            }}
+          />
           {this.state.pharmacy && (
             <div className="pharmacy_detail">
               {this.state.editedNotes !== undefined ? (
