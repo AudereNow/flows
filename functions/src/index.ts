@@ -393,7 +393,8 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         createdAt: Date.now(),
         site: {
           name: pharm.values[0]["Pharmacy Name FULL"],
-          phone: pharm.values[0]["Pharmacy Contact and MPESA"]
+          phone: pharm.values[0]["Pharmacy Phone Number"],
+          location: pharm.values[0]["Pharmacy Exact Location"]
         }
       };
       const record: TaskChangeRecord = {
