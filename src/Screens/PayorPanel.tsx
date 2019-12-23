@@ -120,7 +120,6 @@ class ConfigurablePayorDetails extends React.Component<
   }
 
   _issuePayment = async (): Promise<ActionCallbackResult> => {
-    debugger;
     const { tasks } = this.props;
     const reimburseAmount = _getReimbursementTotal(tasks);
 
