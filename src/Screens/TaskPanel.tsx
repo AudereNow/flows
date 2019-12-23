@@ -122,7 +122,9 @@ class TaskPanel extends React.Component<Props, State> {
     if (selectedTaskId && this.props.initialSelectedTaskID !== selectedTaskId) {
       this._pushHistory(selectedTaskId);
     }
-    setImmediate(() => this.setState({ selectedTaskIndex }));
+    if (this.state.selectedTaskIndex !== selectedTaskIndex) {
+      this.setState({ selectedTaskIndex });
+    }
     return { selectedTaskIndex, selectedTaskId };
   }
 
