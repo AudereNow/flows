@@ -1,7 +1,7 @@
 import moment from "moment";
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { RowRenderProps } from "react-table";
+import { RowRenderProps, Column } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
 import Button from "../Components/Button";
@@ -54,13 +54,13 @@ type State = {
 
 export type HistoryRow = {
   id: string;
-  time: string;
+  time: number;
   description: string;
   notes?: string;
   state?: TaskState;
 };
 
-const HISTORY_TABLE_COLUMNS = [
+const HISTORY_TABLE_COLUMNS: Column<any>[] = [
   {
     Header: "ID",
     accessor: "id",
@@ -71,6 +71,7 @@ const HISTORY_TABLE_COLUMNS = [
   },
   {
     Header: "TIME",
+    id: "timestamp",
     accessor: "time",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
     minWidth: 60
@@ -188,7 +189,7 @@ class AdminPanel extends React.Component<Props, State> {
     return records.map(r => {
       return {
         id: r.taskID,
-        time: new Date(r.timestamp).toLocaleDateString(),
+        time: r.timestamp,
         description: !!r.fromState
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
@@ -202,7 +203,7 @@ class AdminPanel extends React.Component<Props, State> {
     return records.map(r => {
       return {
         id: "",
-        time: new Date(r.timestamp).toLocaleDateString(),
+        time: r.timestamp,
         description: r.desc,
         notes: r.notes || ""
       };
@@ -405,9 +406,9 @@ class AdminPanel extends React.Component<Props, State> {
   }
 }
 
-function renderTooltippedTime(timestamp: string) {
+function renderTooltippedTime(timestamp: number) {
   const tip = moment(timestamp).fromNow();
-  const when = timestamp;
+  const when = new Date(timestamp).toLocaleDateString();
 
   return (
     <span data-tip={tip}>
