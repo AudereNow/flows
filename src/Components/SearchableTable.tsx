@@ -2,7 +2,7 @@ import { json2csv } from "json-2-csv";
 import moment from "moment";
 import React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
-import ReactTable from "react-table";
+import ReactTable, { Column } from "react-table";
 import "react-table/react-table.css";
 import ClearSearchImg from "../assets/close.png";
 import DownloadCSVImg from "../assets/downloadcsv.png";
@@ -15,7 +15,7 @@ import "./SearchableTable.css";
 import { ToolTipIcon } from "./ToolTipIcon";
 
 type Props = RouteComponentProps & {
-  tableColumns: any[];
+  tableColumns: Column<any>[];
   allData: HistoryRow[];
   downloadPrefix: string;
 };

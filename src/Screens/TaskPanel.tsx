@@ -1,5 +1,6 @@
 import { json2csv } from "json-2-csv";
 import moment, { Moment } from "moment";
+import memoize from "memoize-one";
 import React, { Fragment, ReactNode } from "react";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import { RouteComponentProps, withRouter } from "react-router";
@@ -15,6 +16,7 @@ import TaskList from "../Components/TaskList";
 import { SearchContext } from "../Components/TextItem";
 import { ToolTipIcon } from "../Components/ToolTipIcon";
 import {
+  PaymentRecord,
   Pharmacy,
   RemoteConfig,
   Task,
@@ -68,7 +70,6 @@ type State = {
   tasks: Task[];
   changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
-  selectedTaskId?: string;
   initialSelectedTaskID?: string;
   focusedInput: FocusedInputShape | null;
   searchDates: DateRange;
@@ -112,55 +113,31 @@ class TaskPanel extends React.Component<Props, State> {
     this._unsubscribe();
   }
 
-  _onTasksChanged = async (tasks: Task[]) => {
-    const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
-    let { notes, selectedTaskIndex, selectedTaskId } = this.state;
-
-    if (tasks.length === 0) {
-      selectedTaskIndex = -1;
-      selectedTaskId = undefined;
-      notes = "";
-    } else {
-      if (
-        !!this.props.initialSelectedTaskID &&
-        this.props.initialSelectedTaskID !== this.state.initialSelectedTaskID
-      ) {
-        selectedTaskId = this.props.initialSelectedTaskID;
-        this.setState({
-          initialSelectedTaskID: this.props.initialSelectedTaskID
-        });
-      }
-
-      const groupedTasks = groupTasksByPharmacy(tasks);
-      selectedTaskIndex = groupedTasks.findIndex(tasks =>
-        tasks.some(task => task.id === selectedTaskId)
-      );
-      if (selectedTaskIndex === -1) {
-        selectedTaskIndex = 0;
-        selectedTaskId = tasks[0].id;
-        notes = "";
-      } else {
-        if (selectedTaskIndex === -1) {
-          selectedTaskIndex = Math.min(
-            this.state.selectedTaskIndex,
-            groupedTasks.length - 1
-          );
-          selectedTaskId = tasks[selectedTaskIndex].id;
-          notes = "";
-        }
-      }
-    }
-
-    if (selectedTaskId !== this.state.selectedTaskId) {
+  _getSelectedTask() {
+    const { selectedTaskId, selectedTaskIndex } = computeSelectedTaskId(
+      this._groupTasks(),
+      this.state.selectedTaskIndex,
+      this.props.initialSelectedTaskID
+    );
+    if (selectedTaskId && this.props.initialSelectedTaskID !== selectedTaskId) {
       this._pushHistory(selectedTaskId);
     }
+    if (this.state.selectedTaskIndex !== selectedTaskIndex) {
+      this.setState({ selectedTaskIndex });
+    }
+    return { selectedTaskIndex, selectedTaskId };
+  }
+
+  _onTasksChanged = async (tasks: Task[]) => {
+    const changes = await Promise.all(tasks.map(t => getChanges(t.id)));
+    let { notes, selectedTaskIndex } = this.state;
+
     this.setState(
       {
         allTasks: tasks,
         tasks,
         changes,
         selectedTaskIndex,
-        selectedTaskId,
         notes
       },
       this._updateTasks
@@ -191,12 +168,9 @@ class TaskPanel extends React.Component<Props, State> {
     const result = this._okToSwitchAway();
     if (result) {
       const selectedTaskId =
-        index === -1
-          ? undefined
-          : groupTasksByPharmacy(this.state.tasks)[index][0].id;
+        index === -1 ? undefined : this._groupTasks()[index][0].id;
       this.setState({
         selectedTaskIndex: index,
-        selectedTaskId,
         notes: ""
       });
       this._pushHistory(selectedTaskId);
@@ -297,7 +271,7 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _updateTasks = async () => {
-    const { selectedTaskIndex, tasks } = this.state;
+    const { tasks } = this.state;
     const pharmacyNames: { [name: string]: boolean } = {};
     tasks.forEach(task => (pharmacyNames[task.site.name] = true));
     const pharmacies: { [name: string]: Pharmacy } = {};
@@ -315,8 +289,6 @@ class TaskPanel extends React.Component<Props, State> {
         res
       )
     );
-    const selectedId =
-      selectedTaskIndex >= 0 ? tasks[selectedTaskIndex].id : "";
     const filteredTasks = this._computeFilteredTasks(
       this.state.searchTermGlobal,
       this.state.searchDates
@@ -324,23 +296,11 @@ class TaskPanel extends React.Component<Props, State> {
 
     const changes = await Promise.all(filteredTasks.map(t => getChanges(t.id)));
 
-    const selectedIndex = filteredTasks.findIndex(task => {
-      return task.id === selectedId;
+    this.setState({
+      tasks: filteredTasks,
+      notes: "",
+      changes
     });
-
-    this.setState(
-      {
-        tasks: filteredTasks,
-        selectedTaskIndex: selectedIndex,
-        notes: "",
-        changes
-      },
-      () => {
-        if (selectedIndex === -1 && filteredTasks.length > 0) {
-          this._onTaskSelect(0);
-        }
-      }
-    );
   };
 
   _clearSearch = async () => {
@@ -500,16 +460,17 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState({ notes });
   };
 
-  _groupTasks = () => {
+  _groupTasks = (tasks: Task[] = this.state.tasks) => {
     if (this.props.config.groupTasksByPharmacy) {
-      return groupTasksByPharmacy(this.state.tasks);
+      return groupTasksByPharmacy(tasks);
     } else {
-      return this.state.tasks.map(task => [task]);
+      return tasks.map(task => [task]);
     }
   };
 
   render() {
-    const { searchTermGlobal, selectedTaskIndex, notes } = this.state;
+    const { searchTermGlobal, notes } = this.state;
+    const { selectedTaskIndex } = this._getSelectedTask();
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
       selectedTaskIndex >= 0 ? (
@@ -582,9 +543,10 @@ interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
 }
 
-interface ActionCallbackResult {
+export interface ActionCallbackResult {
   success: boolean;
   tasks?: Task[];
+  payments?: PaymentRecord[];
 }
 
 class DetailsWrapper extends React.Component<
@@ -614,8 +576,9 @@ class DetailsWrapper extends React.Component<
       }
     }));
     let tasks: Task[] = this.props.tasks;
+    let result: ActionCallbackResult;
     if (this._actionCallbacks[key]) {
-      let result = await this._actionCallbacks[key]();
+      result = await this._actionCallbacks[key]();
       this.setState(state => ({
         buttonsBusy: {
           ...state.buttonsBusy,
@@ -626,11 +589,12 @@ class DetailsWrapper extends React.Component<
     }
 
     await Promise.all(
-      tasks.map(task =>
+      tasks.map((task, index) =>
         changeTaskState(
           task,
           this.props.actions[key].nextTaskState,
-          this.props.notes
+          this.props.notes,
+          result && result.payments ? result.payments[index] : undefined
         )
       )
     );
@@ -690,7 +654,7 @@ const ConfiguredDetailsWrapper = configuredComponent<
   return { remoteConfig: configProps };
 });
 
-function groupTasksByPharmacy(tasks: Task[]) {
+const groupTasksByPharmacy = memoize((tasks: Task[]) => {
   const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
   tasks.forEach(task => {
     if (tasksByPharmacy[task.site.name]) {
@@ -700,4 +664,30 @@ function groupTasksByPharmacy(tasks: Task[]) {
     }
   });
   return Object.values(tasksByPharmacy);
-}
+});
+
+const computeSelectedTaskId = memoize(
+  (
+    groupedTasks: Task[][],
+    selectedTaskIndex: number,
+    selectedTaskId?: string
+  ) => {
+    let newSelectedTaskIndex;
+    if (groupedTasks.length === 0) {
+      newSelectedTaskIndex = -1;
+      selectedTaskId = undefined;
+    } else {
+      newSelectedTaskIndex = groupedTasks.findIndex(tasks =>
+        tasks.some(task => task.id === selectedTaskId)
+      );
+      if (newSelectedTaskIndex === -1) {
+        newSelectedTaskIndex = Math.min(
+          Math.max(0, selectedTaskIndex),
+          groupedTasks.length - 1
+        );
+        selectedTaskId = groupedTasks[newSelectedTaskIndex][0].id;
+      }
+    }
+    return { selectedTaskIndex: newSelectedTaskIndex, selectedTaskId };
+  }
+);
