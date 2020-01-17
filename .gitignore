@@ -23,7 +23,7 @@
 .firebaserc
 /.firebase
 firebase-debug.log
-firebaseconfig.json
+firebaseconfig.json*
 
 npm-debug.log*
 yarn-debug.log*
