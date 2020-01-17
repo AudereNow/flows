@@ -85,7 +85,10 @@ const TaskLink = withRouter(
   ) => {
     return (
       <Link
-        to={`/${props.state}/${props.taskId}`}
+        to={() => {
+          ReactTooltip.hide();
+          return `/${props.state}/${props.taskId}`;
+        }}
         className="notesaudit_tasklink"
       >
         {props.children}
