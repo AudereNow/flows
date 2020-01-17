@@ -1,6 +1,7 @@
 import moment from "moment";
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { RouteComponentProps, withRouter } from "react-router";
 import { RowRenderProps, Column } from "react-table";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import ReactTooltip from "react-tooltip";
@@ -35,6 +36,13 @@ const NO_ROLES_MAP: RoleMap = {
   Operator: false,
   Admin: false
 };
+const ADMIN_TABS = [
+  "history",
+  "instructions",
+  "userRoles",
+  "cannedResponses",
+  "advanced"
+];
 
 type Props = {
   config: RemoteConfig;
@@ -94,7 +102,7 @@ const REMOTE_CONFIG_TOGGLES: { key: keyof RemoteConfig; label: string }[] = [
   { key: "enableRealPayments", label: "Enable Africa's talking payments" }
 ];
 
-class AdminPanel extends React.Component<Props, State> {
+class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
   state: State = {
     allHistory: [],
     email: "",
@@ -115,6 +123,14 @@ class AdminPanel extends React.Component<Props, State> {
         this._recordsToAdminLogRows(allAdminLogs)
       )
     });
+  }
+
+  componentDidUpdate() {
+    //@ts-ignore
+    const tabName = this.props.match.params.tab;
+    if (!tabName) {
+      this.props.history.push(`/admin/${ADMIN_TABS[0]}`);
+    }
   }
 
   _onEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -286,12 +302,19 @@ class AdminPanel extends React.Component<Props, State> {
     );
   };
 
+  _onTabSelect = (index: number) => {
+    this.props.history.push(`/admin/${ADMIN_TABS[index]}`);
+  };
+
   render() {
     const { allHistory } = this.state;
+    // @ts-ignore
+    const tabName = this.props.match.params.tab;
+    const selectedTabIndex = tabName ? ADMIN_TABS.indexOf(tabName) : 0;
 
     return (
       <div className="mainview_admin_panel">
-        <Tabs>
+        <Tabs onSelect={this._onTabSelect} selectedIndex={selectedTabIndex}>
           <TabList>
             <Tab>History</Tab>
             <Tab>Instructions</Tab>
@@ -418,6 +441,9 @@ function renderTooltippedTime(timestamp: number) {
   );
 }
 
-export default configuredComponent<{}, Props>(AdminPanel, config => ({
-  config
-}));
+export default configuredComponent<{}, Props>(
+  withRouter(AdminPanel),
+  config => ({
+    config
+  })
+);
