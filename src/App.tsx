@@ -56,6 +56,9 @@ class App extends React.Component<Props, State> {
               ]}
               render={this._renderLinkedMainView}
             />
+            <Route path={"/admin/:tab?"}>
+              <MainView startingTab={"admin"} />
+            </Route>
             <Route>
               <MainView />
             </Route>
