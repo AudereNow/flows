@@ -21,7 +21,7 @@ import {
   TASKS_COLLECTION,
   TASK_CHANGE_COLLECTION,
   User,
-  UserRole
+  UserRole,
 } from "./sharedtypes";
 
 // You're going to need this file on your local machine.  It's stored in our
@@ -64,7 +64,7 @@ type CallResult =
 const bucketName = `gs://${serviceAccount.projectId}-backup`;
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage({
-  projectId: serviceAccount.projectId
+  projectId: serviceAccount.projectId,
 });
 
 exports.scheduledFirestoreExport = functions.pubsub
@@ -81,7 +81,7 @@ exports.scheduledFirestoreExport = functions.pubsub
       .exportDocuments({
         name: databaseName,
         outputUriPrefix: bucketName,
-        collectionIds: []
+        collectionIds: [],
       })
       .then((responses: any) => {
         const response = responses[0];
@@ -124,7 +124,7 @@ exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
 
     data.recipients = data.recipients.map((recipient: PaymentRecipient) => ({
       ...recipient,
-      phoneNumber: canonicalizePhoneNumber(recipient.phoneNumber)
+      phoneNumber: canonicalizePhoneNumber(recipient.phoneNumber),
     }));
 
     const response = await axios.post(
@@ -132,14 +132,14 @@ exports.issuePayments = functions.runWith({ timeoutSeconds: 300 }).https.onCall(
       {
         username: africasTalkingOptions.username,
         productName: africasTalkingOptions.productName,
-        recipients: data.recipients
+        recipients: data.recipients,
       },
       {
         headers: {
           "Content-Type": "application/json",
           apikey: africasTalkingOptions.apiKey,
-          Accept: "application/json"
-        }
+          Accept: "application/json",
+        },
       }
     );
     if (response.status < 200 || response.status > 299) {
@@ -153,7 +153,7 @@ exports.setRoles = functions.https.onCall(
   async (data, context): Promise<CallResult> => {
     if (!hasRole(context, UserRole.ADMIN)) {
       return {
-        error: "Request not authorized"
+        error: "Request not authorized",
       };
     }
 
@@ -161,7 +161,7 @@ exports.setRoles = functions.https.onCall(
       return {
         error:
           "Request did not include valid email and/or roles: " +
-          JSON.stringify(data)
+          JSON.stringify(data),
       };
     }
 
@@ -186,14 +186,15 @@ async function setRoles(email: string, roles: UserRole[]): Promise<CallResult> {
 
   if (!user || !user.uid) {
     return {
-      error: "Unable to find user " + email
+      error: "Unable to find user " + email,
     };
   }
 
   await admin.auth().setCustomUserClaims(user.uid, { roles });
   await admin.auth().revokeRefreshTokens(user.uid);
   return {
-    result: "Roles successfully set for " + email + ": " + JSON.stringify(roles)
+    result:
+      "Roles successfully set for " + email + ": " + JSON.stringify(roles),
   };
 }
 
@@ -206,7 +207,7 @@ exports.uploadCSV = functions.https.onCall(
     const authUser = await admin.auth().getUser(context.auth!.uid);
     const user: User = {
       name: getBestUserName(authUser),
-      id: authUser.uid
+      id: authUser.uid,
     };
     if (!data.content) {
       return { error: "Empty file uploaded" };
@@ -242,7 +243,7 @@ exports.uploadCSV = functions.https.onCall(
       return {
         error: `CSV processing error: ${e.message ||
           e.error ||
-          JSON.stringify(e)}`
+          JSON.stringify(e)}`,
       };
     }
   }
@@ -324,7 +325,7 @@ async function LogAdminEvent(user: User, desc: string) {
   const event: AdminLogEvent = {
     timestamp: Date.now(),
     user,
-    desc
+    desc,
   };
   console.log(desc);
   await admin
@@ -345,7 +346,7 @@ async function logUploadedRecords(cache: any[], batchID: string, user: User) {
         csvID,
         batchID,
         timestamp,
-        by: user.name
+        by: user.name,
       };
       return logs.doc(csvID).set(log);
     })
@@ -356,11 +357,11 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
   const rowsByPharmacy = groupBy(cache, ROW_GROUP_BY_KEY);
   const shuffledRowsByPharmacy = rowsByPharmacy.map(pharm => ({
     key: pharm.key,
-    values: shuffleArray(pharm.values)
+    values: shuffleArray(pharm.values),
   }));
   const changeTemplate = {
     timestamp: Date.now(),
-    by: user.name
+    by: user.name,
   };
 
   // Now generate Auditor work items representing each sampled row.
@@ -384,7 +385,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         item: d["Type received"],
         totalCost: parseFloat(d["Total med price covered by SPIDER"]),
         claimedCost: parseFloat(d["Total reimbursement"]),
-        timestamp: new Date(d["YYYY"], d["MM"] - 1, d["DD"]).getTime()
+        timestamp: new Date(d["YYYY"], d["MM"] - 1, d["DD"]).getTime(),
       }));
       const task: Task = {
         id: doc.id,
@@ -394,14 +395,14 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
         site: {
           name: pharm.values[0]["Pharmacy Name FULL"],
           phone: pharm.values[0]["Pharmacy Phone Number"],
-          location: pharm.values[0]["Pharmacy Exact Location"]
-        }
+          location: pharm.values[0]["Pharmacy Exact Location"],
+        },
       };
       const record: TaskChangeRecord = {
         ...changeTemplate,
         taskID: doc.id,
         state: TaskState.AUDIT,
-        fromState: TaskState.CSV
+        fromState: TaskState.CSV,
       };
       removeEmptyFieldsInPlace(task);
       await Promise.all([
@@ -411,7 +412,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
           .collection(TASK_CHANGE_COLLECTION)
           .doc()
           .set(record),
-        updatePatientsForTask(task)
+        updatePatientsForTask(task),
       ]);
     })
   );
@@ -465,7 +466,7 @@ async function completeCSVProcessing(
     const batchID = new Date().toISOString();
     await Promise.all([
       logUploadedRecords(dedupedCache, batchID, user),
-      createAuditorTasks(dedupedCache, batchID, user)
+      createAuditorTasks(dedupedCache, batchID, user),
     ]);
     result += `Successfully imported ${dedupedCache.length} records`;
   } else {

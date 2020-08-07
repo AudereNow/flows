@@ -17,7 +17,7 @@ class LabelWrapper extends Component<Props> {
       label,
       postLabelElement,
       renderLabelItems,
-      searchPanel
+      searchPanel,
     } = this.props;
     return (
       <div className={`labelwrapper_container ${className}`}>

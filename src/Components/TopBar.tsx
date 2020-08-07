@@ -23,7 +23,7 @@ class TopBar extends React.Component<{}, State> {
     roles: [],
     showFileSelector: false,
     selectingFile: false,
-    uploading: false
+    uploading: false,
   };
 
   async componentDidMount() {

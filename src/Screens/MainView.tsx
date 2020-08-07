@@ -29,13 +29,13 @@ type State = {
 const PanelComponents: {
   [key: string]: React.ComponentType<{}>;
 } = {
-  Admin: AdminPanel
+  Admin: AdminPanel,
 };
 
 const ItemComponents: {
   [key: string]: React.ComponentType<{ tasks: Task[]; isSelected: boolean }>;
 } = {
-  default: ListItem
+  default: ListItem,
 };
 
 const DetailsComponents: {
@@ -43,13 +43,13 @@ const DetailsComponents: {
 } = {
   AuditTask: AuditorDetails,
   PayorTask: PayorDetails,
-  OperatorTask: OperatorDetails
+  OperatorTask: OperatorDetails,
 };
 
 class MainView extends React.Component<Props, State> {
   state: State = {
     roles: [],
-    selectedTabIndex: 0
+    selectedTabIndex: 0,
   };
   _onTabSelectCallback?: () => boolean;
 
@@ -58,7 +58,7 @@ class MainView extends React.Component<Props, State> {
 
     this.setState({
       roles,
-      selectedTabIndex: this._getSelectedTabIndex(defaultConfig, roles)
+      selectedTabIndex: this._getSelectedTabIndex(defaultConfig, roles),
     });
   }
 
@@ -166,7 +166,7 @@ class MainView extends React.Component<Props, State> {
               key={"tab_" + index}
               style={{
                 display: "flex",
-                flexDirection: "row"
+                flexDirection: "row",
               }}
             >
               {panelElement}

@@ -20,7 +20,7 @@ interface State {
 export default class CannedNotesEditor extends React.Component<Props> {
   state: State = {
     editing: {},
-    saving: false
+    saving: false,
   };
 
   _unsubscribe?: () => void;
@@ -45,8 +45,8 @@ export default class CannedNotesEditor extends React.Component<Props> {
     this.setState({
       editing: {
         ...this.state.editing,
-        [index]: this.state.notes[index]
-      }
+        [index]: this.state.notes[index],
+      },
     });
   };
 
@@ -58,8 +58,8 @@ export default class CannedNotesEditor extends React.Component<Props> {
     this.setState({
       editing: {
         ...this.state.editing,
-        [parseInt(name)]: value
-      }
+        [parseInt(name)]: value,
+      },
     });
   };
 
@@ -72,15 +72,15 @@ export default class CannedNotesEditor extends React.Component<Props> {
       index === i ? this.state.editing[i] : note
     );
     this.setState({
-      saving: true
+      saving: true,
     });
     await saveNotes(this.props.categoryName, newNotes);
     this.setState({
       saving: false,
       editing: {
         ...this.state.editing,
-        [index]: undefined
-      }
+        [index]: undefined,
+      },
     });
   };
 
@@ -93,15 +93,15 @@ export default class CannedNotesEditor extends React.Component<Props> {
       .slice(0, index)
       .concat(this.state.notes.slice(index + 1));
     this.setState({
-      saving: true
+      saving: true,
     });
     await saveNotes(this.props.categoryName, newNotes);
     this.setState({
       saving: false,
       editing: {
         ...this.state.editing,
-        [index]: undefined
-      }
+        [index]: undefined,
+      },
     });
   };
 
@@ -113,8 +113,8 @@ export default class CannedNotesEditor extends React.Component<Props> {
     this.setState({
       editing: {
         ...this.state.editing,
-        [this.state.notes.length]: ""
-      }
+        [this.state.notes.length]: "",
+      },
     });
     await saveNotes(this.props.categoryName, newNotes);
   };

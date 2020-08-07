@@ -42,7 +42,7 @@ class ConfigurableOperatorDetails extends React.Component<
     if (!!claim.photoMedUri) {
       claimImages.push({
         url: claim.photoMedUri,
-        label: { value: claim.item, searchKey: "item" }
+        label: { value: claim.item, searchKey: "item" },
       });
     }
     if (!!claim.photoIDUri) {
@@ -51,14 +51,14 @@ class ConfigurableOperatorDetails extends React.Component<
         label: {
           displayKey: "ID",
           value: claim.patientID || "",
-          searchKey: "patient"
-        }
+          searchKey: "patient",
+        },
       });
     }
     if (!!claim.photoMedBatchUri) {
       claimImages.push({
         url: claim.photoMedBatchUri,
-        label: { value: "Batch", searchKey: "" }
+        label: { value: "Batch", searchKey: "" },
       });
     }
     return claimImages;
@@ -83,7 +83,7 @@ class ConfigurableOperatorDetails extends React.Component<
             data={{
               displayKey: "Date",
               searchKey: "date",
-              value: new Date(entry.timestamp).toLocaleDateString()
+              value: new Date(entry.timestamp).toLocaleDateString(),
             }}
           />
           <TextItem
@@ -92,7 +92,7 @@ class ConfigurableOperatorDetails extends React.Component<
               searchKey: "patient",
               value: `${entry.patientFirstName} ${
                 entry.patientLastName
-              } ${patientInfo} ${entry.phone || ""}`
+              } ${patientInfo} ${entry.phone || ""}`,
             }}
           />
           <ImageRow
@@ -139,5 +139,5 @@ export const OperatorDetails = configuredComponent<
   DetailsComponentProps,
   Props
 >(ConfigurableOperatorDetails, config => ({
-  instructions: config.opsInstructions
+  instructions: config.opsInstructions,
 }));

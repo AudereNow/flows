@@ -4,7 +4,7 @@ import { TaskTotal } from "../Screens/AuditorPanel";
 import { Pharmacy, Site } from "../sharedtypes";
 import {
   setPharmacyDetails,
-  subscribeToPharmacyDetails
+  subscribeToPharmacyDetails,
 } from "../store/corestore";
 import Button from "./Button";
 import ExpandableDiv from "./ExpandableDiv";
@@ -14,7 +14,7 @@ import { ToolTipIcon } from "./ToolTipIcon";
 
 const DEFAULT_PHARMACY: Pharmacy = {
   notes: "",
-  owners: []
+  owners: [],
 };
 
 interface Props {
@@ -40,18 +40,18 @@ const PREVIOUS_CLAIMS_TABLE_COLUMNS = [
     id: "Count",
     Header: "Count",
     accessor: "count",
-    minWidth: 60
+    minWidth: 60,
   },
   {
     Header: "Date",
     id: "date",
     accessor: (row: any) => new Date(row.date).toLocaleDateString(),
-    minWidth: 70
-  }
+    minWidth: 70,
+  },
 ];
 class PharmacyInfo extends React.Component<Props, State> {
   state: State = {
-    saving: false
+    saving: false,
   };
 
   _unsubscribe = () => {};
@@ -97,14 +97,14 @@ class PharmacyInfo extends React.Component<Props, State> {
     this.setState({ saving: true });
     await setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
-      notes: this.state.editedNotes || ""
+      notes: this.state.editedNotes || "",
     });
     this.setState({ editedNotes: undefined, saving: false });
   };
 
   _onNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     this.setState({
-      editedNotes: event.target.value
+      editedNotes: event.target.value,
     });
   };
 
@@ -125,14 +125,14 @@ class PharmacyInfo extends React.Component<Props, State> {
       owners: (this.state.editedOwners || "")
         .split(",")
         .map(owner => owner.trim())
-        .filter(owner => owner)
+        .filter(owner => owner),
     });
     this.setState({ editedOwners: undefined, saving: false });
   };
 
   _onOwnersChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({
-      editedOwners: event.target.value
+      editedOwners: event.target.value,
     });
   };
 
@@ -151,21 +151,21 @@ class PharmacyInfo extends React.Component<Props, State> {
             data={{
               displayKey: "Pharmacy",
               searchKey: "pharmacy",
-              value: this.props.site.name || ""
+              value: this.props.site.name || "",
             }}
           />
           <TextItem
             data={{
               displayKey: "Phone Number",
               searchKey: "pharmacy",
-              value: this.props.site.phone || ""
+              value: this.props.site.phone || "",
             }}
           />
           <TextItem
             data={{
               displayKey: "Location",
               searchKey: "pharmacy",
-              value: this.props.site.location || ""
+              value: this.props.site.location || "",
             }}
           />
           {this.state.pharmacy && (

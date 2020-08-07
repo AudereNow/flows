@@ -13,7 +13,7 @@ import {
   RemoteConfig,
   TaskChangeRecord,
   TaskState,
-  UserRole
+  UserRole,
 } from "../sharedtypes";
 import {
   getAdminLogs,
@@ -21,7 +21,7 @@ import {
   getBestUserName,
   issuePayments,
   setRoles,
-  updatePatientsTaskLists
+  updatePatientsTaskLists,
 } from "../store/corestore";
 import { setConfig } from "../store/remoteconfig";
 import { configuredComponent } from "../util/configuredComponent";
@@ -34,14 +34,14 @@ const NO_ROLES_MAP: RoleMap = {
   Auditor: false,
   Payor: false,
   Operator: false,
-  Admin: false
+  Admin: false,
 };
 const ADMIN_TABS = [
   "history",
   "instructions",
   "userRoles",
   "cannedResponses",
-  "advanced"
+  "advanced",
 ];
 
 type Props = {
@@ -75,31 +75,31 @@ const HISTORY_TABLE_COLUMNS: Column<any>[] = [
     minWidth: 90,
     Cell: (props: RowRenderProps) => (
       <span className="mainview_table_id">{props.value}</span>
-    )
+    ),
   },
   {
     Header: "TIME",
     id: "timestamp",
     accessor: "time",
     Cell: (props: RowRenderProps) => renderTooltippedTime(props.value),
-    minWidth: 60
+    minWidth: 60,
   },
   {
     Header: "DESCRIPTION",
     accessor: "description",
-    minWidth: 150
+    minWidth: 150,
   },
   {
     Header: "NOTES",
     accessor: "notes",
     minWidth: 200,
-    style: { whiteSpace: "unset" }
-  }
+    style: { whiteSpace: "unset" },
+  },
 ];
 
 const REMOTE_CONFIG_TOGGLES: { key: keyof RemoteConfig; label: string }[] = [
   { key: "allowDuplicateUploads", label: "Allow duplicate uploads" },
-  { key: "enableRealPayments", label: "Enable Africa's talking payments" }
+  { key: "enableRealPayments", label: "Enable Africa's talking payments" },
 ];
 
 class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
@@ -108,7 +108,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     email: "",
     roleMap: NO_ROLES_MAP,
     paymentForm: {},
-    savingOpsInstructions: false
+    savingOpsInstructions: false,
   };
 
   _fetchedAllData = false;
@@ -121,7 +121,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
       roleMap: NO_ROLES_MAP,
       allHistory: this._recordsToChangeRows(allChanges).concat(
         this._recordsToAdminLogRows(allAdminLogs)
-      )
+      ),
     });
   }
 
@@ -149,8 +149,8 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     this.setState({
       paymentForm: {
         ...this.state.paymentForm,
-        phoneNumber: event.target.value
-      }
+        phoneNumber: event.target.value,
+      },
     });
   };
 
@@ -158,8 +158,8 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     this.setState({
       paymentForm: {
         ...this.state.paymentForm,
-        amount: parseInt(event.target.value)
-      }
+        amount: parseInt(event.target.value),
+      },
     });
   };
   _setUserRoles = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -210,7 +210,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
           ? `${r.by} changed task from ${r.fromState} to ${r.state}`
           : `${r.by} ${(r as any).desc}`,
         notes: r.notes || "",
-        state: r.state
+        state: r.state,
       };
     });
   };
@@ -221,7 +221,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
         id: "",
         time: r.timestamp,
         description: r.desc,
-        notes: r.notes || ""
+        notes: r.notes || "",
       };
     });
   };
@@ -248,7 +248,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     }
 
     this.setState({
-      paymentForm: { ...this.state.paymentForm, sending: true }
+      paymentForm: { ...this.state.paymentForm, sending: true },
     });
 
     try {
@@ -260,9 +260,9 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
           phoneNumber,
           currencyCode: "KES",
           metadata: {
-            payorName: getBestUserName()
-          }
-        }
+            payorName: getBestUserName(),
+          },
+        },
       ]);
       console.log(result);
       if (result.data && result.data.error) {
@@ -275,7 +275,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
       alert("Payment failed");
     }
     this.setState({
-      paymentForm: { ...this.state.paymentForm, sending: false }
+      paymentForm: { ...this.state.paymentForm, sending: false },
     });
   };
 
@@ -444,6 +444,6 @@ function renderTooltippedTime(timestamp: number) {
 export default configuredComponent<{}, Props>(
   withRouter(AdminPanel),
   config => ({
-    config
+    config,
   })
 );

@@ -19,7 +19,7 @@ import {
   getPatientHistories,
   getPharmacyClaims,
   PatientHistory,
-  setRejectedClaim
+  setRejectedClaim,
 } from "../store/corestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
@@ -36,9 +36,9 @@ const PATIENT_HISTORY_TABLE_COLUMNS = [
     Header: "TOTAL AMOUNT",
     id: "totalAmount",
     accessor: (row: any) => formatCurrency(parseFloat(row.totalAmount)),
-    minWidth: 60
+    minWidth: 60,
   },
-  { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 }
+  { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 },
 ];
 
 export interface TaskTotal {
@@ -76,7 +76,7 @@ function getInitialState(props: DetailsComponentProps): State {
       Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
       MIN_SAMPLES
     ),
-    patients
+    patients,
   };
 }
 
@@ -108,7 +108,7 @@ export class AuditorDetails extends React.Component<
           id: task.id,
           total: 0,
           count: 0,
-          date: new Date(task.entries[0].timestamp).toLocaleDateString()
+          date: new Date(task.entries[0].timestamp).toLocaleDateString(),
         };
 
         task.entries.forEach(entry => {
@@ -143,11 +143,11 @@ export class AuditorDetails extends React.Component<
         ) {
           return {
             ...entry,
-            reviewed: true
+            reviewed: true,
           };
         }
         return entry;
-      })
+      }),
     }));
     return { success: true, tasks };
   };
@@ -164,9 +164,9 @@ export class AuditorDetails extends React.Component<
             this.props.tasks.every(
               currentTask => task.taskId !== currentTask.id
             )
-          )
-        }
-      }))
+          ),
+        },
+      })),
     });
   };
 
@@ -175,7 +175,7 @@ export class AuditorDetails extends React.Component<
     if (!!claim.photoMedUri) {
       claimImages.push({
         url: claim.photoMedUri,
-        label: { value: claim.item, searchKey: "item" }
+        label: { value: claim.item, searchKey: "item" },
       });
     }
     if (!!claim.photoIDUri) {
@@ -184,14 +184,14 @@ export class AuditorDetails extends React.Component<
         label: {
           displayKey: "ID",
           value: claim.patientID || "",
-          searchKey: "patient"
-        }
+          searchKey: "patient",
+        },
       });
     }
     if (!!claim.photoMedBatchUri) {
       claimImages.push({
         url: claim.photoMedBatchUri,
-        label: { value: "Barcode", searchKey: "" }
+        label: { value: "Barcode", searchKey: "" },
       });
     }
     return claimImages;
@@ -239,7 +239,7 @@ export class AuditorDetails extends React.Component<
               data={{
                 displayKey: "Patient",
                 searchKey: "patient",
-                value: patientString
+                value: patientString,
               }}
             />
           </div>
@@ -250,7 +250,7 @@ export class AuditorDetails extends React.Component<
                   data={{
                     displayKey: "Date",
                     searchKey: "date",
-                    value: new Date(claim.timestamp).toLocaleDateString()
+                    value: new Date(claim.timestamp).toLocaleDateString(),
                   }}
                 />
                 <ImageRow
@@ -264,7 +264,7 @@ export class AuditorDetails extends React.Component<
                   label={"Rejected"}
                   value={JSON.stringify({
                     claimIndex: (claim as any).originalIndex,
-                    taskIndex
+                    taskIndex,
                   })}
                   onCheckBoxSelect={this._toggleRejectClaim}
                   disabled={disabledCheckbox}
@@ -330,7 +330,7 @@ export class AuditorDetails extends React.Component<
           item: entry.item,
           "claimed cost": entry.claimedCost,
           rejected: (entry as any).rejected || false,
-          notes: (entry as any).notes || ""
+          notes: (entry as any).notes || "",
         });
       })
     );
@@ -435,7 +435,7 @@ function getPatients(tasks: Task[]): PatientInfo[] {
         } else {
           entriesByPatient[id].currentClaims.push({
             taskIndex,
-            claims: [entry]
+            claims: [entry],
           });
         }
       } else {
@@ -444,9 +444,9 @@ function getPatients(tasks: Task[]): PatientInfo[] {
           currentClaims: [
             {
               taskIndex,
-              claims: [entry]
-            }
-          ]
+              claims: [entry],
+            },
+          ],
         };
       }
     })
