@@ -8,7 +8,7 @@ import logoutIcon from "../assets/logout.png";
 import logo from "../assets/maishalogo.png";
 import uploadIcon from "../assets/uploadcsv.png";
 import { UserRole } from "../sharedtypes";
-import { uploadCSV, userRoles } from "../store/corestore";
+import { uploadCSV, userRoles } from "../transport/firestore";
 import "./TopBar.css";
 
 type State = {

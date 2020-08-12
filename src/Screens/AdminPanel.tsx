@@ -22,7 +22,7 @@ import {
   issuePayments,
   setRoles,
   updatePatientsTaskLists,
-} from "../store/corestore";
+} from "../transport/firestore";
 import { setConfig } from "../store/remoteconfig";
 import { configuredComponent } from "../util/configuredComponent";
 

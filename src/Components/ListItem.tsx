@@ -1,6 +1,6 @@
 import React from "react";
 import { Task } from "../sharedtypes";
-import { formatCurrency } from "../store/corestore";
+import { formatCurrency } from "../transport/firestore";
 import "./ListItem.css";
 
 export class ListItem extends React.Component<{

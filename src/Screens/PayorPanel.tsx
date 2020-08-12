@@ -11,7 +11,7 @@ import {
   getBestUserName,
   issuePayments,
   loadPreviousTasks,
-} from "../store/corestore";
+} from "../transport/firestore";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
 import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";

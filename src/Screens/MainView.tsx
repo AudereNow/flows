@@ -5,7 +5,7 @@ import "react-tabs/style/react-tabs.css";
 import { ListItem } from "../Components/ListItem";
 import { Task, UserRole } from "../sharedtypes";
 import { AppConfig, defaultConfig, isCustomPanel } from "../store/config";
-import { userRoles } from "../store/corestore";
+import { userRoles } from "../transport/firestore";
 import AdminPanel from "./AdminPanel";
 import { AuditorDetails } from "./AuditorPanel";
 import MainChrome from "./MainChrome";

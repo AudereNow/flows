@@ -20,7 +20,7 @@ import {
   getPharmacyClaims,
   PatientHistory,
   setRejectedClaim,
-} from "../store/corestore";
+} from "../transport/firestore";
 import debounce from "../util/debounce";
 import { containsSearchTerm } from "../util/search";
 import "./MainView.css";

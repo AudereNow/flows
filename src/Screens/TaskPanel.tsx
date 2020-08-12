@@ -31,7 +31,7 @@ import {
   getPharmacyDetails,
   getUserEmail,
   subscribeToTasks,
-} from "../store/corestore";
+} from "../transport/firestore";
 import { configuredComponent } from "../util/configuredComponent";
 import debounce from "../util/debounce";
 import { containsSearchTerm, DateRange, withinDateRange } from "../util/search";

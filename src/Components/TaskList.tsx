@@ -7,7 +7,7 @@ import {
   getBestUserName,
   logActiveTaskView,
   subscribeActiveTasks,
-} from "../store/corestore";
+} from "../transport/firestore";
 import "./TaskList.css";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"

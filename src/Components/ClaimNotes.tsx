@@ -1,6 +1,6 @@
 import React, { ChangeEvent, Fragment } from "react";
 import { Task } from "../sharedtypes";
-import { getNotes, setClaimNotes } from "../store/corestore";
+import { getNotes, setClaimNotes } from "../transport/firestore";
 import Button from "./Button";
 import "./ClaimNotes.css";
 

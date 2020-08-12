@@ -1,6 +1,6 @@
 import React from "react";
 import Button from "./Button";
-import { subscribeToNotes, saveNotes } from "../store/corestore";
+import { subscribeToNotes, saveNotes } from "../transport/firestore";
 
 interface CannedNote {
   title: string;

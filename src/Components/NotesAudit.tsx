@@ -3,7 +3,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { Link } from "react-router-dom";
 import "./NotesAudit.css";
 import { PaymentType, TaskChangeRecord, Task, TaskState } from "../sharedtypes";
-import { formatCurrency, getAllTasks } from "../store/corestore";
+import { formatCurrency, getAllTasks } from "../transport/firestore";
 import ReactTooltip from "react-tooltip";
 import moment from "moment";
 

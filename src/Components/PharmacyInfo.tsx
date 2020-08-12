@@ -5,7 +5,7 @@ import { Pharmacy, Site } from "../sharedtypes";
 import {
   setPharmacyDetails,
   subscribeToPharmacyDetails,
-} from "../store/corestore";
+} from "../transport/firestore";
 import Button from "./Button";
 import ExpandableDiv from "./ExpandableDiv";
 import "./PharmacyInfo.css";

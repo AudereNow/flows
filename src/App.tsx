@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import LoginScreen from "./Screens/LoginScreen";
 import MainView from "./Screens/MainView";
-import { initializeStore } from "./store/corestore";
+import { initializeStore } from "./transport/firestore";
 import "./styles/SharedStyles.css";
 
 type Props = {};
