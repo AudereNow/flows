@@ -40,7 +40,7 @@ class SearchableTable extends React.Component<Props, State> {
   state: State = {
     allData: this.props.allData,
     data: this.props.allData,
-    searchTerm: ""
+    searchTerm: "",
   };
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
@@ -54,7 +54,7 @@ class SearchableTable extends React.Component<Props, State> {
     this._inputRef.current!.value = "";
     this.setState({
       searchTerm: "",
-      data: this.state.allData
+      data: this.state.allData,
     });
   };
   _onSearchTermChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +108,7 @@ class SearchableTable extends React.Component<Props, State> {
         ) {
           this.props.history.push(`/${(STATE_TO_PANEL as any)[state]}/${id}`);
         }
-      }
+      },
     };
   };
 
@@ -159,8 +159,8 @@ class SearchableTable extends React.Component<Props, State> {
             defaultSorted={[
               {
                 id: "timestamp",
-                desc: true
-              }
+                desc: true,
+              },
             ]}
           />
         )}

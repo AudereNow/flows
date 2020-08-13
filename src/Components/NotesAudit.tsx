@@ -24,18 +24,18 @@ const CHANGE_MESSAGES: {
   };
 } = {
   [TaskState.CSV]: {
-    [TaskState.AUDIT]: "uploaded for primary review"
+    [TaskState.AUDIT]: "uploaded for primary review",
   },
   [TaskState.AUDIT]: {
     [TaskState.AUDIT]: "added a note",
     [TaskState.FOLLOWUP]: "sent for secondary followup",
-    [TaskState.PAY]: "approved for payment"
+    [TaskState.PAY]: "approved for payment",
   },
   [TaskState.FOLLOWUP]: {
     [TaskState.FOLLOWUP]: "added a note",
     [TaskState.REJECTED]: "rejected",
     [TaskState.PAY]: "approved for payment",
-    [TaskState.AUDIT]: "sent back to primary review"
+    [TaskState.AUDIT]: "sent back to primary review",
   },
   [TaskState.PAY]: {
     [TaskState.FOLLOWUP]: "sent back for secondary followup",
@@ -71,8 +71,8 @@ const CHANGE_MESSAGES: {
           change.payment.recipient!.phoneNumber
         } ${when}`;
       }
-    }
-  }
+    },
+  },
 };
 
 const TaskLink = withRouter(
@@ -182,7 +182,7 @@ function getDescription(
             </TaskLink>
           </div>
         );
-      })
+      }),
     ];
   }
   return msg;

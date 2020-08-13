@@ -4,7 +4,7 @@ import "./ZoomableImage.css";
 
 const transition = {
   duration: 400,
-  ease: [0.08, 0.69, 0.2, 0.99]
+  ease: [0.08, 0.69, 0.2, 0.99],
 };
 
 const Image = posed.img({
@@ -16,7 +16,7 @@ const Image = posed.img({
     right: 0,
     transition,
     flip: true,
-    zIndex: 1
+    zIndex: 1,
   },
   zoomedOut: {
     position: "static",
@@ -24,21 +24,21 @@ const Image = posed.img({
     height: "auto",
     transition,
     flip: true,
-    zIndex: 0
-  }
+    zIndex: 0,
+  },
 });
 
 const Frame = posed.div({
   zoomedIn: {
     applyAtStart: { display: "block" },
     opacity: 0.7,
-    zIndex: 1
+    zIndex: 1,
   },
   zoomedOut: {
     applyAtEnd: { display: "none" },
     opacity: 0,
-    zIndex: 0
-  }
+    zIndex: 0,
+  },
 });
 
 interface Props {

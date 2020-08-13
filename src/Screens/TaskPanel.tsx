@@ -21,7 +21,7 @@ import {
   RemoteConfig,
   Task,
   TaskChangeRecord,
-  TaskState
+  TaskState,
 } from "../sharedtypes";
 import { ActionConfig, defaultConfig, TaskConfig } from "../store/config";
 import {
@@ -30,7 +30,7 @@ import {
   getNotes,
   getPharmacyDetails,
   getUserEmail,
-  subscribeToTasks
+  subscribeToTasks,
 } from "../store/corestore";
 import { configuredComponent } from "../util/configuredComponent";
 import debounce from "../util/debounce";
@@ -93,7 +93,7 @@ class TaskPanel extends React.Component<Props, State> {
     searchTermGlobal: "",
     showSearch: false,
     notes: "",
-    disableOwnersFilter: false
+    disableOwnersFilter: false,
   };
   _unsubscribe = () => {};
   _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
@@ -105,7 +105,7 @@ class TaskPanel extends React.Component<Props, State> {
     );
     this.props.registerForTabSelectCallback(this._onTabSelect);
     this.setState({
-      cannedTaskNotes: await getNotes("task")
+      cannedTaskNotes: await getNotes("task"),
     });
   }
 
@@ -138,7 +138,7 @@ class TaskPanel extends React.Component<Props, State> {
         tasks,
         changes,
         selectedTaskIndex,
-        notes
+        notes,
       },
       this._updateTasks
     );
@@ -171,7 +171,7 @@ class TaskPanel extends React.Component<Props, State> {
         index === -1 ? undefined : this._groupTasks()[index][0].id;
       this.setState({
         selectedTaskIndex: index,
-        notes: ""
+        notes: "",
       });
       this._pushHistory(selectedTaskId);
     }
@@ -187,7 +187,7 @@ class TaskPanel extends React.Component<Props, State> {
     if (showSearch || this._okToSwitchAway()) {
       this.setState({
         showSearch: !showSearch,
-        notes: showSearch ? notes : ""
+        notes: showSearch ? notes : "",
       });
     }
   };
@@ -213,7 +213,7 @@ class TaskPanel extends React.Component<Props, State> {
 
   _onDatesChange = ({
     startDate,
-    endDate
+    endDate,
   }: {
     startDate: Moment | null;
     endDate: Moment | null;
@@ -299,7 +299,7 @@ class TaskPanel extends React.Component<Props, State> {
     this.setState({
       tasks: filteredTasks,
       notes: "",
-      changes
+      changes,
     });
   };
 
@@ -313,7 +313,7 @@ class TaskPanel extends React.Component<Props, State> {
       tasks: allTasks,
       selectedTaskIndex: 0,
       searchTermGlobal: "",
-      changes
+      changes,
     });
   };
 
@@ -347,7 +347,7 @@ class TaskPanel extends React.Component<Props, State> {
             siteName: task.site.name,
             notes: entry.notes || "",
             pharmacy: task.site.name || "",
-            rejected: entry.rejected === undefined ? false : entry.rejected
+            rejected: entry.rejected === undefined ? false : entry.rejected,
           },
           entry
         );
@@ -377,7 +377,7 @@ class TaskPanel extends React.Component<Props, State> {
   _onOwnersFilterToggle = () => {
     this.setState(
       state => ({
-        disableOwnersFilter: !state.disableOwnersFilter
+        disableOwnersFilter: !state.disableOwnersFilter,
       }),
       this._updateTasks
     );
@@ -486,7 +486,7 @@ class TaskPanel extends React.Component<Props, State> {
     return (
       <SearchContext.Provider
         value={{
-          searchTermGlobal: searchTermGlobal
+          searchTermGlobal: searchTermGlobal,
         }}
       >
         <div className="mainview_content">
@@ -554,7 +554,7 @@ class DetailsWrapper extends React.Component<
   DetailsWrapperState
 > {
   state: DetailsWrapperState = {
-    buttonsBusy: {}
+    buttonsBusy: {},
   };
 
   _actionCallbacks: {
@@ -572,8 +572,8 @@ class DetailsWrapper extends React.Component<
     this.setState(state => ({
       buttonsBusy: {
         ...state.buttonsBusy,
-        [key]: true
-      }
+        [key]: true,
+      },
     }));
     let tasks: Task[] = this.props.tasks;
     let result: ActionCallbackResult;
@@ -582,8 +582,8 @@ class DetailsWrapper extends React.Component<
       this.setState(state => ({
         buttonsBusy: {
           ...state.buttonsBusy,
-          [key]: false
-        }
+          [key]: false,
+        },
       }));
       tasks = result.tasks || tasks;
     }

@@ -6,7 +6,7 @@ import {
   dateFromServerTimestamp,
   getBestUserName,
   logActiveTaskView,
-  subscribeActiveTasks
+  subscribeActiveTasks,
 } from "../store/corestore";
 import "./TaskList.css";
 
@@ -28,7 +28,7 @@ type State = {
 class TaskList extends React.Component<Props, State> {
   state: State = {
     selectedIndex: null,
-    activeTasks: []
+    activeTasks: [],
   };
   _unsubscribeActives: (() => void) | null = null;
 
@@ -44,7 +44,7 @@ class TaskList extends React.Component<Props, State> {
       state.selectedIndex !== props.selectedItem
     ) {
       return {
-        selectedIndex: props.selectedItem
+        selectedIndex: props.selectedItem,
       };
     }
     return null;

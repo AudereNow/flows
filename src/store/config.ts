@@ -58,20 +58,20 @@ export const defaultConfig: AppConfig = {
           label: "DECLINE",
           nextTaskState: TaskState.FOLLOWUP,
           labelClassName: "mainview_decline_button",
-          labelImg: DeclineImg
+          labelImg: DeclineImg,
         },
         approve: {
           label: "APPROVE",
           nextTaskState: TaskState.PAY,
           labelClassName: "mainview_approve_button",
-          labelImg: ApproveImg
+          labelImg: ApproveImg,
         },
         save: {
           label: "SAVE NOTE",
           nextTaskState: TaskState.AUDIT,
-          labelClassName: "mainview_button"
-        }
-      }
+          labelClassName: "mainview_button",
+        },
+      },
     },
     Payor: {
       taskState: TaskState.PAY,
@@ -86,23 +86,23 @@ export const defaultConfig: AppConfig = {
           label: "DECLINE PAYMENT",
           labelClassName: "mainview_decline_button",
           labelImg: DeclineImg,
-          nextTaskState: TaskState.FOLLOWUP
+          nextTaskState: TaskState.FOLLOWUP,
         },
         approve: {
           label: "ISSUE PAYMENT",
           labelClassName: "mainview_approve_button",
           nextTaskState: TaskState.COMPLETED,
           labelImg: ApproveImg,
-          enableOnConfig: "enableRealPayments"
+          enableOnConfig: "enableRealPayments",
         },
         markApprove: {
           label: "MARK PAID",
           labelClassName: "mainview_approve_button",
           labelImg: ApproveImg,
           nextTaskState: TaskState.COMPLETED,
-          disableOnConfig: "enableRealPayments"
-        }
-      }
+          disableOnConfig: "enableRealPayments",
+        },
+      },
     },
     "Secondary Followup": {
       taskState: TaskState.FOLLOWUP,
@@ -117,25 +117,25 @@ export const defaultConfig: AppConfig = {
           label: "REJECT",
           labelImg: DeclineImg,
           nextTaskState: TaskState.REJECTED,
-          labelClassName: "mainview_decline_button"
+          labelClassName: "mainview_decline_button",
         },
         approve: {
           label: "APPROVE FOR PAYMENT",
           nextTaskState: TaskState.PAY,
           labelClassName: "mainview_approve_button",
-          labelImg: ApproveImg
+          labelImg: ApproveImg,
         },
         sendToPrimary: {
           label: "SEND TO PRIMARY REVIEWER",
           nextTaskState: TaskState.AUDIT,
-          labelClassName: "mainview_neutral_button"
+          labelClassName: "mainview_neutral_button",
         },
         save: {
           label: "SAVE NOTE",
           nextTaskState: TaskState.FOLLOWUP,
-          labelClassName: "mainview_button"
-        }
-      }
+          labelClassName: "mainview_button",
+        },
+      },
     },
     Rejected: {
       taskState: TaskState.REJECTED,
@@ -145,7 +145,7 @@ export const defaultConfig: AppConfig = {
       actions: {},
       roles: [UserRole.AUDITOR],
       baseUrl: "rejected",
-      hideImagesDefault: true
+      hideImagesDefault: true,
     },
     Completed: {
       taskState: TaskState.COMPLETED,
@@ -155,12 +155,12 @@ export const defaultConfig: AppConfig = {
       actions: {},
       roles: [UserRole.AUDITOR],
       baseUrl: "completed",
-      hideImagesDefault: true
+      hideImagesDefault: true,
     },
     Admin: {
       panelComponent: "Admin",
       roles: [UserRole.ADMIN],
-      baseUrl: "admin"
-    }
-  }
+      baseUrl: "admin",
+    },
+  },
 };

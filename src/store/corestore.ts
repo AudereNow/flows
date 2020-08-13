@@ -20,7 +20,7 @@ import {
   TASKS_COLLECTION,
   TASK_CHANGE_COLLECTION,
   User,
-  UserRole
+  UserRole,
 } from "../sharedtypes";
 import firebaseConfig from "./firebaseconfig.json";
 
@@ -61,7 +61,7 @@ export async function changeTaskState(
     fromState: task.state,
     timestamp: Date.now(),
     by: getBestUserName(),
-    notes
+    notes,
   };
   if (payment) {
     change.payment = payment;
@@ -71,7 +71,7 @@ export async function changeTaskState(
 
   const updatedTask = {
     ...task,
-    state: newState
+    state: newState,
   };
   removeEmptyFieldsInPlace(updatedTask);
   return Promise.all([
@@ -80,7 +80,7 @@ export async function changeTaskState(
       .firestore()
       .collection(TASK_CHANGE_COLLECTION)
       .doc()
-      .set(change)
+      .set(change),
   ]);
 }
 
@@ -156,11 +156,13 @@ export async function loadPreviousTasks(
   currentIds: string[]
 ): Promise<Task[]> {
   const states = Object.values(TaskState);
-  return (await firebase
-    .firestore()
-    .collection(TASKS_COLLECTION)
-    .where("site.name", "==", siteName)
-    .get()).docs
+  return (
+    await firebase
+      .firestore()
+      .collection(TASKS_COLLECTION)
+      .where("site.name", "==", siteName)
+      .get()
+  ).docs
     .map(doc => doc.data() as Task)
     .sort((t1, t2) => states.indexOf(t1.state) - states.indexOf(t2.state))
     .filter(t => !currentIds.includes(t.id));
@@ -205,7 +207,7 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
       `${recipients.length} payments issued totalling ${totalPayment}`
     );
     return await serverIssuePayments({
-      recipients
+      recipients,
     });
   } catch (e) {
     logAdminEvent(
@@ -213,8 +215,8 @@ export async function issuePayments(recipients: PaymentRecipient[]) {
     );
     return {
       data: {
-        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
-      }
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`,
+      },
     };
   }
 }
@@ -223,13 +225,13 @@ async function logAdminEvent(desc: string) {
   const authUser = await firebase.auth().currentUser;
   const user: User = {
     name: getBestUserName(),
-    id: authUser ? authUser.uid : ""
+    id: authUser ? authUser.uid : "",
   };
   const dateString = `${new Date().toISOString()} ${Math.random()}`;
   const event: AdminLogEvent = {
     timestamp: Date.now(),
     user,
-    desc
+    desc,
   };
 
   await firebase
@@ -248,8 +250,8 @@ export async function updatePatientsTaskLists() {
   } catch (e) {
     return {
       data: {
-        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
-      }
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`,
+      },
     };
   }
 }
@@ -259,13 +261,13 @@ export async function uploadCSV(content: any) {
 
   try {
     return await serverUploadCSV({
-      content
+      content,
     });
   } catch (e) {
     return {
       data: {
-        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`
-      }
+        error: `Server error: ${e.message || e.error || JSON.stringify(e)}`,
+      },
     };
   }
 }
@@ -291,7 +293,7 @@ export async function logActiveTaskView(taskID: string) {
   const activeTask: ActiveTask = {
     id: taskID,
     name: getBestUserName(),
-    since: toServerTimestamp(new Date())
+    since: toServerTimestamp(new Date()),
   };
   await firebase
     .firestore()
@@ -329,11 +331,13 @@ export function subscribeToPharmacyDetails(
 export async function getPharmacyDetails(
   pharmacyId: string
 ): Promise<Pharmacy> {
-  return (await firebase
-    .firestore()
-    .collection(PHARMACY_COLLECTION)
-    .doc(pharmacyId)
-    .get()).data() as Pharmacy;
+  return (
+    await firebase
+      .firestore()
+      .collection(PHARMACY_COLLECTION)
+      .doc(pharmacyId)
+      .get()
+  ).data() as Pharmacy;
 }
 
 export async function setPharmacyDetails(
@@ -365,21 +369,25 @@ async function getAllDocsIn<T>(
     return [];
   }
 
-  return (await Promise.all(
-    new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
-      async (_, index) =>
-        (await firebase
-          .firestore()
-          .collection(collection)
-          .where(
-            attribute,
-            //@ts-ignore
-            "in",
-            attributeValues.slice(index * 10, (index + 1) * 10)
-          )
-          .get()).docs.map((doc: any) => doc.data()) as T[]
+  return (
+    await Promise.all(
+      new Array(Math.ceil(attributeValues.length / 10)).fill(0).map(
+        async (_, index) =>
+          (
+            await firebase
+              .firestore()
+              .collection(collection)
+              .where(
+                attribute,
+                //@ts-ignore
+                "in",
+                attributeValues.slice(index * 10, (index + 1) * 10)
+              )
+              .get()
+          ).docs.map((doc: any) => doc.data()) as T[]
+      )
     )
-  )).flat();
+  ).flat();
 }
 
 export function getAllTasks(taskIds: string[]): Promise<Task[]> {
@@ -395,11 +403,9 @@ export async function getPatientHistories(patientIds: string[]) {
   const patientHistories: { [id: string]: PatientHistory } = {};
   await Promise.all(
     patients.map(async patient => {
-      const tasks = (await getAllDocsIn<Task>(
-        TASKS_COLLECTION,
-        "id",
-        patient.taskIds
-      ))
+      const tasks = (
+        await getAllDocsIn<Task>(TASKS_COLLECTION, "id", patient.taskIds)
+      )
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 5);
       const history = tasks.map(task => {
@@ -413,11 +419,11 @@ export async function getPatientHistories(patientIds: string[]) {
           taskId: task.id,
           date: new Date(task.createdAt).toLocaleDateString(),
           totalAmount: formatCurrency(sum),
-          claimCount: entries.length
+          claimCount: entries.length,
         };
       });
       patientHistories[patient.id] = {
-        tasks: history
+        tasks: history,
       };
     })
   );
@@ -448,11 +454,13 @@ export function saveNotes(categoryName: string, notes: string[]) {
 }
 
 export async function getNotes(categoryName: string): Promise<string[]> {
-  const data = (await firebase
-    .firestore()
-    .collection(CANNED_NOTES_COLLECTION)
-    .doc(categoryName)
-    .get()).data();
+  const data = (
+    await firebase
+      .firestore()
+      .collection(CANNED_NOTES_COLLECTION)
+      .doc(categoryName)
+      .get()
+  ).data();
   return data ? data.notes : [];
 }
 

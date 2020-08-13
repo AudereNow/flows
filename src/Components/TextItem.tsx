@@ -8,7 +8,7 @@ export interface TextData {
 }
 
 export const SearchContext = React.createContext({
-  searchTermGlobal: ""
+  searchTermGlobal: "",
 });
 
 interface Props {

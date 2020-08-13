@@ -5,7 +5,7 @@ import {
   BrowserRouter as Router,
   Route,
   RouteComponentProps,
-  Switch
+  Switch,
 } from "react-router-dom";
 import LoginScreen from "./Screens/LoginScreen";
 import MainView from "./Screens/MainView";
@@ -19,7 +19,7 @@ type State = {
 
 class App extends React.Component<Props, State> {
   state = {
-    authenticated: false
+    authenticated: false,
   };
 
   constructor(props: Props) {
@@ -52,7 +52,7 @@ class App extends React.Component<Props, State> {
                 "/payor/:id",
                 "/operator/:id",
                 "/rejected/:id",
-                "/completed/:id"
+                "/completed/:id",
               ]}
               render={this._renderLinkedMainView}
             />

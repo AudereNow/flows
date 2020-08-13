@@ -4,7 +4,7 @@ import {
   DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
   RemoteConfig,
-  REMOTE_CONFIG_DOC
+  REMOTE_CONFIG_DOC,
 } from "../sharedtypes";
 
 const REFRESH_MSEC = 60 * 60 * 1000; // Refresh settings once an hour

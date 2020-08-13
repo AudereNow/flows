@@ -10,7 +10,7 @@ import {
   formatCurrency,
   getBestUserName,
   issuePayments,
-  loadPreviousTasks
+  loadPreviousTasks,
 } from "../store/corestore";
 import { configuredComponent } from "../util/configuredComponent";
 import "./MainView.css";
@@ -22,7 +22,7 @@ const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
   [TaskState.FOLLOWUP]: "Needs Ops Followup",
   [TaskState.REJECTED]: "Claim Rejected",
   [TaskState.COMPLETED]: "Paid",
-  [TaskState.CSV]: "Not yet imported"
+  [TaskState.CSV]: "Not yet imported",
 };
 
 const PATIENT_CLAIMS_TABLE_COLUMNS = [
@@ -30,29 +30,29 @@ const PATIENT_CLAIMS_TABLE_COLUMNS = [
     Header: "DATE",
     id: "Date",
     accessor: (entry: any) => new Date(entry.timestamp).toLocaleDateString(),
-    minWidth: 70
+    minWidth: 70,
   },
   {
     id: "Patient",
     Header: "PATIENT",
     accessor: (entry: any) =>
       `${entry.patientFirstName} ${entry.patientLastName}`,
-    minWidth: 90
+    minWidth: 90,
   },
   { id: "Item", Header: "ITEM", accessor: "item", minWidth: 60 },
   {
     id: "Reimbursement",
     Header: "REIMBURSEMENT",
     accessor: (entry: any) => formatCurrency(entry.claimedCost),
-    minWidth: 50
+    minWidth: 50,
   },
   {
     id: "Rejected",
     Header: "REJECTED",
     accessor: (entry: any) =>
       entry.hasOwnProperty("rejected") ? entry.rejected.toString() : "",
-    minWidth: 60
-  }
+    minWidth: 60,
+  },
 ];
 
 const RELATED_TASKS_TABLE_COLUMNS = [
@@ -65,7 +65,7 @@ const RELATED_TASKS_TABLE_COLUMNS = [
             (entry.updatedAt as any).seconds * 1000 || entry.updatedAt
           ).toLocaleDateString()
         : "",
-    minWidth: 70
+    minWidth: 70,
   },
   {
     id: "Claims",
@@ -73,7 +73,7 @@ const RELATED_TASKS_TABLE_COLUMNS = [
     accessor: (task: any) => {
       return task.entries.length;
     },
-    minWidth: 90
+    minWidth: 90,
   },
   {
     id: "Total Amount",
@@ -86,7 +86,7 @@ const RELATED_TASKS_TABLE_COLUMNS = [
         )
       );
     },
-    minWidth: 70
+    minWidth: 70,
   },
   {
     id: "State",
@@ -94,8 +94,8 @@ const RELATED_TASKS_TABLE_COLUMNS = [
     accessor: (task: any) => {
       return (STATE_DESCRIPTIONS as any)[task.state];
     },
-    minWidth: 60
-  }
+    minWidth: 60,
+  },
 ];
 
 interface RemoteProps {
@@ -111,7 +111,7 @@ class ConfigurablePayorDetails extends React.Component<
   State
 > {
   state: State = {
-    showPreviousClaims: false
+    showPreviousClaims: false,
   };
 
   componentDidMount() {
@@ -129,21 +129,21 @@ class ConfigurablePayorDetails extends React.Component<
       return {
         paymentType: PaymentType.BUNDLED,
         bundledUnderTaskId: tasks[0].id,
-        amount: 0
+        amount: 0,
       };
     });
 
     if (!this.props.realPayments) {
       const payment: PaymentRecord = {
         paymentType: PaymentType.MANUAL,
-        amount: reimburseAmount
+        amount: reimburseAmount,
       };
       if (tasks.length > 1) {
         payment.bundledTaskIds = bundledTaskIds;
       }
       return {
         success: true,
-        payments: [payment, ...bundledPayments]
+        payments: [payment, ...bundledPayments],
       };
     }
 
@@ -160,8 +160,8 @@ class ConfigurablePayorDetails extends React.Component<
       metadata: {
         taskIDs: tasks.map(task => task.id),
         payorName: getBestUserName(),
-        payeeName: tasks[0].site.name
-      }
+        payeeName: tasks[0].site.name,
+      },
     };
     const result = await issuePayments([recipient]);
     console.log("Response gotten:", result);
@@ -175,14 +175,14 @@ class ConfigurablePayorDetails extends React.Component<
     const payment: PaymentRecord = {
       paymentType: PaymentType.AFRICAS_TALKING,
       amount: reimburseAmount,
-      recipient
+      recipient,
     };
     if (tasks.length > 1) {
       payment.bundledTaskIds = bundledTaskIds;
     }
     return {
       success: true,
-      payments: [payment, ...bundledPayments]
+      payments: [payment, ...bundledPayments],
     };
   };
 
@@ -213,7 +213,7 @@ class ConfigurablePayorDetails extends React.Component<
                 0
               )
             ),
-            State: STATE_DESCRIPTIONS[relatedTask.state]
+            State: STATE_DESCRIPTIONS[relatedTask.state],
           };
         })
       : null;
@@ -233,7 +233,7 @@ class ConfigurablePayorDetails extends React.Component<
             data={{
               displayKey: "Total Reimbursement",
               searchKey: "reimbursement",
-              value: formatCurrency(claimsTotal)
+              value: formatCurrency(claimsTotal),
             }}
           />
 
@@ -247,8 +247,8 @@ class ConfigurablePayorDetails extends React.Component<
             defaultSorted={[
               {
                 id: "Date",
-                desc: true
-              }
+                desc: true,
+              },
             ]}
           />
         </div>
@@ -274,8 +274,8 @@ class ConfigurablePayorDetails extends React.Component<
                 defaultSorted={[
                   {
                     id: "Date",
-                    desc: true
-                  }
+                    desc: true,
+                  },
                 ]}
               />
             ) : (
@@ -295,7 +295,7 @@ export const PayorDetails = configuredComponent<
   DetailsComponentProps,
   RemoteProps
 >(ConfigurablePayorDetails, config => ({
-  realPayments: config.enableRealPayments
+  realPayments: config.enableRealPayments,
 }));
 
 function _getReimbursementTotal(tasks: Task[]): number {

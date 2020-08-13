@@ -21,7 +21,7 @@ export enum TaskState {
   FOLLOWUP = "FOLLOWUP",
   PAY = "PAY",
   COMPLETED = "COMPLETED",
-  REJECTED = "REJECTED"
+  REJECTED = "REJECTED",
 }
 
 export const REMOTE_CONFIG_DOC = "remoteConfig";
@@ -35,14 +35,14 @@ export type RemoteConfig = {
 export const DEFAULT_REMOTE_CONFIG: RemoteConfig = {
   enableRealPayments: false,
   allowDuplicateUploads: false,
-  opsInstructions: ""
+  opsInstructions: "",
 };
 
 export enum UserRole {
   AUDITOR = "Auditor",
   PAYOR = "Payor",
   OPERATOR = "Operator",
-  ADMIN = "Admin"
+  ADMIN = "Admin",
 }
 
 export type Site = {
@@ -91,7 +91,7 @@ export type PaymentRecord = {
 export enum PaymentType {
   MANUAL,
   AFRICAS_TALKING,
-  BUNDLED
+  BUNDLED,
 }
 
 export type Task = {
