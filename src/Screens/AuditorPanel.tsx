@@ -1,30 +1,26 @@
-import { json2csv } from "json-2-csv";
-import moment from "moment";
-import React from "react";
 import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
-import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
-import DownloadCSVImg from "../assets/downloadcsv.png";
+import "./MainView.css";
+
+import { ClaimEntry, Task } from "../sharedtypes";
+import { PatientHistory, dataStore } from "../transport/datastore";
+import TextItem, { SearchContext } from "../Components/TextItem";
+
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import ClaimNotes from "../Components/ClaimNotes";
+import { DetailsComponentProps } from "./TaskPanel";
+import DownloadCSVImg from "../assets/downloadcsv.png";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
-import TextItem, { SearchContext } from "../Components/TextItem";
-import { ClaimEntry, Task } from "../sharedtypes";
-import {
-  formatCurrency,
-  getPatientHistories,
-  getPharmacyClaims,
-  PatientHistory,
-  setRejectedClaim,
-} from "../transport/firestore";
-import debounce from "../util/debounce";
+import React from "react";
+import ReactTable from "react-table";
 import { containsSearchTerm } from "../util/search";
-import "./MainView.css";
-import { DetailsComponentProps } from "./TaskPanel";
+import debounce from "../util/debounce";
+import { json2csv } from "json-2-csv";
+import moment from "moment";
 
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
@@ -35,7 +31,8 @@ const PATIENT_HISTORY_TABLE_COLUMNS = [
   {
     Header: "TOTAL AMOUNT",
     id: "totalAmount",
-    accessor: (row: any) => formatCurrency(parseFloat(row.totalAmount)),
+    accessor: (row: any) =>
+      dataStore.formatCurrency(parseFloat(row.totalAmount)),
     minWidth: 60,
   },
   { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 },
@@ -100,7 +97,7 @@ export class AuditorDetails extends React.Component<
   }
 
   _loadPreviousClaims = async (siteName: string) => {
-    let tasks = await getPharmacyClaims(siteName);
+    let tasks = await dataStore.getPharmacyClaims(siteName);
     let previousClaims: TaskTotal[] = [];
     tasks.forEach(task => {
       if (this.props.tasks.every(currentTask => task.id !== currentTask.id)) {
@@ -153,7 +150,7 @@ export class AuditorDetails extends React.Component<
   };
 
   _loadPatientHistories = async () => {
-    const histories = await getPatientHistories(
+    const histories = await dataStore.getPatientHistories(
       this.state.patients.map(patient => patient.patientId)
     );
     this.setState({
@@ -199,7 +196,11 @@ export class AuditorDetails extends React.Component<
 
   _toggleRejectClaim = async (value: string, checked: boolean) => {
     const { taskIndex, claimIndex } = JSON.parse(value || "");
-    await setRejectedClaim(this.props.tasks[taskIndex], claimIndex, checked);
+    await dataStore.setRejectedClaim(
+      this.props.tasks[taskIndex],
+      claimIndex,
+      checked
+    );
   };
 
   _renderPatientDetails = (patient: PatientInfo, index: number) => {

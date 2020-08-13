@@ -1,6 +1,6 @@
-import React from "react";
 import Button from "./Button";
-import { subscribeToNotes, saveNotes } from "../transport/firestore";
+import React from "react";
+import { dataStore } from "../transport/datastore";
 
 interface CannedNote {
   title: string;
@@ -26,8 +26,9 @@ export default class CannedNotesEditor extends React.Component<Props> {
   _unsubscribe?: () => void;
 
   componentDidMount() {
-    this._unsubscribe = subscribeToNotes(this.props.categoryName, notes =>
-      this.setState({ notes })
+    this._unsubscribe = dataStore.subscribeToNotes(
+      this.props.categoryName,
+      notes => this.setState({ notes })
     );
   }
 
@@ -74,7 +75,7 @@ export default class CannedNotesEditor extends React.Component<Props> {
     this.setState({
       saving: true,
     });
-    await saveNotes(this.props.categoryName, newNotes);
+    await dataStore.saveNotes(this.props.categoryName, newNotes);
     this.setState({
       saving: false,
       editing: {
@@ -95,7 +96,7 @@ export default class CannedNotesEditor extends React.Component<Props> {
     this.setState({
       saving: true,
     });
-    await saveNotes(this.props.categoryName, newNotes);
+    await dataStore.saveNotes(this.props.categoryName, newNotes);
     this.setState({
       saving: false,
       editing: {
@@ -116,7 +117,7 @@ export default class CannedNotesEditor extends React.Component<Props> {
         [this.state.notes.length]: "",
       },
     });
-    await saveNotes(this.props.categoryName, newNotes);
+    await dataStore.saveNotes(this.props.categoryName, newNotes);
   };
 
   render() {

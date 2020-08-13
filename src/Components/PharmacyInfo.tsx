@@ -1,16 +1,15 @@
-import React, { Fragment } from "react";
-import ReactTable from "react-table";
-import { TaskTotal } from "../Screens/AuditorPanel";
+import "./PharmacyInfo.css";
+
 import { Pharmacy, Site } from "../sharedtypes";
-import {
-  setPharmacyDetails,
-  subscribeToPharmacyDetails,
-} from "../transport/firestore";
+import React, { Fragment } from "react";
+
 import Button from "./Button";
 import ExpandableDiv from "./ExpandableDiv";
-import "./PharmacyInfo.css";
+import ReactTable from "react-table";
+import { TaskTotal } from "../Screens/AuditorPanel";
 import TextItem from "./TextItem";
 import { ToolTipIcon } from "./ToolTipIcon";
+import { dataStore } from "../transport/datastore";
 
 const DEFAULT_PHARMACY: Pharmacy = {
   notes: "",
@@ -57,7 +56,7 @@ class PharmacyInfo extends React.Component<Props, State> {
   _unsubscribe = () => {};
 
   componentDidMount() {
-    this._unsubscribe = subscribeToPharmacyDetails(
+    this._unsubscribe = dataStore.subscribeToPharmacyDetails(
       this.props.site.name,
       pharmacy => {
         if (pharmacy === undefined) {
@@ -70,7 +69,7 @@ class PharmacyInfo extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.site.name !== this.props.site.name) {
-      subscribeToPharmacyDetails(this.props.site.name, pharmacy => {
+      dataStore.subscribeToPharmacyDetails(this.props.site.name, pharmacy => {
         if (pharmacy === undefined) {
           pharmacy = DEFAULT_PHARMACY;
         }
@@ -95,7 +94,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.site.name, {
+    await dataStore.setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       notes: this.state.editedNotes || "",
     });
@@ -120,7 +119,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       return;
     }
     this.setState({ saving: true });
-    await setPharmacyDetails(this.props.site.name, {
+    await dataStore.setPharmacyDetails(this.props.site.name, {
       ...this.state.pharmacy,
       owners: (this.state.editedOwners || "")
         .split(",")

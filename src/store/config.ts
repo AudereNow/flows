@@ -1,6 +1,7 @@
+import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
+
 import ApproveImg from "../assets/approve.png";
 import DeclineImg from "../assets/decline.png";
-import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
 
 interface TabConfig {
   roles: UserRole[];
@@ -32,10 +33,25 @@ export interface TaskConfig extends TabConfig {
   groupTasksByPharmacy?: boolean;
 }
 
+export enum DataStoreType {
+  FIREBASE = "FIREBASE",
+  REST = "REST",
+}
+
+export type DataStoreConfig =
+  | {
+      type: DataStoreType.FIREBASE;
+    }
+  | {
+      type: DataStoreType.REST;
+      endpointRoot: string;
+    };
+
 export interface AppConfig {
   tabs: {
     [tab: string]: TaskConfig | CustomPanelConfig;
   };
+  dataStore: DataStoreConfig;
 }
 
 export function isCustomPanel(config: TabConfig): config is CustomPanelConfig {
@@ -162,5 +178,8 @@ export const defaultConfig: AppConfig = {
       roles: [UserRole.ADMIN],
       baseUrl: "admin",
     },
+  },
+  dataStore: {
+    type: DataStoreType.FIREBASE,
   },
 };

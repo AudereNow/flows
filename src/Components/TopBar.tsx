@@ -1,15 +1,17 @@
-import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
-import React from "react";
+import "./TopBar.css";
+
+import { FirebaseDataStore } from "../transport/firestore";
 // @ts-ignore
 import LoadingOverlay from "react-loading-overlay"; // no available type data
-import logoutIcon from "../assets/logout.png";
-import logo from "../assets/maishalogo.png";
-import uploadIcon from "../assets/uploadcsv.png";
+import React from "react";
 import { UserRole } from "../sharedtypes";
-import { uploadCSV, userRoles } from "../transport/firestore";
-import "./TopBar.css";
+import { dataStore } from "../transport/datastore";
+import firebase from "firebase/app";
+import logo from "../assets/maishalogo.png";
+import logoutIcon from "../assets/logout.png";
+import uploadIcon from "../assets/uploadcsv.png";
 
 type State = {
   roles: UserRole[];
@@ -27,7 +29,7 @@ class TopBar extends React.Component<{}, State> {
   };
 
   async componentDidMount() {
-    const roles = await userRoles();
+    const roles = await dataStore.userRoles();
     this.setState({ roles });
   }
 
@@ -65,11 +67,14 @@ class TopBar extends React.Component<{}, State> {
   };
 
   _onFileLoaded = async (e: ProgressEvent<FileReader>) => {
+    if (!(dataStore instanceof FirebaseDataStore)) {
+      throw new Error("CSV Upload not supported for this datastore");
+    }
     if (!e.target || !e.target.result) {
       alert("Error reading file.  It appears empty.");
       return;
     }
-    const result = await uploadCSV(e.target.result);
+    const result = await dataStore.uploadCSV(e.target.result);
 
     this.setState({ uploading: false, showFileSelector: false });
 
@@ -113,9 +118,7 @@ class TopBar extends React.Component<{}, State> {
         spinner
         text="Loading..."
       />
-    ) : (
-      undefined
-    );
+    ) : undefined;
 
     return (
       <div className="topbar_main">

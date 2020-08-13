@@ -1,8 +1,10 @@
-import React, { ChangeEvent, Fragment } from "react";
-import { Task } from "../sharedtypes";
-import { getNotes, setClaimNotes } from "../transport/firestore";
-import Button from "./Button";
 import "./ClaimNotes.css";
+
+import React, { ChangeEvent, Fragment } from "react";
+
+import Button from "./Button";
+import { Task } from "../sharedtypes";
+import { dataStore } from "../transport/datastore";
 
 interface Props {
   claimIndex: number;
@@ -26,13 +28,13 @@ class ClaimNotes extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
-    this.setState({ cannedClaimNotes: await getNotes("claim") });
+    this.setState({ cannedClaimNotes: await dataStore.getNotes("claim") });
   }
 
   _onSave = async () => {
     const { notes } = this.state;
     const { claimIndex, task } = this.props;
-    await setClaimNotes(task, claimIndex, notes);
+    await dataStore.setClaimNotes(task, claimIndex, notes);
     this.setState({ editing: false });
   };
 

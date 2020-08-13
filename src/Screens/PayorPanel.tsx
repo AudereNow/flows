@@ -1,20 +1,17 @@
-import React from "react";
-import ReactTable from "react-table";
 import "react-tabs/style/react-tabs.css";
+import "./MainView.css";
+
+import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";
+import { PaymentRecord, PaymentType, Task, TaskState } from "../sharedtypes";
+
 import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
+import React from "react";
+import ReactTable from "react-table";
 import TextItem from "../Components/TextItem";
-import { PaymentRecord, PaymentType, Task, TaskState } from "../sharedtypes";
-import {
-  formatCurrency,
-  getBestUserName,
-  issuePayments,
-  loadPreviousTasks,
-} from "../transport/firestore";
 import { configuredComponent } from "../util/configuredComponent";
-import "./MainView.css";
-import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";
+import { dataStore } from "../transport/datastore";
 
 const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
@@ -43,7 +40,7 @@ const PATIENT_CLAIMS_TABLE_COLUMNS = [
   {
     id: "Reimbursement",
     Header: "REIMBURSEMENT",
-    accessor: (entry: any) => formatCurrency(entry.claimedCost),
+    accessor: (entry: any) => dataStore.formatCurrency(entry.claimedCost),
     minWidth: 50,
   },
   {
@@ -79,7 +76,7 @@ const RELATED_TASKS_TABLE_COLUMNS = [
     id: "Total Amount",
     Header: "Total Amount",
     accessor: (task: any) => {
-      return formatCurrency(
+      return dataStore.formatCurrency(
         task.entries.reduce(
           (total: any, entry: any) => total + entry.claimedCost,
           0
@@ -124,7 +121,7 @@ class ConfigurablePayorDetails extends React.Component<
     const reimburseAmount = _getReimbursementTotal(tasks);
 
     const bundledTaskIds: string[] = [];
-    const bundledPayments: PaymentRecord[] = tasks.slice(1).map(task => {
+    const bundledPayments: PaymentRecord[] = tasks.slice(1).map((task) => {
       bundledTaskIds.push(task.id);
       return {
         paymentType: PaymentType.BUNDLED,
@@ -158,12 +155,12 @@ class ConfigurablePayorDetails extends React.Component<
       amount: reimburseAmount,
       reason: "PromotionPayment",
       metadata: {
-        taskIDs: tasks.map(task => task.id),
-        payorName: getBestUserName(),
+        taskIDs: tasks.map((task) => task.id),
+        payorName: dataStore.getBestUserName(),
         payeeName: tasks[0].site.name,
       },
     };
-    const result = await issuePayments([recipient]);
+    const result = await dataStore.issuePayments([recipient]);
     console.log("Response gotten:", result);
 
     // numQueued should be exactly 1 if the payment was successful
@@ -188,17 +185,19 @@ class ConfigurablePayorDetails extends React.Component<
 
   _toggleShowPreviousClaims = () => {
     if (!this.state.relatedTasks && !this.state.showPreviousClaims) {
-      loadPreviousTasks(
-        this.props.tasks[0].site.name,
-        this.props.tasks.map(task => task.id)
-      ).then(relatedTasks => this.setState({ relatedTasks }));
+      dataStore
+        .loadPreviousTasks(
+          this.props.tasks[0].site.name,
+          this.props.tasks.map((task) => task.id)
+        )
+        .then((relatedTasks) => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   _formatRelatedTasks = () => {
     return this.state.relatedTasks
-      ? this.state.relatedTasks.map(relatedTask => {
+      ? this.state.relatedTasks.map((relatedTask) => {
           return {
             Date: relatedTask.updatedAt
               ? new Date(
@@ -207,7 +206,7 @@ class ConfigurablePayorDetails extends React.Component<
                 ).toLocaleDateString()
               : "",
             Claims: relatedTask.entries.length,
-            "Total Amount": formatCurrency(
+            "Total Amount": dataStore.formatCurrency(
               relatedTask.entries.reduce(
                 (total, entry) => total + entry.claimedCost,
                 0
@@ -233,7 +232,7 @@ class ConfigurablePayorDetails extends React.Component<
             data={{
               displayKey: "Total Reimbursement",
               searchKey: "reimbursement",
-              value: formatCurrency(claimsTotal),
+              value: dataStore.formatCurrency(claimsTotal),
             }}
           />
 
@@ -294,14 +293,14 @@ class ConfigurablePayorDetails extends React.Component<
 export const PayorDetails = configuredComponent<
   DetailsComponentProps,
   RemoteProps
->(ConfigurablePayorDetails, config => ({
+>(ConfigurablePayorDetails, (config) => ({
   realPayments: config.enableRealPayments,
 }));
 
 function _getReimbursementTotal(tasks: Task[]): number {
   const claimAmounts = tasks
-    .map(task =>
-      task.entries.map(entry => {
+    .map((task) =>
+      task.entries.map((entry) => {
         return entry.rejected ? 0 : entry.claimedCost;
       })
     )

@@ -1,16 +1,19 @@
-import firebase from "firebase/app";
 import "firebase/auth";
-import React from "react";
+import "./styles/SharedStyles.css";
+
 import {
-  BrowserRouter as Router,
   Route,
   RouteComponentProps,
+  BrowserRouter as Router,
   Switch,
 } from "react-router-dom";
+
 import LoginScreen from "./Screens/LoginScreen";
 import MainView from "./Screens/MainView";
-import { initializeStore } from "./transport/firestore";
-import "./styles/SharedStyles.css";
+import React from "react";
+import { defaultConfig } from "./store/config";
+import firebase from "firebase/app";
+import { initializeStore } from "./transport/datastore";
 
 type Props = {};
 type State = {
@@ -24,7 +27,7 @@ class App extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    initializeStore();
+    initializeStore(defaultConfig.dataStore);
 
     firebase.auth().onAuthStateChanged(this._onAuthChanged);
   }

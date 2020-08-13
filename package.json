@@ -35,6 +35,7 @@
     "start:react": "react-scripts start",
     "build": "react-scripts build; git rev-list -n 1 HEAD > build/about.txt; date >> build/about.txt",
     "test": "react-scripts test",
+    "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

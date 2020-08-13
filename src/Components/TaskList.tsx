@@ -1,14 +1,10 @@
+import "./TaskList.css";
+
+import { ActiveTask, dataStore } from "../transport/datastore";
+
 import React from "react";
 import ReactTooltip from "react-tooltip";
 import { Task } from "../sharedtypes";
-import {
-  ActiveTask,
-  dateFromServerTimestamp,
-  getBestUserName,
-  logActiveTaskView,
-  subscribeActiveTasks,
-} from "../transport/firestore";
-import "./TaskList.css";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 
@@ -33,7 +29,7 @@ class TaskList extends React.Component<Props, State> {
   _unsubscribeActives: (() => void) | null = null;
 
   componentDidMount() {
-    this._unsubscribeActives = subscribeActiveTasks(tasks =>
+    this._unsubscribeActives = dataStore.subscribeActiveTasks(tasks =>
       this.setState({ activeTasks: tasks })
     );
   }
@@ -73,7 +69,7 @@ class TaskList extends React.Component<Props, State> {
 
     if (okToSelect) {
       // Let this drift by without await because nothing after it depends on it
-      logActiveTaskView(this.props.tasks[index][0].id);
+      dataStore.logActiveTaskView(this.props.tasks[index][0].id);
 
       this.setState({ selectedIndex: index });
     }
@@ -85,8 +81,9 @@ class TaskList extends React.Component<Props, State> {
       .filter(
         t =>
           tasks.some(task => t.id === task.id) &&
-          now - dateFromServerTimestamp(t.since).getTime() <= MAX_ACTIVE_MSEC &&
-          t.name !== getBestUserName()
+          now - dataStore.dateFromServerTimestamp(t.since).getTime() <=
+            MAX_ACTIVE_MSEC &&
+          t.name !== dataStore.getBestUserName()
       )
       .map(t => t.name);
     return activeViewers;
