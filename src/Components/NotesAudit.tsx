@@ -1,10 +1,12 @@
-import React, { Fragment, useState, useEffect } from "react";
-import { RouteComponentProps, withRouter } from "react-router";
-import { Link } from "react-router-dom";
 import "./NotesAudit.css";
-import { PaymentType, TaskChangeRecord, Task, TaskState } from "../sharedtypes";
-import { formatCurrency, getAllTasks } from "../store/corestore";
+
+import { PaymentType, Task, TaskChangeRecord, TaskState } from "../sharedtypes";
+import React, { Fragment, useEffect, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router";
+
+import { Link } from "react-router-dom";
 import ReactTooltip from "react-tooltip";
+import { dataStore } from "../transport/datastore";
 import moment from "moment";
 
 interface Props {
@@ -63,13 +65,13 @@ const CHANGE_MESSAGES: {
         );
       }
       if (change.payment.paymentType === PaymentType.MANUAL) {
-        return `${by} manually paid ${formatCurrency(
+        return `${by} manually paid ${dataStore.formatCurrency(
           change.payment.amount
         )} ${when}`;
       } else {
-        return `${by} paid ${formatCurrency(change.payment.amount)} to ${
-          change.payment.recipient!.phoneNumber
-        } ${when}`;
+        return `${by} paid ${dataStore.formatCurrency(
+          change.payment.amount
+        )} to ${change.payment.recipient!.phoneNumber} ${when}`;
       }
     },
   },
@@ -114,7 +116,7 @@ const NotesAudit = (props: Props) => {
         return;
       }
       const tasksById: { [id: string]: Task } = {};
-      (await getAllTasks(otherTaskIds)).forEach(
+      (await dataStore.getAllTasks(otherTaskIds)).forEach(
         task => (tasksById[task.id] = task)
       );
       setTasks(tasksById);

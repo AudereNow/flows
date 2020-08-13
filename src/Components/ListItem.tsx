@@ -1,7 +1,8 @@
+import "./ListItem.css";
+
 import React from "react";
 import { Task } from "../sharedtypes";
-import { formatCurrency } from "../store/corestore";
-import "./ListItem.css";
+import { dataStore } from "../transport/datastore";
 
 export class ListItem extends React.Component<{
   tasks: Task[];
@@ -31,7 +32,9 @@ export class ListItem extends React.Component<{
             {claimCount} Claim{claimCount !== 1 ? "s" : ""}
           </span>
         </div>
-        <div>{"Total Reimbursement: " + formatCurrency(claimsTotal)}</div>
+        <div>
+          {"Total Reimbursement: " + dataStore.formatCurrency(claimsTotal)}
+        </div>
       </div>
     );
   }

@@ -1,18 +1,20 @@
-import React from "react";
+import "react-tabs/style/react-tabs.css";
+import "./MainView.css";
+
+import { AppConfig, defaultConfig, isCustomPanel } from "../store/config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
-import "react-tabs/style/react-tabs.css";
-import { ListItem } from "../Components/ListItem";
 import { Task, UserRole } from "../sharedtypes";
-import { AppConfig, defaultConfig, isCustomPanel } from "../store/config";
-import { userRoles } from "../store/corestore";
+import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
+
 import AdminPanel from "./AdminPanel";
 import { AuditorDetails } from "./AuditorPanel";
+import { ListItem } from "../Components/ListItem";
 import MainChrome from "./MainChrome";
-import "./MainView.css";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
-import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
+import React from "react";
+import { dataStore } from "../transport/datastore";
 
 type Props = RouteComponentProps & {
   // To simplify our implementation, you should change MainView's key if you
@@ -54,7 +56,7 @@ class MainView extends React.Component<Props, State> {
   _onTabSelectCallback?: () => boolean;
 
   async componentDidMount() {
-    const roles = await userRoles();
+    const roles = await dataStore.userRoles();
 
     this.setState({
       roles,

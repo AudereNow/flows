@@ -1,30 +1,25 @@
-import moment from "moment";
-import React from "react";
-import ReactMarkdown from "react-markdown";
-import { RouteComponentProps, withRouter } from "react-router";
-import { RowRenderProps, Column } from "react-table";
-import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
-import ReactTooltip from "react-tooltip";
-import Button from "../Components/Button";
-import CannedNotesEditor from "../Components/CannedNotesEditor";
-import CheckBox from "../Components/CheckBox";
-import SearchableTable from "../Components/SearchableTable";
+import { Column, RowRenderProps } from "react-table";
 import {
   RemoteConfig,
   TaskChangeRecord,
   TaskState,
   UserRole,
 } from "../sharedtypes";
-import {
-  getAdminLogs,
-  getAllChanges,
-  getBestUserName,
-  issuePayments,
-  setRoles,
-  updatePatientsTaskLists,
-} from "../store/corestore";
-import { setConfig } from "../store/remoteconfig";
+import { RouteComponentProps, withRouter } from "react-router";
+import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
+
+import Button from "../Components/Button";
+import CannedNotesEditor from "../Components/CannedNotesEditor";
+import CheckBox from "../Components/CheckBox";
+import { FirebaseDataStore } from "../transport/firestore";
+import React from "react";
+import ReactMarkdown from "react-markdown";
+import ReactTooltip from "react-tooltip";
+import SearchableTable from "../Components/SearchableTable";
 import { configuredComponent } from "../util/configuredComponent";
+import { dataStore } from "../transport/datastore";
+import moment from "moment";
+import { setConfig } from "../store/remoteconfig";
 
 type RoleMap = {
   [roleName in UserRole]: boolean;
@@ -114,8 +109,8 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
   _fetchedAllData = false;
 
   async componentDidMount() {
-    const allChanges = await getAllChanges();
-    const allAdminLogs = await getAdminLogs();
+    const allChanges = await dataStore.getAllChanges();
+    const allAdminLogs = await dataStore.getAdminLogs();
     this._fetchedAllData = true;
     this.setState({
       roleMap: NO_ROLES_MAP,
@@ -181,7 +176,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
       }
     });
 
-    const result = await setRoles(this.state.email, roles);
+    const result = await dataStore.setRoles(this.state.email, roles);
 
     alert(result);
     this.setState({ email: "", roleMap: NO_ROLES_MAP });
@@ -227,9 +222,11 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
   };
 
   _updatePatientsTaskLists = async () => {
-    console.log("Starting update...");
-    await updatePatientsTaskLists();
-    console.log("Update complete");
+    if (dataStore instanceof FirebaseDataStore) {
+      console.log("Starting update...");
+      await dataStore.updatePatientsTaskLists();
+      console.log("Update complete");
+    }
   };
 
   _sendPayment = async () => {
@@ -252,7 +249,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     });
 
     try {
-      const result = await issuePayments([
+      const result = await dataStore.issuePayments([
         {
           name: "Maisha Meds",
           reason: "TestPayment",
@@ -260,7 +257,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
           phoneNumber,
           currencyCode: "KES",
           metadata: {
-            payorName: getBestUserName(),
+            payorName: dataStore.getBestUserName(),
           },
         },
       ]);
