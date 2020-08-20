@@ -11,6 +11,7 @@ import {
 import { DataStoreConfig, DataStoreType } from "../store/config";
 
 import { FirebaseDataStore } from "./firestore";
+import { RestDataStore } from "./rest";
 
 export type ActiveTask = {
   id: string;
@@ -36,8 +37,9 @@ export function initializeStore(config: DataStoreConfig): DataStore {
       firebaseDataStore.initializeStore();
       dataStore = firebaseDataStore;
       return dataStore;
-    default:
-      throw new Error("Unsupported DataStore type: " + config.type);
+    case DataStoreType.REST:
+      dataStore = new RestDataStore();
+      return dataStore;
   }
 }
 

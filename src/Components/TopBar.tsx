@@ -127,7 +127,7 @@ class TopBar extends React.Component<{}, State> {
         </a>
 
         <div className="topbar_details">
-          <span>{firebase.auth().currentUser!.displayName}</span>
+          <span>{dataStore.getBestUserName()}</span>
           <div className="topbar_row">
             {overlay}
             {uploadButton}

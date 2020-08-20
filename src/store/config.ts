@@ -184,13 +184,7 @@ export const defaultConfig: AppConfig = {
     },
   },
   dataStore: {
-    type: DataStoreType.FIREBASE,
-    authUiConfig: {
-      signInSuccessUrl: "/",
-      signInOptions: [
-        firebase.auth.EmailAuthProvider.PROVIDER_ID,
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      ],
-    },
+    type: DataStoreType.REST,
+    endpointRoot: "",
   },
 };
