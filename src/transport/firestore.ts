@@ -36,6 +36,10 @@ export class FirebaseDataStore implements DataStore {
     firebase.initializeApp(FIREBASE_CONFIG);
   }
 
+  onAuthStateChanged(callback: (authenticated: boolean) => void) {
+    firebase.auth().onAuthStateChanged(user => callback(!!user));
+  }
+
   async userRoles(): Promise<UserRole[]> {
     // Uncomment next line to force a refresh of custom claims
     // await firebase.auth().currentUser!.getIdToken(true);
@@ -76,11 +80,7 @@ export class FirebaseDataStore implements DataStore {
     removeEmptyFieldsInPlace(updatedTask);
     await Promise.all([
       this.saveTask(updatedTask, task.id),
-      firebase
-        .firestore()
-        .collection(TASK_CHANGE_COLLECTION)
-        .doc()
-        .set(change),
+      firebase.firestore().collection(TASK_CHANGE_COLLECTION).doc().set(change),
     ]);
   }
 

@@ -1,7 +1,10 @@
+import "firebase/auth";
+
 import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
 
 import ApproveImg from "../assets/approve.png";
 import DeclineImg from "../assets/decline.png";
+import firebase from "firebase";
 
 interface TabConfig {
   roles: UserRole[];
@@ -38,14 +41,15 @@ export enum DataStoreType {
   REST = "REST",
 }
 
-export type DataStoreConfig =
-  | {
-      type: DataStoreType.FIREBASE;
-    }
-  | {
-      type: DataStoreType.REST;
-      endpointRoot: string;
-    };
+export type DataStoreConfig = FirebaseDataStoreConfig | RestDataStoreConfig;
+export type FirebaseDataStoreConfig = {
+  type: DataStoreType.FIREBASE;
+  authUiConfig: firebaseui.auth.Config;
+};
+export type RestDataStoreConfig = {
+  type: DataStoreType.REST;
+  endpointRoot: string;
+};
 
 export interface AppConfig {
   tabs: {
@@ -181,5 +185,12 @@ export const defaultConfig: AppConfig = {
   },
   dataStore: {
     type: DataStoreType.FIREBASE,
+    authUiConfig: {
+      signInSuccessUrl: "/",
+      signInOptions: [
+        firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+      ],
+    },
   },
 };

@@ -42,6 +42,8 @@ export function initializeStore(config: DataStoreConfig): DataStore {
 }
 
 export interface DataStore {
+  onAuthStateChanged(callback: (authenticated: boolean) => void): void;
+
   userRoles: () => Promise<UserRole[]>;
 
   changeTaskState: (
