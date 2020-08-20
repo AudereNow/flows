@@ -38,7 +38,7 @@ export function initializeStore(config: DataStoreConfig): DataStore {
       dataStore = firebaseDataStore;
       return dataStore;
     case DataStoreType.REST:
-      dataStore = new RestDataStore();
+      dataStore = new RestDataStore(config.endpointRoot);
       return dataStore;
   }
 }

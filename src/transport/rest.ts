@@ -12,6 +12,7 @@ import {
 import { firestore, functions } from "firebase";
 
 export class RestDataStore implements DataStore {
+  constructor(readonly endpointRoot: string) {}
   async userRoles(): Promise<UserRole[]> {
     return [
       UserRole.AUDITOR,
@@ -21,8 +22,30 @@ export class RestDataStore implements DataStore {
     ];
   }
 
+  authStateChangedCallbacks: ((authenticated: boolean) => void)[] = [];
   onAuthStateChanged(callback: (authenticated: boolean) => void): void {
-    setImmediate(() => callback(true));
+    this.authStateChangedCallbacks.push(callback);
+    //setImmediate(() => callback(true));
+  }
+
+  async login({ username, password }: { username: string; password: string }) {
+    const res = await fetch(this.endpointRoot + "/users/sign_in", {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user: { username, password },
+      }),
+    });
+    const user = await res.json();
+    console.log(user);
+    if (user.error) {
+      throw new Error(user.error);
+    } else {
+      this.authStateChangedCallbacks.map(cb => cb(true));
+    }
   }
 
   async changeTaskState(

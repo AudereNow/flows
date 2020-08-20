@@ -1,4 +1,5 @@
 import "firebase/auth";
+import "./LoginScreen.css";
 
 import {
   DataStoreConfig,
@@ -8,6 +9,7 @@ import {
 } from "../store/config";
 import React, { ChangeEvent, Component, PureComponent } from "react";
 
+import { RestDataStore } from "../transport/rest";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import { dataStore } from "../transport/datastore";
 import firebase from "firebase/app";
@@ -40,13 +42,14 @@ interface RestLoginScreenProps {
 interface RestLoginScreenState {
   username: string;
   password: string;
+  error: string;
 }
 
 class RestLoginScreen extends Component<
   RestLoginScreenProps,
   RestLoginScreenState
 > {
-  state: RestLoginScreenState = { username: "", password: "" };
+  state: RestLoginScreenState = { username: "", password: "", error: "" };
 
   _updateUsername = (e: ChangeEvent<HTMLInputElement>) => {
     this.setState({ username: e.target.value });
@@ -57,21 +60,14 @@ class RestLoginScreen extends Component<
   };
 
   _onSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    this.setState({ error: "" });
     const { username, password } = this.state;
     e.preventDefault();
     try {
-      await fetch(this.props.dataStoreConfig.endpointRoot + "/users/sign_in", {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user: { username, password },
-        }),
-      });
+      await (dataStore as RestDataStore).login({ username, password });
     } catch (e) {
       console.error(e);
+      this.setState({ error: e.message });
     }
   };
 
@@ -81,6 +77,9 @@ class RestLoginScreen extends Component<
         method="post"
         action={this.props.dataStoreConfig.endpointRoot + "/users/sign_in"}
       >
+        {this.state.error && (
+          <div className="login_error">{this.state.error}</div>
+        )}
         <div>
           <input
             type="text"

@@ -185,6 +185,6 @@ export const defaultConfig: AppConfig = {
   },
   dataStore: {
     type: DataStoreType.REST,
-    endpointRoot: "",
+    endpointRoot: "https://staging-service.maishameds.org",
   },
 };
