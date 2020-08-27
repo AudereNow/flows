@@ -1,32 +1,43 @@
-import axios, { AxiosResponse } from "axios";
-import csvtojson from "csvtojson";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
-import { UserRecord } from "firebase-functions/lib/providers/auth";
-import africasTalkingOptions from "./africas-talking-options.json";
+
 import {
-  AdminLogEvent,
   ADMIN_LOG_EVENT_COLLECTION,
+  AdminLogEvent,
   DEFAULT_REMOTE_CONFIG,
   METADATA_COLLECTION,
-  Patient,
   PATIENTS_COLLECTION,
+  Patient,
   PaymentRecipient,
-  RemoteConfig,
   REMOTE_CONFIG_DOC,
-  removeEmptyFieldsInPlace,
+  RemoteConfig,
+  TASKS_COLLECTION,
+  TASK_CHANGE_COLLECTION,
   Task,
   TaskChangeRecord,
   TaskState,
-  TASKS_COLLECTION,
-  TASK_CHANGE_COLLECTION,
   User,
   UserRole,
+  removeEmptyFieldsInPlace,
 } from "./sharedtypes";
+import axios, { AxiosResponse } from "axios";
+
+import { UserRecord } from "firebase-functions/lib/providers/auth";
+import africasTalkingOptions from "./africas-talking-options.json";
+import csvtojson from "csvtojson";
 
 // You're going to need this file on your local machine.  It's stored in our
 // team's LastPass ServerInfrastructure section.
 const serviceAccount = require(`../${process.env.GCLOUD_PROJECT}-key.json`);
+
+// Needed for access to Storage.  If there's a way to actually pull files from
+// there without credentials (but securely, given we're in the same Firebase
+// project), that'd be best.
+const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG!);
+adminConfig.credential = admin.credential.cert(serviceAccount);
+admin.initializeApp(adminConfig);
+
+export { api } from "./api";
 
 const UPLOADED_RECORDS_COLLECTION = "uploaded_records";
 
@@ -45,13 +56,6 @@ type RecordUploadLog = {
   by: string;
   timestamp: number;
 };
-
-// Needed for access to Storage.  If there's a way to actually pull files from
-// there without credentials (but securely, given we're in the same Firebase
-// project), that'd be best.
-const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG!);
-adminConfig.credential = admin.credential.cert(serviceAccount);
-admin.initializeApp(adminConfig);
 
 type CallResult =
   | {
@@ -104,10 +108,7 @@ async function removeOldBackups() {
     const diffDays = (currentDate - folderDate) / MS_IN_DAY;
 
     if (diffDays > 45) {
-      await storage
-        .bucket(bucketName)
-        .file(folder.name)
-        .delete();
+      await storage.bucket(bucketName).file(folder.name).delete();
       console.log(`FILE ${folder.name} deleted`);
     }
   }
@@ -241,9 +242,9 @@ exports.uploadCSV = functions.https.onCall(
     } catch (e) {
       console.error(e.message || e.error || JSON.stringify(e));
       return {
-        error: `CSV processing error: ${e.message ||
-          e.error ||
-          JSON.stringify(e)}`,
+        error: `CSV processing error: ${
+          e.message || e.error || JSON.stringify(e)
+        }`,
       };
     }
   }
@@ -367,10 +368,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
   // Now generate Auditor work items representing each sampled row.
   await Promise.all(
     shuffledRowsByPharmacy.map(async pharm => {
-      const doc = admin
-        .firestore()
-        .collection(TASKS_COLLECTION)
-        .doc();
+      const doc = admin.firestore().collection(TASKS_COLLECTION).doc();
       const patients = pharm.values.map((d: any) => ({
         patientAge: d["g2:A12 Age"],
         patientFirstName: d["g2:A10 First Name"],
@@ -407,11 +405,7 @@ async function createAuditorTasks(cache: any[], batchID: string, user: User) {
       removeEmptyFieldsInPlace(task);
       await Promise.all([
         doc.set(task),
-        admin
-          .firestore()
-          .collection(TASK_CHANGE_COLLECTION)
-          .doc()
-          .set(record),
+        admin.firestore().collection(TASK_CHANGE_COLLECTION).doc().set(record),
         updatePatientsForTask(task),
       ]);
     })
@@ -503,7 +497,7 @@ function groupBy(
   xs: any[],
   key: Function | string
 ): { key: string; values: any[] }[] {
-  return xs.reduce(function(rv: any[], x) {
+  return xs.reduce(function (rv: any[], x) {
     const v = key instanceof Function ? key(x) : x[key];
     const el = rv.find(r => r && r.key === v);
     if (el) {
