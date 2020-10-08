@@ -13,7 +13,7 @@ import TextItem from "../Components/TextItem";
 import { configuredComponent } from "../util/configuredComponent";
 import { dataStore } from "../transport/datastore";
 
-const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
+const STATE_DESCRIPTIONS: { [key in TaskState]?: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
   [TaskState.PAY]: "Awaiting Payment",
   [TaskState.FOLLOWUP]: "Needs Ops Followup",
@@ -121,7 +121,7 @@ class ConfigurablePayorDetails extends React.Component<
     const reimburseAmount = _getReimbursementTotal(tasks);
 
     const bundledTaskIds: string[] = [];
-    const bundledPayments: PaymentRecord[] = tasks.slice(1).map((task) => {
+    const bundledPayments: PaymentRecord[] = tasks.slice(1).map(task => {
       bundledTaskIds.push(task.id);
       return {
         paymentType: PaymentType.BUNDLED,
@@ -155,7 +155,7 @@ class ConfigurablePayorDetails extends React.Component<
       amount: reimburseAmount,
       reason: "PromotionPayment",
       metadata: {
-        taskIDs: tasks.map((task) => task.id),
+        taskIDs: tasks.map(task => task.id),
         payorName: dataStore.getBestUserName(),
         payeeName: tasks[0].site.name,
       },
@@ -188,16 +188,16 @@ class ConfigurablePayorDetails extends React.Component<
       dataStore
         .loadPreviousTasks(
           this.props.tasks[0].site.name,
-          this.props.tasks.map((task) => task.id)
+          this.props.tasks.map(task => task.id)
         )
-        .then((relatedTasks) => this.setState({ relatedTasks }));
+        .then(relatedTasks => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   _formatRelatedTasks = () => {
     return this.state.relatedTasks
-      ? this.state.relatedTasks.map((relatedTask) => {
+      ? this.state.relatedTasks.map(relatedTask => {
           return {
             Date: relatedTask.updatedAt
               ? new Date(
@@ -293,14 +293,14 @@ class ConfigurablePayorDetails extends React.Component<
 export const PayorDetails = configuredComponent<
   DetailsComponentProps,
   RemoteProps
->(ConfigurablePayorDetails, (config) => ({
+>(ConfigurablePayorDetails, config => ({
   realPayments: config.enableRealPayments,
 }));
 
 function _getReimbursementTotal(tasks: Task[]): number {
   const claimAmounts = tasks
-    .map((task) =>
-      task.entries.map((entry) => {
+    .map(task =>
+      task.entries.map(entry => {
         return entry.rejected ? 0 : entry.claimedCost;
       })
     )

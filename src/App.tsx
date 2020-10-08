@@ -49,18 +49,18 @@ class App extends React.Component<Props, State> {
         <Router>
           <Switch>
             <Route
-              path={[
-                "/auditor/:id",
-                "/payor/:id",
-                "/operator/:id",
-                "/rejected/:id",
-                "/completed/:id",
-              ]}
+              path={(() => {
+                const routes = Object.values(defaultConfig.tabs).map(
+                  tab => `/${tab.baseUrl}/:id`
+                );
+                console.log(routes);
+                return routes;
+              })()}
               render={this._renderLinkedMainView}
             />
-            <Route path={"/admin/:tab?"}>
+            {/*<Route path={"/admin/:tab?"}>
               <MainView startingTab={"admin"} />
-            </Route>
+            </Route>*/}
             <Route>
               <MainView />
             </Route>

@@ -3,6 +3,7 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "noImplicitReturns": true,
+    "noImplicitAny": false,
     "noUnusedLocals": true,
     "outDir": "lib",
     "resolveJsonModule": true,

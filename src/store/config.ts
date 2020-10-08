@@ -3,8 +3,8 @@ import "firebase/auth";
 import { RemoteConfig, TaskState, UserRole } from "../sharedtypes";
 
 import ApproveImg from "../assets/approve.png";
+import { ClaimAction } from "../Screens/TaskPanel";
 import DeclineImg from "../assets/decline.png";
-import firebase from "firebase";
 
 interface TabConfig {
   roles: UserRole[];
@@ -20,6 +20,7 @@ export interface ActionConfig {
   labelClassName?: string;
   labelImg?: string;
   nextTaskState: TaskState;
+  claimAction?: ClaimAction;
   enableOnConfig?: keyof RemoteConfig;
   disableOnConfig?: keyof RemoteConfig;
 }
@@ -64,8 +65,8 @@ export function isCustomPanel(config: TabConfig): config is CustomPanelConfig {
 
 export const defaultConfig: AppConfig = {
   tabs: {
-    "Primary Review": {
-      taskState: TaskState.AUDIT,
+    "First Review": {
+      taskState: TaskState.RECEIVED,
       taskListComponent: "default",
       detailsComponent: "AuditTask",
       listLabel: "ITEMS TO REVIEW",
@@ -76,7 +77,68 @@ export const defaultConfig: AppConfig = {
       actions: {
         decline: {
           label: "DECLINE",
-          nextTaskState: TaskState.FOLLOWUP,
+          claimAction: ClaimAction.REJECT,
+          nextTaskState: TaskState.NEEDS_REJECTED_REVIEW,
+          labelClassName: "mainview_decline_button",
+          labelImg: DeclineImg,
+        },
+        approve: {
+          label: "APPROVE",
+          nextTaskState: TaskState.NEEDS_PATIENT_REVIEW,
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg,
+        },
+        save: {
+          label: "HOLD",
+          nextTaskState: TaskState.RECEIVED,
+          labelClassName: "mainview_button",
+        },
+      },
+    },
+    "Patient Review": {
+      taskState: TaskState.NEEDS_PATIENT_REVIEW,
+      taskListComponent: "default",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS TO REVIEW",
+      roles: [UserRole.AUDITOR],
+      baseUrl: "patient",
+      showPreviousClaims: true,
+      groupTasksByPharmacy: true,
+      actions: {
+        decline: {
+          label: "DECLINE",
+          claimAction: ClaimAction.REJECT,
+          nextTaskState: TaskState.NEEDS_REJECTED_REVIEW,
+          labelClassName: "mainview_decline_button",
+          labelImg: DeclineImg,
+        },
+        approve: {
+          label: "APPROVE",
+          nextTaskState: TaskState.NEEDS_FINAL_APPROVAL,
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg,
+        },
+        save: {
+          label: "HOLD",
+          nextTaskState: TaskState.NEEDS_PATIENT_REVIEW,
+          labelClassName: "mainview_button",
+        },
+      },
+    },
+    "Final Approval": {
+      taskState: TaskState.NEEDS_FINAL_APPROVAL,
+      taskListComponent: "default",
+      detailsComponent: "AuditTask",
+      listLabel: "ITEMS TO REVIEW",
+      roles: [UserRole.AUDITOR],
+      baseUrl: "finalapproval",
+      showPreviousClaims: true,
+      groupTasksByPharmacy: true,
+      actions: {
+        decline: {
+          label: "DECLINE",
+          claimAction: ClaimAction.REJECT,
+          nextTaskState: TaskState.NEEDS_REJECTED_REVIEW,
           labelClassName: "mainview_decline_button",
           labelImg: DeclineImg,
         },
@@ -87,13 +149,42 @@ export const defaultConfig: AppConfig = {
           labelImg: ApproveImg,
         },
         save: {
-          label: "SAVE NOTE",
-          nextTaskState: TaskState.AUDIT,
+          label: "HOLD",
+          nextTaskState: TaskState.NEEDS_FINAL_APPROVAL,
           labelClassName: "mainview_button",
         },
       },
     },
-    Payor: {
+    "Rejection Review": {
+      taskState: TaskState.NEEDS_REJECTED_REVIEW,
+      taskListComponent: "default",
+      detailsComponent: "OperatorTask",
+      listLabel: "ITEMS TO REVIEW",
+      roles: [UserRole.OPERATOR],
+      baseUrl: "rejectionreview",
+      filterByOwners: true,
+      actions: {
+        decline: {
+          label: "CONFIRM REJECTION",
+          labelImg: DeclineImg,
+          claimAction: ClaimAction.REJECT,
+          nextTaskState: TaskState.REJECTED,
+          labelClassName: "mainview_decline_button",
+        },
+        approve: {
+          label: "RE-APPROVE",
+          nextTaskState: TaskState.NEEDS_FINAL_APPROVAL,
+          labelClassName: "mainview_approve_button",
+          labelImg: ApproveImg,
+        },
+        save: {
+          label: "HOLD",
+          nextTaskState: TaskState.NEEDS_REJECTED_REVIEW,
+          labelClassName: "mainview_button",
+        },
+      },
+    },
+    Billing: {
       taskState: TaskState.PAY,
       taskListComponent: "default",
       detailsComponent: "PayorTask",
@@ -106,7 +197,8 @@ export const defaultConfig: AppConfig = {
           label: "DECLINE PAYMENT",
           labelClassName: "mainview_decline_button",
           labelImg: DeclineImg,
-          nextTaskState: TaskState.FOLLOWUP,
+          claimAction: ClaimAction.REJECT,
+          nextTaskState: TaskState.NEEDS_REJECTED_REVIEW,
         },
         approve: {
           label: "ISSUE PAYMENT",
@@ -121,39 +213,6 @@ export const defaultConfig: AppConfig = {
           labelImg: ApproveImg,
           nextTaskState: TaskState.COMPLETED,
           disableOnConfig: "enableRealPayments",
-        },
-      },
-    },
-    "Secondary Followup": {
-      taskState: TaskState.FOLLOWUP,
-      taskListComponent: "default",
-      detailsComponent: "OperatorTask",
-      listLabel: "ITEMS TO REVIEW",
-      roles: [UserRole.OPERATOR],
-      baseUrl: "operator",
-      filterByOwners: true,
-      actions: {
-        decline: {
-          label: "REJECT",
-          labelImg: DeclineImg,
-          nextTaskState: TaskState.REJECTED,
-          labelClassName: "mainview_decline_button",
-        },
-        approve: {
-          label: "APPROVE FOR PAYMENT",
-          nextTaskState: TaskState.PAY,
-          labelClassName: "mainview_approve_button",
-          labelImg: ApproveImg,
-        },
-        sendToPrimary: {
-          label: "SEND TO PRIMARY REVIEWER",
-          nextTaskState: TaskState.AUDIT,
-          labelClassName: "mainview_neutral_button",
-        },
-        save: {
-          label: "SAVE NOTE",
-          nextTaskState: TaskState.FOLLOWUP,
-          labelClassName: "mainview_button",
         },
       },
     },
@@ -185,6 +244,9 @@ export const defaultConfig: AppConfig = {
   },
   dataStore: {
     type: DataStoreType.REST,
+    //endpointRoot: "http://localhost:5001/flows-app-staging/us-central1/api",
     endpointRoot: "https://staging-service.maishameds.org",
+    //endpointRoot:
+    //  "https://us-central1-flows-app-staging.cloudfunctions.net/api",
   },
 };

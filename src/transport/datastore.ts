@@ -19,6 +19,11 @@ export type ActiveTask = {
   since: firebase.firestore.Timestamp;
 };
 
+export type Flag = {
+  severity: "ALERT" | "WARN";
+  description: string;
+};
+
 export interface PatientHistory {
   tasks: {
     taskId: string;
@@ -49,7 +54,8 @@ export interface DataStore {
   userRoles: () => Promise<UserRole[]>;
 
   changeTaskState: (
-    task: Task,
+    tasks: Task[],
+    reviewedTasks: Task[],
     newState: TaskState,
     notes: string,
     payment?: PaymentRecord
@@ -71,6 +77,8 @@ export interface DataStore {
   getAdminLogs: () => Promise<AdminLogEvent[]>;
 
   loadTasks: (taskState: TaskState) => Promise<Task[]>;
+
+  loadFlags: (tasks: Task[]) => Promise<{ [taskId: string]: Flag[] }>;
 
   loadPreviousTasks: (
     siteName: string,

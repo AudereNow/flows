@@ -16,12 +16,22 @@ export const PATIENTS_COLLECTION = "patients";
 export const PHARMACY_COLLECTION = "pharmacies";
 
 export enum TaskState {
+  // old
   CSV = "CSV",
   AUDIT = "AUDIT",
   FOLLOWUP = "FOLLOWUP",
-  PAY = "PAY",
+
+  // reused
   COMPLETED = "COMPLETED",
   REJECTED = "REJECTED",
+  PAY = "PAY",
+
+  // new
+  RECEIVED = "received",
+  APPROVED = "approved",
+  NEEDS_PATIENT_REVIEW = "needs_patient_review",
+  NEEDS_REJECTED_REVIEW = "needs_rejected_review",
+  NEEDS_FINAL_APPROVAL = "needs_final_approval",
 }
 
 export const REMOTE_CONFIG_DOC = "remoteConfig";
@@ -58,16 +68,30 @@ export type ClaimEntry = {
   patientSex?: string;
   patientID?: string;
   phone?: string;
-  item: string;
-  totalCost: number;
+  //item: string;
+  //totalCost: number;
   claimedCost: number;
+  generalPhotoUris?: string[];
+
+  items: {
+    name: string;
+    costPriceCents: number;
+    loyaltyPriceCents: number;
+    retailPriceCents: number;
+    wholesalePriceCents: number;
+    photoUrl?: string;
+  }[];
+
+  // TODO: delete these
   photoIDUri?: string;
   photoMedUri?: string;
   photoMedBatchUri?: string;
+
   timestamp: number;
   reviewed?: boolean;
   notes?: string;
   rejected?: boolean;
+  claimID?: string;
 };
 
 export type TaskChangeRecord = {

@@ -64,6 +64,13 @@ button:active {
   flex-direction: column;
 }
 
+.mainview_flag_box {
+  border: 1px solid darkred;
+  background-color: lightpink;
+  margin: 10px;
+  padding: 10px;
+}
+
 .mainview_button_row {
   display: flex;
   flex-direction: row;
