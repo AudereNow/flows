@@ -3,14 +3,15 @@ import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
 
-import { ClaimEntry, Task } from "../sharedtypes";
-import { PatientHistory, dataStore } from "../transport/datastore";
+import { ClaimAction, ClaimActions, DetailsComponentProps } from "./TaskPanel";
+import { ClaimEntry, Task, TaskState } from "../sharedtypes";
+import { DataStoreType, defaultConfig } from "../store/config";
+import { Flag, PatientHistory, dataStore } from "../transport/datastore";
 import TextItem, { SearchContext } from "../Components/TextItem";
 
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import ClaimNotes from "../Components/ClaimNotes";
-import { DetailsComponentProps } from "./TaskPanel";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -22,8 +23,8 @@ import debounce from "../util/debounce";
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 
-const MIN_SAMPLE_FRACTION = 0.2;
-const MIN_SAMPLES = 1;
+const GROUP_BY_PATIENT = false;
+const SAMPLES_PER_PAGE = 25;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
@@ -62,6 +63,15 @@ interface PatientInfo {
   history?: PatientHistory;
 }
 
+type LabeledPhoto = {
+  url: string;
+  label: {
+    displayKey?: string;
+    value: string;
+    searchKey: string;
+  };
+};
+
 function getInitialState(props: DetailsComponentProps): State {
   const patients = getPatients(props.tasks);
   return {
@@ -69,10 +79,7 @@ function getInitialState(props: DetailsComponentProps): State {
     showAllEntries: false,
     showImages: !!props.hideImagesDefault ? false : true,
     previousClaims: [],
-    numPatients: Math.max(
-      Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
-      MIN_SAMPLES
-    ),
+    numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
   };
 }
@@ -86,8 +93,6 @@ export class AuditorDetails extends React.Component<
   static contextType = SearchContext;
 
   async componentDidMount() {
-    this.props.registerActionCallback("approve", this._onApprove);
-    this.props.registerActionCallback("save", this._onApprove);
     this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
@@ -105,7 +110,7 @@ export class AuditorDetails extends React.Component<
           id: task.id,
           total: 0,
           count: 0,
-          date: new Date(task.entries[0].timestamp).toLocaleDateString(),
+          date: new Date(task.entries[0].startTime).toLocaleDateString(),
         };
 
         task.entries.forEach(entry => {
@@ -127,70 +132,36 @@ export class AuditorDetails extends React.Component<
     this.setState({ showAllEntries: !this.state.showAllEntries });
   };
 
-  _onApprove = async () => {
-    const tasks = this.props.tasks.map(task => ({
-      ...task,
-      entries: task.entries.map((entry, index) => {
-        const patientIndex = this.state.patients.findIndex(
-          patient => patient.patientId === entry.patientID
-        );
-        if (
-          (patientIndex !== -1 && patientIndex < this.state.numPatients) ||
-          this.state.showAllEntries
-        ) {
-          return {
-            ...entry,
-            reviewed: true,
-          };
-        }
-        return entry;
-      }),
-    }));
-    return { success: true, tasks };
-  };
-
   _loadPatientHistories = async () => {
     const histories = await dataStore.getPatientHistories(
       this.state.patients.map(patient => patient.patientId)
     );
     this.setState({
-      patients: this.state.patients.map(patient => ({
-        ...patient,
-        history: {
-          tasks: histories[patient.patientId].tasks.filter(task =>
-            this.props.tasks.every(
-              currentTask => task.taskId !== currentTask.id
-            )
-          ),
-        },
-      })),
+      patients: this.state.patients.map(patient => {
+        const history = histories[patient.patientId];
+        return {
+          ...patient,
+          history: {
+            tasks: history
+              ? history.tasks.filter(task =>
+                  this.props.tasks.every(
+                    currentTask => task.taskId !== currentTask.id
+                  )
+                )
+              : [],
+          },
+        };
+      }),
     });
   };
 
-  _extractImages = (claim: ClaimEntry) => {
-    const claimImages = [];
-    if (!!claim.photoMedUri) {
-      claimImages.push({
-        url: claim.photoMedUri,
-        label: { value: claim.item, searchKey: "item" },
-      });
-    }
-    if (!!claim.photoIDUri) {
-      claimImages.push({
-        url: claim.photoIDUri,
-        label: {
-          displayKey: "ID",
-          value: claim.patientID || "",
-          searchKey: "patient",
-        },
-      });
-    }
-    if (!!claim.photoMedBatchUri) {
-      claimImages.push({
-        url: claim.photoMedBatchUri,
-        label: { value: "Barcode", searchKey: "" },
-      });
-    }
+  _extractImages = (claim: ClaimEntry): LabeledPhoto[] => {
+    const claimImages: LabeledPhoto[] = claim.generalPhotoUris
+      ? claim.generalPhotoUris.map(url => ({
+          url,
+          label: { value: "", searchKey: "item" },
+        }))
+      : [];
     return claimImages;
   };
 
@@ -203,13 +174,36 @@ export class AuditorDetails extends React.Component<
     );
   };
 
+  _updateClaimAction = (value: string, checked: boolean) => {
+    const {
+      claimId,
+      claimAction,
+    }: { claimId: string; claimAction: ClaimAction } = JSON.parse(value);
+    this.props.updateSelectedAction(claimId, {
+      action: checked ? claimAction : undefined,
+    });
+  };
+
+  _updateFlag = (value: string, checked: boolean) => {
+    const {
+      claimId,
+    }: { claimId: string; claimAction: ClaimAction } = JSON.parse(value);
+    this.props.updateSelectedAction(claimId, { flag: checked });
+  };
+
   _renderPatientDetails = (patient: PatientInfo, index: number) => {
     const { searchTermDetails, showImages } = this.state;
     const { tasks } = this.props;
     let patientProps = [];
     const entry = patient.currentClaims[0].claims[0];
+    const flags: Flag[] = patient.currentClaims
+      .map(group => group.claims.map(claim => this.props.flags[claim.claimID!]))
+      .flat()
+      .flat()
+      .filter(flag => flag);
     const disabledCheckbox =
-      tasks[0].state === "REJECTED" || tasks[0].state === "COMPLETED"
+      tasks[0].state === TaskState.REJECTED ||
+      tasks[0].state === TaskState.COMPLETED
         ? true
         : false;
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -218,10 +212,9 @@ export class AuditorDetails extends React.Component<
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
-    const date = new Date(entry.timestamp).toLocaleDateString();
-    const patientString = `${entry.patientFirstName} ${
-      entry.patientLastName
-    } ${patientInfo} ${entry.phone || ""}`;
+    const date = new Date(entry.startTime).toLocaleDateString();
+    const patientString = `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`;
+    const patientPhone = entry.phone || "";
 
     let checkEntry = Object.assign({}, entry, date, patient);
 
@@ -233,8 +226,13 @@ export class AuditorDetails extends React.Component<
     }
 
     return (
-      <LabelWrapper key={JSON.stringify(entry + "_" + index)}>
+      <LabelWrapper key={JSON.stringify("entry_" + index)}>
         <div className="mainview_padded">
+          {flags.length > 0 && (
+            <div className="mainview_row mainview_flag_box">
+              <strong>{flags.map(flag => flag.description).join(", ")}</strong>
+            </div>
+          )}
           <div className="mainview_row">
             <TextItem
               data={{
@@ -244,33 +242,103 @@ export class AuditorDetails extends React.Component<
               }}
             />
           </div>
+          <div className="mainview_row">
+            <TextItem
+              data={{
+                displayKey: "Phone",
+                searchKey: "phone",
+                value: patientPhone,
+              }}
+            />
+          </div>
           {patient.currentClaims.map((task, taskIndex) =>
-            task.claims.map((claim, index) => (
-              <React.Fragment key={`${claim.totalCost}_${index}`}>
+            task.claims.map((claim, claimIndex) => (
+              <React.Fragment key={`${index}_${taskIndex}_${claimIndex}`}>
                 <TextItem
                   data={{
                     displayKey: "Date",
                     searchKey: "date",
-                    value: new Date(claim.timestamp).toLocaleDateString(),
+                    value: getDateString(claim),
                   }}
                 />
                 <ImageRow
                   showImages={showImages}
                   images={this._extractImages(claim)}
                 />
+                {claim.items.map((item, itemIndex) => (
+                  <React.Fragment key={item.name + itemIndex}>
+                    <TextItem
+                      data={{
+                        displayKey: "Item",
+                        searchKey: "item",
+                        value: item.name,
+                      }}
+                    />
+                    {item.photoUrl && (
+                      <ImageRow
+                        showImages={showImages}
+                        images={[item.photoUrl]}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
                 <CheckBox
                   checked={
-                    claim.rejected === undefined ? false : claim.rejected
+                    this.props.selectedActions[claim.claimID] &&
+                    this.props.selectedActions[claim.claimID].action ===
+                      ClaimAction.APPROVE
                   }
-                  label={"Rejected"}
+                  label={"Approve"}
                   value={JSON.stringify({
-                    claimIndex: (claim as any).originalIndex,
-                    taskIndex,
+                    claimAction: ClaimAction.APPROVE,
+                    claimId: claim.claimID,
                   })}
-                  onCheckBoxSelect={this._toggleRejectClaim}
+                  onCheckBoxSelect={this._updateClaimAction}
                   disabled={disabledCheckbox}
-                  key={index}
+                  radio={true}
                 />
+                <CheckBox
+                  checked={
+                    this.props.selectedActions[claim.claimID] &&
+                    this.props.selectedActions[claim.claimID].action ===
+                      ClaimAction.HOLD
+                  }
+                  label={"Hold"}
+                  value={JSON.stringify({
+                    claimAction: ClaimAction.HOLD,
+                    claimId: claim.claimID,
+                  })}
+                  onCheckBoxSelect={this._updateClaimAction}
+                  disabled={disabledCheckbox}
+                  radio={true}
+                />
+                <CheckBox
+                  checked={
+                    this.props.selectedActions[claim.claimID] &&
+                    this.props.selectedActions[claim.claimID].action ===
+                      ClaimAction.REJECT
+                  }
+                  label={"Reject"}
+                  value={JSON.stringify({
+                    claimAction: ClaimAction.REJECT,
+                    claimId: claim.claimID,
+                  })}
+                  onCheckBoxSelect={this._updateClaimAction}
+                  disabled={disabledCheckbox}
+                  radio={true}
+                />
+                {this.props.taskConfig.showFlagForReview && (
+                  <CheckBox
+                    checked={
+                      this.props.selectedActions[claim.claimID] &&
+                      this.props.selectedActions[claim.claimID].flag
+                    }
+                    label={this.props.taskConfig.showFlagForReview}
+                    value={JSON.stringify({ claimId: claim.claimID })}
+                    onCheckBoxSelect={this._updateFlag}
+                    disabled={disabledCheckbox}
+                  />
+                )}
                 <ClaimNotes
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
@@ -322,13 +390,13 @@ export class AuditorDetails extends React.Component<
     tasks.forEach(task =>
       task.entries.forEach(entry => {
         rows.push({
-          date: new Date(entry.timestamp).toLocaleDateString(),
+          date: new Date(entry.startTime).toLocaleDateString(),
           first: entry.patientFirstName,
           last: entry.patientLastName,
           id: entry.patientID,
           sex: entry.patientSex,
           phone: entry.phone,
-          item: entry.item,
+          item: "",
           "claimed cost": entry.claimedCost,
           rejected: (entry as any).rejected || false,
           notes: (entry as any).notes || "",
@@ -357,6 +425,8 @@ export class AuditorDetails extends React.Component<
     const { showImages } = this.state;
     const patients = getPatients(tasks).slice(0, this.state.numPatients);
     const remaining = this.state.patients.length - this.state.numPatients;
+    const showPharmacyHistory =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <LabelWrapper key={searchTermGlobal} className="mainview_details">
@@ -370,12 +440,14 @@ export class AuditorDetails extends React.Component<
             .reduce((a, b) => a + b, 0)}
           showPreviousClaims={this.props.showPreviousClaims}
         />
-        <Button
-          className="mainview_button"
-          label="Download Pharmacy Report"
-          labelImg={DownloadCSVImg}
-          onClick={this._downloadPharmacyReport}
-        />
+        {showPharmacyHistory && (
+          <Button
+            className="mainview_button"
+            label="Download Pharmacy Report"
+            labelImg={DownloadCSVImg}
+            onClick={this._downloadPharmacyReport}
+          />
+        )}
         <div className="mainview_row">
           <input
             className="mainview_search_input"
@@ -411,7 +483,10 @@ export class AuditorDetails extends React.Component<
             .slice(this.state.numPatients)
 
             .map((patient, index) => {
-              return this._renderPatientDetails(patient, index);
+              return this._renderPatientDetails(
+                patient,
+                patients.length + index
+              );
             })}
 
         {this.props.notesux}
@@ -422,6 +497,17 @@ export class AuditorDetails extends React.Component<
 }
 
 function getPatients(tasks: Task[]): PatientInfo[] {
+  if (!GROUP_BY_PATIENT) {
+    return tasks.map((task, index) => ({
+      patientId: task.entries[0].patientID || "",
+      currentClaims: [
+        {
+          taskIndex: index,
+          claims: task.entries,
+        },
+      ],
+    }));
+  }
   const entriesByPatient: { [id: string]: PatientInfo } = {};
   tasks.forEach((task, taskIndex) =>
     task.entries.forEach((entry, index) => {
@@ -455,4 +541,18 @@ function getPatients(tasks: Task[]): PatientInfo[] {
   return Object.values(entriesByPatient).sort(
     (a, b) => b.currentClaims.length - a.currentClaims.length
   );
+}
+
+function getDateString(claim: ClaimEntry): string {
+  const start = new Date(claim.startTime);
+  const end = new Date(claim.endTime);
+  const startDate = start.toLocaleDateString();
+  const endDate = end.toLocaleDateString();
+  const startTime = start.toLocaleTimeString();
+  const endTime = end.toLocaleTimeString();
+  if (startDate === endDate) {
+    return `${startDate} ${startTime} - ${endTime}`;
+  } else {
+    return `${startDate} ${startTime} - ${endDate} ${endTime}`;
+  }
 }

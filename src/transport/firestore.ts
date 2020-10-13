@@ -36,6 +36,14 @@ export class FirebaseDataStore implements DataStore {
     firebase.initializeApp(FIREBASE_CONFIG);
   }
 
+  onAuthStateChanged(callback: (authenticated: boolean) => void) {
+    firebase.auth().onAuthStateChanged(user => callback(!!user));
+  }
+
+  async logout() {
+    await firebase.auth().signOut();
+  }
+
   async userRoles(): Promise<UserRole[]> {
     // Uncomment next line to force a refresh of custom claims
     // await firebase.auth().currentUser!.getIdToken(true);
@@ -50,38 +58,44 @@ export class FirebaseDataStore implements DataStore {
   }
 
   async changeTaskState(
-    task: Task,
+    tasks: Task[],
+    reviewedTasks: Task[],
+    flaggedTasks: Task[],
     newState: TaskState,
     notes: string,
     payment?: PaymentRecord
   ) {
-    const change: TaskChangeRecord = {
-      taskID: task.id,
-      state: newState,
-      fromState: task.state,
-      timestamp: Date.now(),
-      by: this.getBestUserName(),
-      notes,
-    };
-    if (payment) {
-      change.payment = payment;
-    }
+    await Promise.all(
+      tasks.map(async task => {
+        const change: TaskChangeRecord = {
+          taskID: task.id,
+          state: newState,
+          fromState: task.state,
+          timestamp: Date.now(),
+          by: this.getBestUserName(),
+          notes,
+        };
+        if (payment) {
+          change.payment = payment;
+        }
 
-    task.updatedAt = new Date().getMilliseconds();
+        task.updatedAt = new Date().getMilliseconds();
 
-    const updatedTask = {
-      ...task,
-      state: newState,
-    };
-    removeEmptyFieldsInPlace(updatedTask);
-    await Promise.all([
-      this.saveTask(updatedTask, task.id),
-      firebase
-        .firestore()
-        .collection(TASK_CHANGE_COLLECTION)
-        .doc()
-        .set(change),
-    ]);
+        const updatedTask = {
+          ...task,
+          state: newState,
+        };
+        removeEmptyFieldsInPlace(updatedTask);
+        await Promise.all([
+          this.saveTask(updatedTask, task.id),
+          firebase
+            .firestore()
+            .collection(TASK_CHANGE_COLLECTION)
+            .doc()
+            .set(change),
+        ]);
+      })
+    );
   }
 
   getUserEmail(): string {
@@ -149,6 +163,11 @@ export class FirebaseDataStore implements DataStore {
       .where("state", "==", taskState)
       .get();
     return taskSnapshot.docs.map(doc => (doc.data() as unknown) as Task);
+  }
+
+  async loadFlags(tasks: Task[]) {
+    console.warn("Load flags not implemented");
+    return {};
   }
 
   async loadPreviousTasks(

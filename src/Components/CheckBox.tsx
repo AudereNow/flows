@@ -1,5 +1,6 @@
-import React from "react";
 import "./CheckBox.css";
+
+import React from "react";
 
 interface Props {
   onCheckBoxSelect: (value: string, checked: boolean) => void;
@@ -7,6 +8,7 @@ interface Props {
   label: string;
   value: string;
   disabled?: boolean;
+  radio?: boolean;
 }
 
 class CheckBox extends React.Component<Props> {
@@ -15,15 +17,15 @@ class CheckBox extends React.Component<Props> {
   };
 
   render() {
-    const { checked, label, value } = this.props;
+    const { checked, label, value, radio } = this.props;
     return (
       <div className="checkbox_row" onClick={this._onCheckBoxSelect}>
         <input
           style={{ display: "inline" }}
           data-value={value}
           className="checkbox_input"
-          type="checkbox"
-          name={label}
+          type={radio ? "radio" : "checkbox"}
+          name={label + value}
           readOnly
           checked={checked}
           disabled={this.props.disabled}

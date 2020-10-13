@@ -1,16 +1,17 @@
-import React from "react";
-import ReactMarkdown from "react-markdown";
 import "react-tabs/style/react-tabs.css";
+import "./MainView.css";
+
 import Button from "../Components/Button";
+import { ClaimEntry } from "../sharedtypes";
 import ClaimNotes from "../Components/ClaimNotes";
+import { DetailsComponentProps } from "./TaskPanel";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
+import React from "react";
+import ReactMarkdown from "react-markdown";
 import TextItem from "../Components/TextItem";
-import { ClaimEntry } from "../sharedtypes";
 import { configuredComponent } from "../util/configuredComponent";
-import "./MainView.css";
-import { DetailsComponentProps } from "./TaskPanel";
 
 interface State {
   showImages: boolean;
@@ -29,22 +30,14 @@ class ConfigurableOperatorDetails extends React.Component<
     this.state = { showImages: true };
   }
 
-  componentDidMount() {
-    this.props.registerActionCallback("save", this._onSave);
-  }
-
-  _onSave = async () => {
-    return { success: true, tasks: this.props.tasks };
-  };
-
   _extractImages = (claim: ClaimEntry) => {
     const claimImages = [];
-    if (!!claim.photoMedUri) {
-      claimImages.push({
-        url: claim.photoMedUri,
-        label: { value: claim.item, searchKey: "item" },
-      });
-    }
+    //if (!!claim.photoMedUri) {
+    //  claimImages.push({
+    //    url: claim.photoMedUri,
+    //    label: { value: claim.item, searchKey: "item" },
+    //  });
+    //}
     if (!!claim.photoIDUri) {
       claimImages.push({
         url: claim.photoIDUri,
@@ -83,7 +76,7 @@ class ConfigurableOperatorDetails extends React.Component<
             data={{
               displayKey: "Date",
               searchKey: "date",
-              value: new Date(entry.timestamp).toLocaleDateString(),
+              value: new Date(entry.startTime).toLocaleDateString(),
             }}
           />
           <TextItem

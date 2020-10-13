@@ -60,7 +60,7 @@ class PharmacyInfo extends React.Component<Props, State> {
       this.props.site.name,
       pharmacy => {
         if (pharmacy === undefined) {
-          pharmacy = DEFAULT_PHARMACY;
+          //pharmacy = DEFAULT_PHARMACY;
         }
         this.setState({ pharmacy });
       }

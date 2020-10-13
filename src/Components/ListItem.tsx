@@ -28,12 +28,9 @@ export class ListItem extends React.Component<{
       <div className={previewName}>
         <div className="listitem_header">
           <span>{tasks[0].site.name}</span>
-          <span>
-            {claimCount} Claim{claimCount !== 1 ? "s" : ""}
-          </span>
         </div>
         <div>
-          {"Total Reimbursement: " + dataStore.formatCurrency(claimsTotal)}
+          {claimCount} Claim{claimCount !== 1 ? "s" : ""}
         </div>
       </div>
     );

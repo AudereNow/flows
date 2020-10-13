@@ -2,18 +2,24 @@ import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
 
 import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";
-import { PaymentRecord, PaymentType, Task, TaskState } from "../sharedtypes";
+import {
+  ClaimEntry,
+  PaymentRecord,
+  PaymentType,
+  Task,
+  TaskState,
+} from "../sharedtypes";
+import React, { ChangeEvent } from "react";
 
 import Button from "../Components/Button";
 import LabelWrapper from "../Components/LabelWrapper";
 import PharmacyInfo from "../Components/PharmacyInfo";
-import React from "react";
 import ReactTable from "react-table";
 import TextItem from "../Components/TextItem";
 import { configuredComponent } from "../util/configuredComponent";
 import { dataStore } from "../transport/datastore";
 
-const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
+const STATE_DESCRIPTIONS: { [key in TaskState]?: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
   [TaskState.PAY]: "Awaiting Payment",
   [TaskState.FOLLOWUP]: "Needs Ops Followup",
@@ -26,28 +32,22 @@ const PATIENT_CLAIMS_TABLE_COLUMNS = [
   {
     Header: "DATE",
     id: "Date",
-    accessor: (entry: any) => new Date(entry.timestamp).toLocaleDateString(),
-    minWidth: 70,
+    accessor: (entry: ClaimEntry) =>
+      new Date(entry.startTime).toLocaleDateString(),
+    minWidth: 40,
   },
   {
     id: "Patient",
     Header: "PATIENT",
-    accessor: (entry: any) =>
+    accessor: (entry: ClaimEntry) =>
       `${entry.patientFirstName} ${entry.patientLastName}`,
-    minWidth: 90,
-  },
-  { id: "Item", Header: "ITEM", accessor: "item", minWidth: 60 },
-  {
-    id: "Reimbursement",
-    Header: "REIMBURSEMENT",
-    accessor: (entry: any) => dataStore.formatCurrency(entry.claimedCost),
-    minWidth: 50,
+    minWidth: 60,
   },
   {
-    id: "Rejected",
-    Header: "REJECTED",
-    accessor: (entry: any) =>
-      entry.hasOwnProperty("rejected") ? entry.rejected.toString() : "",
+    id: "Item",
+    Header: "ITEMS",
+    accessor: (entry: ClaimEntry) =>
+      entry.items.map(item => item.name).join(", "),
     minWidth: 60,
   },
 ];
@@ -101,6 +101,7 @@ interface RemoteProps {
 interface State {
   relatedTasks?: Task[];
   showPreviousClaims: boolean;
+  confirmationCode: string;
 }
 
 class ConfigurablePayorDetails extends React.Component<
@@ -109,19 +110,39 @@ class ConfigurablePayorDetails extends React.Component<
 > {
   state: State = {
     showPreviousClaims: false,
+    confirmationCode: "",
   };
 
   componentDidMount() {
     this.props.registerActionCallback("approve", this._issuePayment);
-    this.props.registerActionCallback("markApprove", this._issuePayment);
+    this.props.registerActionCallback("markApprove", this._markPaid);
   }
+
+  _updateConfirmationCode = (e: ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      confirmationCode: e.target.value,
+    });
+  };
+
+  _markPaid = async (): Promise<ActionCallbackResult> => {
+    return {
+      success: true,
+      payments: [
+        {
+          amount: 0,
+          confirmationNumber: this.state.confirmationCode,
+          paymentType: PaymentType.MANUAL,
+        },
+      ],
+    };
+  };
 
   _issuePayment = async (): Promise<ActionCallbackResult> => {
     const { tasks } = this.props;
     const reimburseAmount = _getReimbursementTotal(tasks);
 
     const bundledTaskIds: string[] = [];
-    const bundledPayments: PaymentRecord[] = tasks.slice(1).map((task) => {
+    const bundledPayments: PaymentRecord[] = tasks.slice(1).map(task => {
       bundledTaskIds.push(task.id);
       return {
         paymentType: PaymentType.BUNDLED,
@@ -155,7 +176,7 @@ class ConfigurablePayorDetails extends React.Component<
       amount: reimburseAmount,
       reason: "PromotionPayment",
       metadata: {
-        taskIDs: tasks.map((task) => task.id),
+        taskIDs: tasks.map(task => task.id),
         payorName: dataStore.getBestUserName(),
         payeeName: tasks[0].site.name,
       },
@@ -188,16 +209,16 @@ class ConfigurablePayorDetails extends React.Component<
       dataStore
         .loadPreviousTasks(
           this.props.tasks[0].site.name,
-          this.props.tasks.map((task) => task.id)
+          this.props.tasks.map(task => task.id)
         )
-        .then((relatedTasks) => this.setState({ relatedTasks }));
+        .then(relatedTasks => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   _formatRelatedTasks = () => {
     return this.state.relatedTasks
-      ? this.state.relatedTasks.map((relatedTask) => {
+      ? this.state.relatedTasks.map(relatedTask => {
           return {
             Date: relatedTask.updatedAt
               ? new Date(
@@ -251,7 +272,7 @@ class ConfigurablePayorDetails extends React.Component<
             ]}
           />
         </div>
-        <Button
+        {/*<Button
           className="mainview_show_more_button"
           label={
             this.state.showPreviousClaims
@@ -283,6 +304,16 @@ class ConfigurablePayorDetails extends React.Component<
           ) : (
             <div className="mainview_details_text">Loading...</div>
           ))}
+          */}
+        <div className="mainview_details_text pharmacy_text">
+          M-Pesa Confirmation Code:
+        </div>
+        <input
+          type="text"
+          className="mainview_details_text"
+          value={this.state.confirmationCode}
+          onChange={this._updateConfirmationCode}
+        />
         {notesux}
         {this.props.children}
       </LabelWrapper>
@@ -293,14 +324,14 @@ class ConfigurablePayorDetails extends React.Component<
 export const PayorDetails = configuredComponent<
   DetailsComponentProps,
   RemoteProps
->(ConfigurablePayorDetails, (config) => ({
+>(ConfigurablePayorDetails, config => ({
   realPayments: config.enableRealPayments,
 }));
 
 function _getReimbursementTotal(tasks: Task[]): number {
   const claimAmounts = tasks
-    .map((task) =>
-      task.entries.map((entry) => {
+    .map(task =>
+      task.entries.map(entry => {
         return entry.rejected ? 0 : entry.claimedCost;
       })
     )

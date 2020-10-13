@@ -1,9 +1,16 @@
 import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
-import { ActionConfig, TaskConfig, defaultConfig } from "../store/config";
+import {
+  ActionConfig,
+  DataStoreType,
+  TaskConfig,
+  defaultConfig,
+} from "../store/config";
 import { DateRange, containsSearchTerm, withinDateRange } from "../util/search";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
+import { Flag, dataStore } from "../transport/datastore";
 import {
   PaymentRecord,
   Pharmacy,
@@ -12,7 +19,7 @@ import {
   TaskChangeRecord,
   TaskState,
 } from "../sharedtypes";
-import React, { Fragment, ReactNode } from "react";
+import React, { ChangeEvent, Fragment, ReactNode } from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import moment, { Moment } from "moment";
 
@@ -27,13 +34,31 @@ import SearchIcon from "../assets/search.png";
 import TaskList from "../Components/TaskList";
 import { ToolTipIcon } from "../Components/ToolTipIcon";
 import { configuredComponent } from "../util/configuredComponent";
-import { dataStore } from "../transport/datastore";
+import { confirmAlert } from "react-confirm-alert";
 import debounce from "../util/debounce";
 import { json2csv } from "json-2-csv";
 import memoize from "memoize-one";
 
+const SELECTED_ACTIONS_STORAGE_KEY = "selectedActions";
+
+type SelectedActions = {
+  [claimId: string]: ClaimActions;
+};
+
+export type ClaimActions = {
+  action?: ClaimAction;
+  flag: boolean;
+};
+
+export enum ClaimAction {
+  APPROVE = "APPROVE",
+  REJECT = "REJECT",
+  HOLD = "HOLD",
+}
+
 export interface DetailsComponentProps {
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   notesux: ReactNode;
   actionable?: boolean;
   registerActionCallback: (
@@ -42,6 +67,12 @@ export interface DetailsComponentProps {
   ) => void;
   hideImagesDefault?: boolean;
   showPreviousClaims: boolean;
+  updateSelectedAction: (
+    taskId: string,
+    action?: Partial<ClaimActions>
+  ) => void;
+  selectedActions: SelectedActions;
+  taskConfig: TaskConfig;
 }
 
 type Props = RouteComponentProps & {
@@ -57,12 +88,14 @@ type Props = RouteComponentProps & {
   filterByOwners: boolean;
   hideImagesDefault: boolean;
   showPreviousClaims: boolean;
+  taskConfig: TaskConfig;
 };
 
 type State = {
   allTasks: Task[];
   pharmacies: { [name: string]: Pharmacy };
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
   initialSelectedTaskID?: string;
@@ -80,6 +113,7 @@ class TaskPanel extends React.Component<Props, State> {
     allTasks: [],
     pharmacies: {},
     tasks: [],
+    flags: {},
     changes: [],
     selectedTaskIndex: -1,
     initialSelectedTaskID: undefined,
@@ -115,6 +149,9 @@ class TaskPanel extends React.Component<Props, State> {
       this.props.initialSelectedTaskID
     );
     if (selectedTaskId && this.props.initialSelectedTaskID !== selectedTaskId) {
+      console.log(
+        `selecedTaskId: ${selectedTaskId}, initialSelectedTaskID: ${this.props.initialSelectedTaskID}`
+      );
       this._pushHistory(selectedTaskId);
     }
     if (this.state.selectedTaskIndex !== selectedTaskIndex) {
@@ -125,14 +162,22 @@ class TaskPanel extends React.Component<Props, State> {
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(
-      tasks.map((t) => dataStore.getChanges(t.id))
+      tasks.map(t => dataStore.getChanges(t.id))
     );
     let { notes, selectedTaskIndex } = this.state;
 
+    const flags = await dataStore.loadFlags(tasks);
+    const sortedTasks = tasks.sort((t1, t2) => {
+      const v1 = flags[t1.id] ? -1 : 0;
+      const v2 = flags[t2.id] ? -1 : 0;
+      return v1 - v2;
+    });
+
     this.setState(
       {
-        allTasks: tasks,
-        tasks,
+        allTasks: sortedTasks,
+        tasks: sortedTasks,
+        flags,
         changes,
         selectedTaskIndex,
         notes,
@@ -142,6 +187,10 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _pushHistory(selectedTaskId?: string) {
+    console.log(
+      "Pushing history: " +
+        `/${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
+    );
     this.props.history.push(
       `/${this.props.baseUrl}${selectedTaskId ? "/" + selectedTaskId : ""}`
     );
@@ -237,10 +286,10 @@ class TaskPanel extends React.Component<Props, State> {
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     let newTasks: any[] = [];
 
-    this.state.allTasks.forEach((task) => {
+    this.state.allTasks.forEach(task => {
       if (this._checkOwner(task.site.name)) {
         let foundCount = 0;
-        task.entries.forEach((entry) => {
+        task.entries.forEach(entry => {
           (entry as any).pharmacy = task.site.name;
           if (
             withinDateRange(dateRange, entry) &&
@@ -270,17 +319,17 @@ class TaskPanel extends React.Component<Props, State> {
   _updateTasks = async () => {
     const { tasks } = this.state;
     const pharmacyNames: { [name: string]: boolean } = {};
-    tasks.forEach((task) => (pharmacyNames[task.site.name] = true));
+    tasks.forEach(task => (pharmacyNames[task.site.name] = true));
     const pharmacies: { [name: string]: Pharmacy } = {};
     await Promise.all(
-      Object.keys(pharmacyNames).map(async (siteName) => {
+      Object.keys(pharmacyNames).map(async siteName => {
         if (this.state.pharmacies.hasOwnProperty(siteName)) {
           return;
         }
         pharmacies[siteName] = await dataStore.getPharmacyDetails(siteName);
       })
     );
-    await new Promise((res) =>
+    await new Promise(res =>
       this.setState(
         { pharmacies: { ...this.state.pharmacies, ...pharmacies } },
         res
@@ -292,7 +341,7 @@ class TaskPanel extends React.Component<Props, State> {
     );
 
     const changes = await Promise.all(
-      filteredTasks.map((t) => dataStore.getChanges(t.id))
+      filteredTasks.map(t => dataStore.getChanges(t.id))
     );
 
     this.setState({
@@ -306,7 +355,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { allTasks } = this.state;
     this._inputRef.current!.value = "";
     const changes = await Promise.all(
-      allTasks.map((t) => dataStore.getChanges(t.id))
+      allTasks.map(t => dataStore.getChanges(t.id))
     );
 
     this.setState({
@@ -340,8 +389,8 @@ class TaskPanel extends React.Component<Props, State> {
     const fileName = this._getDownloadFilename();
     let rows: any[] = [];
     const json2csvOptions = { checkSchemaDifferences: false };
-    tasks.forEach((task) => {
-      task.entries.forEach((entry) => {
+    tasks.forEach(task => {
+      task.entries.forEach(entry => {
         let entryCopy = Object.assign(
           {
             id: task.id,
@@ -377,7 +426,7 @@ class TaskPanel extends React.Component<Props, State> {
 
   _onOwnersFilterToggle = () => {
     this.setState(
-      (state) => ({
+      state => ({
         disableOwnersFilter: !state.disableOwnersFilter,
       }),
       this._updateTasks
@@ -386,6 +435,8 @@ class TaskPanel extends React.Component<Props, State> {
 
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
+    const showDownloadCSV =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <div
@@ -416,7 +467,7 @@ class TaskPanel extends React.Component<Props, State> {
               label={"ⓘ"}
               iconClassName="tooltipicon_information"
               tooltip={
-                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: item:e, patient:ru"
+                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: \"item:RDT patient:Jess\""
               }
             />
           </div>
@@ -446,12 +497,14 @@ class TaskPanel extends React.Component<Props, State> {
             onClick={this._clearSearch}
           />
 
-          <Button
-            className="mainview_clear_search_button"
-            labelImg={DownloadImg}
-            label={"Download CSV"}
-            onClick={this._downloadCSV}
-          />
+          {showDownloadCSV && (
+            <Button
+              className="mainview_clear_search_button"
+              labelImg={DownloadImg}
+              label={"Download CSV"}
+              onClick={this._downloadCSV}
+            />
+          )}
         </div>
       </div>
     );
@@ -465,7 +518,7 @@ class TaskPanel extends React.Component<Props, State> {
     if (this.props.config.groupTasksByPharmacy) {
       return groupTasksByPharmacy(tasks);
     } else {
-      return tasks.map((task) => [task]);
+      return tasks.map(task => [task]);
     }
   };
 
@@ -513,11 +566,13 @@ class TaskPanel extends React.Component<Props, State> {
                 hideImagesDefault={this.props.hideImagesDefault}
                 showPreviousClaims={this.props.showPreviousClaims}
                 tasks={this._groupTasks()[selectedTaskIndex]}
+                flags={this.state.flags}
                 notesux={notesux}
                 notes={notes}
                 detailsComponent={this.props.detailsComponent}
                 actions={this.props.actions}
                 key={this.state.tasks[selectedTaskIndex].id}
+                taskConfig={this.props.taskConfig}
               />
             )}
           </div>
@@ -531,6 +586,7 @@ export default withRouter(TaskPanel);
 
 interface DetailsWrapperProps {
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   notes: string;
   notesux: ReactNode;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
@@ -538,15 +594,16 @@ interface DetailsWrapperProps {
   remoteConfig: Partial<RemoteConfig>;
   hideImagesDefault: boolean;
   showPreviousClaims: boolean;
+  taskConfig: TaskConfig;
 }
 
 interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
+  selectedActions: SelectedActions;
 }
 
 export interface ActionCallbackResult {
   success: boolean;
-  tasks?: Task[];
   payments?: PaymentRecord[];
 }
 
@@ -556,11 +613,26 @@ class DetailsWrapper extends React.Component<
 > {
   state: DetailsWrapperState = {
     buttonsBusy: {},
+    selectedActions: getSavedSelectedActions(this.props.taskConfig.taskState),
   };
 
   _actionCallbacks: {
     [key: string]: () => Promise<ActionCallbackResult>;
   } = [] as any;
+
+  _updateSelectedAction = (taskId: string, action?: Partial<ClaimActions>) => {
+    this.setState(state => {
+      const { selectedActions } = this.state;
+      const newActions = { ...selectedActions };
+      const oldAction = newActions[taskId] || { flag: false };
+      const newAction = Object.assign({}, oldAction, action);
+      newActions[taskId] = newAction;
+      saveSelectedActions(this.props.taskConfig.taskState, newActions);
+      return {
+        selectedActions: newActions,
+      };
+    });
+  };
 
   _registerActionCallback = (
     key: string,
@@ -570,36 +642,162 @@ class DetailsWrapper extends React.Component<
   };
 
   _onActionClick = async (key: string) => {
-    this.setState((state) => ({
+    this.setState(state => ({
       buttonsBusy: {
         ...state.buttonsBusy,
         [key]: true,
       },
     }));
+    await this._performActions(key);
+    this.setState(state => ({
+      buttonsBusy: {
+        ...state.buttonsBusy,
+        [key]: false,
+      },
+    }));
+  };
+
+  _performActions = async (key: string) => {
     let tasks: Task[] = this.props.tasks;
-    let result: ActionCallbackResult;
+    let action = this.props.actions[key];
+    let reviewedCount = tasks.filter(
+      task =>
+        this.state.selectedActions[task.id] &&
+        this.state.selectedActions[task.id].action === ClaimAction.APPROVE
+    ).length;
+    const additionalReviewsNeeded =
+      Math.ceil(tasks.length * this.props.taskConfig.manualReviewMinimumRatio) -
+      reviewedCount;
+    if (
+      action.claimAction === ClaimAction.APPROVE &&
+      additionalReviewsNeeded > 0
+    ) {
+      const approveBelowThreshold = await new Promise(res =>
+        confirmAlert({
+          title: `${additionalReviewsNeeded} more approvals needed`,
+          message:
+            "You have manually reviewed fewer than 20% of the claims for this facility, are you sure you want to continue?",
+          buttons: [
+            {
+              label: "Yes",
+              onClick: () => res(true),
+            },
+            {
+              label: "No",
+              onClick: () => res(false),
+            },
+          ],
+        })
+      );
+      if (!approveBelowThreshold) {
+        return;
+      }
+    }
+    if (action.claimAction === ClaimAction.REJECT) {
+      const confirmReject = await new Promise(res =>
+        confirmAlert({
+          title: "Are you sure you want to reject all of these claims?",
+          message:
+            "This will reject every unreviewed claim in the batch, are you sure you want to continue?",
+          customUI: ({ onClose }) => (
+            <RejectAllDialog
+              confirm={value => {
+                res(value);
+                onClose();
+              }}
+            />
+          ),
+          buttons: [
+            {
+              label: "Yes",
+              onClick: () => res(true),
+            },
+            {
+              label: "No",
+              onClick: () => res(false),
+            },
+          ],
+        })
+      );
+      if (!confirmReject) {
+        return;
+      }
+    }
+    let approvedTasks = tasks.filter(
+      task =>
+        this.state.selectedActions[task.id] &&
+        this.state.selectedActions[task.id].action === ClaimAction.APPROVE
+    );
+    let rejectedTasks = tasks.filter(
+      task =>
+        this.state.selectedActions[task.id] &&
+        this.state.selectedActions[task.id].action === ClaimAction.REJECT
+    );
+    let flaggedTasks = tasks.filter(
+      task =>
+        this.state.selectedActions[task.id] &&
+        this.state.selectedActions[task.id].flag
+    );
+    let unreviewedTasks = tasks.filter(
+      task =>
+        !this.state.selectedActions[task.id] ||
+        this.state.selectedActions[task.id].action === undefined
+    );
+
+    let result: ActionCallbackResult | undefined = undefined;
     if (this._actionCallbacks[key]) {
       result = await this._actionCallbacks[key]();
-      this.setState((state) => ({
-        buttonsBusy: {
-          ...state.buttonsBusy,
-          [key]: false,
-        },
-      }));
-      tasks = result.tasks || tasks;
     }
 
-    await Promise.all(
-      tasks.map((task, index) =>
-        dataStore.changeTaskState(
-          task,
-          this.props.actions[key].nextTaskState,
-          this.props.notes,
-          result && result.payments ? result.payments[index] : undefined
-        )
-      )
+    const approveAction = Object.values(this.props.actions).find(
+      action => action.claimAction === ClaimAction.APPROVE
+    );
+    const rejectAction = Object.values(this.props.actions).find(
+      action => action.claimAction === ClaimAction.REJECT
+    );
+
+    if (!approveAction || !rejectAction) {
+      throw new Error("Missing action config");
+    }
+
+    await this.performAction(
+      action.claimAction,
+      approveAction,
+      approvedTasks,
+      unreviewedTasks,
+      flaggedTasks,
+      result && result.payments && result.payments[0]
+    );
+    await this.performAction(
+      action.claimAction,
+      rejectAction,
+      rejectedTasks,
+      unreviewedTasks,
+      flaggedTasks
     );
   };
+
+  async performAction(
+    selectedClaimAction: ClaimAction,
+    action: ActionConfig,
+    reviewedTasks: Task[],
+    unreviewedTasks: Task[],
+    flaggedTasks: Task[],
+    payment?: PaymentRecord
+  ) {
+    let tasks = [...reviewedTasks];
+    if (action.claimAction === selectedClaimAction) {
+      tasks.push(...unreviewedTasks);
+    }
+    await dataStore.changeTaskState(
+      tasks,
+      reviewedTasks,
+      selectedClaimAction === ClaimAction.APPROVE ? flaggedTasks : [],
+      action.nextTaskState,
+      this.props.notes,
+      payment
+    );
+  }
 
   render() {
     const buttons = Object.entries(this.props.actions).filter(
@@ -618,9 +816,13 @@ class DetailsWrapper extends React.Component<
         hideImagesDefault={this.props.hideImagesDefault}
         showPreviousClaims={this.props.showPreviousClaims}
         tasks={this.props.tasks}
+        flags={this.props.flags}
         notesux={this.props.notesux}
         key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}
+        updateSelectedAction={this._updateSelectedAction}
+        selectedActions={this.state.selectedActions}
+        taskConfig={this.props.taskConfig}
       >
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (
@@ -646,8 +848,8 @@ const ConfiguredDetailsWrapper = configuredComponent<
 >(DetailsWrapper, (config, props) => {
   const configProps: Partial<RemoteConfig> = {};
   Object.values(props.actions)
-    .map((action) => action.disableOnConfig || action.enableOnConfig)
-    .forEach((configName) => {
+    .map(action => action.disableOnConfig || action.enableOnConfig)
+    .forEach(configName => {
       if (configName) {
         (configProps as any)[configName] = (config as any)[configName];
       }
@@ -655,16 +857,45 @@ const ConfiguredDetailsWrapper = configuredComponent<
   return { remoteConfig: configProps };
 });
 
+const firstClaimTime = (task: Task): number => {
+  let firstTime = Number.MAX_VALUE;
+  task.entries.forEach(
+    claim => (firstTime = Math.min(firstTime, claim.startTime))
+  );
+  return firstTime;
+};
+
+const compareTasksByTime = (taskA: Task, taskB: Task): number => {
+  const timeA = firstClaimTime(taskA);
+  const timeB = firstClaimTime(taskB);
+  return timeA - timeB;
+};
+
 const groupTasksByPharmacy = memoize((tasks: Task[]) => {
   const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
-  tasks.forEach((task) => {
+  tasks.forEach(task => {
     if (tasksByPharmacy[task.site.name]) {
       tasksByPharmacy[task.site.name].push(task);
     } else {
       tasksByPharmacy[task.site.name] = [task];
     }
   });
-  return Object.values(tasksByPharmacy);
+  Object.keys(tasksByPharmacy).forEach(
+    name =>
+      (tasksByPharmacy[name] = tasksByPharmacy[name].sort(compareTasksByTime))
+  );
+  return Object.values(tasksByPharmacy).sort((tasksA, tasksB) => {
+    const timeA = firstClaimTime(tasksA[0]);
+    const timeB = firstClaimTime(tasksB[0]);
+    const dateA = new Date(timeA).toDateString();
+    const dateB = new Date(timeB).toDateString();
+    if (dateA !== dateB) {
+      // Ascending date order
+      return timeA < timeB ? -1 : 1;
+    }
+    // Descending claim count order, if the date is the same
+    return tasksB.length - tasksA.length;
+  });
 });
 
 const computeSelectedTaskId = memoize(
@@ -678,8 +909,8 @@ const computeSelectedTaskId = memoize(
       newSelectedTaskIndex = -1;
       selectedTaskId = undefined;
     } else {
-      newSelectedTaskIndex = groupedTasks.findIndex((tasks) =>
-        tasks.some((task) => task.id === selectedTaskId)
+      newSelectedTaskIndex = groupedTasks.findIndex(tasks =>
+        tasks.some(task => task.id === selectedTaskId)
       );
       if (newSelectedTaskIndex === -1) {
         newSelectedTaskIndex = Math.min(
@@ -692,3 +923,97 @@ const computeSelectedTaskId = memoize(
     return { selectedTaskIndex: newSelectedTaskIndex, selectedTaskId };
   }
 );
+
+function getSelectedActionsStorageKey(taskState: TaskState) {
+  return `${SELECTED_ACTIONS_STORAGE_KEY}_${taskState}`;
+}
+
+function getSavedSelectedActions(taskState: TaskState): SelectedActions {
+  const actionsString = localStorage.getItem(
+    getSelectedActionsStorageKey(taskState)
+  );
+  if (!actionsString) {
+    return {};
+  }
+  return JSON.parse(actionsString);
+}
+
+function saveSelectedActions(
+  taskState: TaskState,
+  selectedActions: SelectedActions
+) {
+  localStorage.setItem(
+    getSelectedActionsStorageKey(taskState),
+    JSON.stringify(selectedActions)
+  );
+}
+
+interface RejectAllDialogProps {
+  confirm: (value: boolean) => void;
+}
+interface RejectAllDialogState {
+  textboxValue: string;
+  showValidation: boolean;
+}
+class RejectAllDialog extends React.Component<
+  RejectAllDialogProps,
+  RejectAllDialogState
+> {
+  state: RejectAllDialogState = {
+    textboxValue: "",
+    showValidation: false,
+  };
+
+  _updateTextboxValue = (e: ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      textboxValue: e.target.value,
+    });
+  };
+
+  render() {
+    const { confirm } = this.props;
+    const { textboxValue, showValidation } = this.state;
+    return (
+      <div className="react-confirm-alert-body">
+        <h1>Are you sure you want to reject all of these claims?</h1>
+        <p>
+          This will reject every unreviewed claim in the batch, are you sure you
+          want to continue?
+        </p>
+        <div>
+          Type "Reject All" to confirm:{" "}
+          <input
+            type="text"
+            value={textboxValue}
+            onChange={this._updateTextboxValue}
+          ></input>
+          {showValidation && (
+            <div style={{ color: "red" }}>
+              Fill out the textbox above to continue
+            </div>
+          )}
+        </div>
+        <div className="react-confirm-alert-button-group">
+          <button
+            onClick={() => {
+              if (textboxValue.toLowerCase() === "reject all") {
+                confirm(true);
+              } else {
+                this.setState({ showValidation: true });
+              }
+            }}
+          >
+            Reject All
+          </button>
+          <button
+            onClick={() => {
+              confirm(false);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+}

@@ -11,11 +11,19 @@ import {
 import { DataStoreConfig, DataStoreType } from "../store/config";
 
 import { FirebaseDataStore } from "./firestore";
+import { RestDataStore } from "./rest";
+import { VoidExpression } from "typescript";
 
 export type ActiveTask = {
   id: string;
   name: string;
   since: firebase.firestore.Timestamp;
+};
+
+export type Flag = {
+  severity: "ALERT" | "WARN";
+  description: string;
+  manual?: boolean;
 };
 
 export interface PatientHistory {
@@ -36,16 +44,23 @@ export function initializeStore(config: DataStoreConfig): DataStore {
       firebaseDataStore.initializeStore();
       dataStore = firebaseDataStore;
       return dataStore;
-    default:
-      throw new Error("Unsupported DataStore type: " + config.type);
+    case DataStoreType.REST:
+      dataStore = new RestDataStore(config.endpointRoot);
+      return dataStore;
   }
 }
 
 export interface DataStore {
+  onAuthStateChanged(callback: (authenticated: boolean) => void): void;
+
+  logout: () => Promise<void>;
+
   userRoles: () => Promise<UserRole[]>;
 
   changeTaskState: (
-    task: Task,
+    tasks: Task[],
+    reviewedTasks: Task[],
+    flaggedTasks: Task[],
     newState: TaskState,
     notes: string,
     payment?: PaymentRecord
@@ -67,6 +82,8 @@ export interface DataStore {
   getAdminLogs: () => Promise<AdminLogEvent[]>;
 
   loadTasks: (taskState: TaskState) => Promise<Task[]>;
+
+  loadFlags: (tasks: Task[]) => Promise<{ [taskId: string]: Flag[] }>;
 
   loadPreviousTasks: (
     siteName: string,
