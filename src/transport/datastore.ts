@@ -8,14 +8,20 @@ import {
   TaskState,
   UserRole,
 } from "../sharedtypes";
-import { DataStoreConfig, DataStoreType } from "../store/config";
 
-import { FirebaseDataStore } from "./firestore";
+import firebase from "firebase";
+import { functions } from "firebase";
 
 export type ActiveTask = {
   id: string;
   name: string;
   since: firebase.firestore.Timestamp;
+};
+
+export type Flag = {
+  severity: "ALERT" | "WARN";
+  description: string;
+  manual?: boolean;
 };
 
 export interface PatientHistory {
@@ -40,96 +46,134 @@ export function initializeStore(config: DataStoreConfig): DataStore {
       throw new Error("Unsupported DataStore type: " + config.type);
   }
 }
+export abstract class DataStore {
+  // Required abstract methods
+  abstract onAuthStateChanged(callback: (authenticated: boolean) => void): void;
 
-export interface DataStore {
-  userRoles: () => Promise<UserRole[]>;
+  abstract logout(): Promise<void>;
 
-  changeTaskState: (
-    task: Task,
+  abstract userRoles(): Promise<UserRole[]>;
+
+  abstract changeTaskState(
+    tasks: Task[],
+    reviewedTasks: Task[],
+    flaggedTasks: Task[],
     newState: TaskState,
     notes: string,
     payment?: PaymentRecord
-  ) => Promise<void>;
+  ): Promise<void>;
 
-  getUserEmail: () => string;
+  abstract getUserEmail(): string;
 
-  getBestUserName: () => string;
+  abstract getBestUserName(): string;
 
-  subscribeToTasks: (
+  abstract subscribeToTasks(
     state: TaskState,
     callback: (tasks: Task[]) => void
-  ) => () => void;
+  ): () => void;
 
-  getChanges: (taskID: string) => Promise<TaskChangeRecord[]>;
+  abstract loadTasks(taskState: TaskState): Promise<Task[]>;
 
-  getAllChanges: () => Promise<TaskChangeRecord[]>;
+  abstract loadFlags(tasks: Task[]): Promise<{ [taskId: string]: Flag[] }>;
 
-  getAdminLogs: () => Promise<AdminLogEvent[]>;
-
-  loadTasks: (taskState: TaskState) => Promise<Task[]>;
-
-  loadPreviousTasks: (
-    siteName: string,
-    currentIds: string[]
-  ) => Promise<Task[]>;
-
-  setRoles: (email: string, roles: UserRole[]) => Promise<string>;
-
-  issuePayments: (
-    recipients: PaymentRecipient[]
-  ) => Promise<firebase.functions.HttpsCallableResult>;
-
-  logAdminEvent: (desc: string) => Promise<void>;
-
-  toServerTimestamp: (date: Date) => firebase.firestore.Timestamp;
-
-  dateFromServerTimestamp: (timestamp: firebase.firestore.Timestamp) => Date;
-
-  formatCurrency: (amount: number) => string;
-
-  logActiveTaskView: (taskID: string) => Promise<void>;
-
-  subscribeActiveTasks: (
-    onActiveTasksChanged: (tasks: ActiveTask[]) => void
-  ) => () => void;
-
-  subscribeToPharmacyDetails: (
-    pharmacyId: string,
-    callback: (pharmacy: Pharmacy) => void
-  ) => () => void;
-
-  getPharmacyDetails: (pharmacyId: string) => Promise<Pharmacy>;
-
-  setPharmacyDetails: (pharmacyId: string, pharmacy: Pharmacy) => Promise<void>;
-
-  getAllTasks: (taskIds: string[]) => Promise<Task[]>;
-
-  getPatientHistories: (
-    patientIds: string[]
-  ) => Promise<{ [id: string]: PatientHistory }>;
-
-  getPharmacyClaims(siteName: string): Promise<Task[]>;
-
-  saveNotes: (categoryName: string, notes: string[]) => Promise<void>;
-
-  getNotes: (categoryName: string) => Promise<string[]>;
-
-  subscribeToNotes: (
-    categoryName: string,
-    callback: (notes: string[]) => void
-  ) => () => void;
-
-  setClaimNotes: (
+  abstract setClaimNotes(
     task: Task,
     claimIndex: number,
     notes: string
-  ) => Promise<void>;
+  ): Promise<void>;
 
-  setRejectedClaim: (
+  // Optional Methods with no-op default implementations
+  async getChanges(taskID: string): Promise<TaskChangeRecord[]> {
+    return [];
+  }
+
+  async getAllChanges(): Promise<TaskChangeRecord[]> {
+    return [];
+  }
+
+  async getAdminLogs(): Promise<AdminLogEvent[]> {
+    return [];
+  }
+
+  async loadPreviousTasks(
+    siteName: string,
+    currentIds: string[]
+  ): Promise<Task[]> {
+    return [];
+  }
+
+  async setRoles(email: string, roles: UserRole[]): Promise<string> {
+    return "";
+  }
+
+  async issuePayments(
+    recipients: PaymentRecipient[]
+  ): Promise<functions.HttpsCallableResult> {
+    throw new Error("issuePayments not implemented");
+  }
+
+  dateFromServerTimestamp(timestamp: firebase.firestore.Timestamp): Date {
+    return timestamp.toDate();
+  }
+
+  async logAdminEvent(desc: string): Promise<void> {}
+
+  async logActiveTaskView(taskID: string): Promise<void> {}
+
+  subscribeActiveTasks(
+    onActiveTasksChanged: (tasks: ActiveTask[]) => void
+  ): () => void {
+    return () => null;
+  }
+
+  subscribeToPharmacyDetails(
+    pharmacyId: string,
+    callback: (pharmacy: Pharmacy) => void
+  ): () => void {
+    return () => null;
+  }
+  async getPharmacyDetails(pharmacyId: string): Promise<Pharmacy> {
+    return {
+      notes: "",
+      owners: [],
+    };
+  }
+
+  async setPharmacyDetails(
+    pharmacyId: string,
+    pharmacy: Pharmacy
+  ): Promise<void> {}
+
+  async getAllTasks(taskIds: string[]): Promise<Task[]> {
+    return [];
+  }
+
+  async getPatientHistories(
+    patientIds: string[]
+  ): Promise<{ [id: string]: PatientHistory }> {
+    return {};
+  }
+
+  async getPharmacyClaims(siteName: string): Promise<Task[]> {
+    return [];
+  }
+
+  async saveNotes(categoryName: string, notes: string[]): Promise<void> {}
+
+  async getNotes(categoryName: string): Promise<string[]> {
+    return [];
+  }
+
+  subscribeToNotes(
+    categoryName: string,
+    callback: (notes: string[]) => void
+  ): () => void {
+    return () => {};
+  }
+
+  async setRejectedClaim(
     task: Task,
     claimIndex: number,
     rejected: boolean
-  ) => Promise<void>;
-
-  saveTask: (task: Task, id: string) => Promise<void>;
+  ): Promise<void> {}
 }
