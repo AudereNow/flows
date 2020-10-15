@@ -1,6 +1,8 @@
-import React from "react";
 import "./ImageRow.css";
+
 import TextItem, { TextData } from "./TextItem";
+
+import React from "react";
 import ZoomableImage from "./ZoomableImage";
 
 interface Props {
