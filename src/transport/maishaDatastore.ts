@@ -104,18 +104,18 @@ export class RestDataStore extends DataStore {
     if (tasks.length === 0) {
       return;
     }
-    const entries = tasks.map(task => task.entries).flat();
-    const reviewedEntries = reviewedTasks.map(task => task.entries).flat();
-    const flaggedEntries = flaggedTasks.map(task => task.entries).flat();
-    const claimIds = entries
-      .map(entry => entry.claimID)
-      .filter(id => id) as string[];
-    const reviewedClaimIds = reviewedEntries
-      .map(entry => entry.claimID)
-      .filter(id => id) as string[];
-    const flaggedClaimIds = flaggedEntries
-      .map(entry => entry.claimID)
-      .filter(id => id) as string[];
+    const claimIds = tasks
+        .map(task => task.entries.map(entry => entry.claimID))
+        .flat()
+        .filter(id => id);
+    const reviewedClaimIds = reviewedTasks
+        .map(task => task.entries.map(entry => entry.claimID))
+        .flat()
+        .filter(id => id);
+    const flaggedClaimIds = flaggedTasks
+        .map(task => task.entries.map(entry => entry.claimID))
+        .flat()
+        .filter(id => id);
     if (newState === TaskState.COMPLETED) {
       // Changing to COMPLETED changes the paid state, not approval status
       if (!payment) {
