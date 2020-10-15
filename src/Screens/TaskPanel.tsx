@@ -459,7 +459,7 @@ class TaskPanel extends React.Component<Props, State> {
               label={"ⓘ"}
               iconClassName="tooltipicon_information"
               tooltip={
-                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: item:e, patient:ru"
+                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: \"item:RDT patient:Jess\""
               }
             />
           </div>
