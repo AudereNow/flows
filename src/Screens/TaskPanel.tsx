@@ -518,7 +518,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { selectedTaskIndex } = this._getSelectedTask();
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
-      selectedTaskIndex >= 0 ? (
+      this.props.taskConfig.showBatchNotes && selectedTaskIndex >= 0 ? (
         <Notes
           changes={this.state.changes[selectedTaskIndex]}
           actionable={actionable}
@@ -853,6 +853,20 @@ const ConfiguredDetailsWrapper = configuredComponent<
   return { remoteConfig: configProps };
 });
 
+const firstClaimTime = (task: Task): number => {
+  let firstTime = Number.MAX_VALUE;
+  task.entries.forEach(
+    claim => (firstTime = Math.min(firstTime, claim.startTime))
+  );
+  return firstTime;
+};
+
+const compareTasksByTime = (taskA: Task, taskB: Task): number => {
+  const timeA = firstClaimTime(taskA);
+  const timeB = firstClaimTime(taskB);
+  return timeA - timeB;
+};
+
 const groupTasksByPharmacy = memoize((tasks: Task[]) => {
   const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
   tasks.forEach(task => {
@@ -862,7 +876,22 @@ const groupTasksByPharmacy = memoize((tasks: Task[]) => {
       tasksByPharmacy[task.site.name] = [task];
     }
   });
-  return Object.values(tasksByPharmacy);
+  Object.keys(tasksByPharmacy).forEach(
+    name =>
+      (tasksByPharmacy[name] = tasksByPharmacy[name].sort(compareTasksByTime))
+  );
+  return Object.values(tasksByPharmacy).sort((tasksA, tasksB) => {
+    const timeA = firstClaimTime(tasksA[0]);
+    const timeB = firstClaimTime(tasksB[0]);
+    const dateA = new Date(timeA).toDateString();
+    const dateB = new Date(timeB).toDateString();
+    if (dateA !== dateB) {
+      // Ascending date order
+      return timeA < timeB ? -1 : 1;
+    }
+    // Descending claim count order, if the date is the same
+    return tasksB.length - tasksA.length;
+  });
 });
 
 const computeSelectedTaskId = memoize(
