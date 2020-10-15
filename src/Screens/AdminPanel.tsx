@@ -122,7 +122,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
 
   componentDidUpdate() {
     //@ts-ignore
-    const tabName = this.props.match.params.tab;
+    const tabName = this.props.match.params.id;
     if (!tabName) {
       this.props.history.push(`/admin/${ADMIN_TABS[0]}`);
     }
@@ -306,7 +306,7 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
   render() {
     const { allHistory } = this.state;
     // @ts-ignore
-    const tabName = this.props.match.params.tab;
+    const tabName = this.props.match.params.id;
     const selectedTabIndex = tabName ? ADMIN_TABS.indexOf(tabName) : 0;
 
     return (
