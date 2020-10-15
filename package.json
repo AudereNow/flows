@@ -30,9 +30,7 @@
     "typescript": "^3.6.3"
   },
   "scripts": {
-    "start": "npm-run-all --parallel start:firebase start:react",
-    "start:firebase": "firebase serve",
-    "start:react": "react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build; git rev-list -n 1 HEAD > build/about.txt; date >> build/about.txt",
     "test": "react-scripts test",
     "typecheck": "tsc --noEmit",
