@@ -2,13 +2,14 @@ import "firebase/auth";
 import "firebase/storage";
 import "./TopBar.css";
 
+import { DataStoreType, defaultConfig } from "../store/config";
+
 import { FirebaseDataStore } from "../transport/firestore";
 // @ts-ignore
 import LoadingOverlay from "react-loading-overlay"; // no available type data
 import React from "react";
 import { UserRole } from "../sharedtypes";
 import { dataStore } from "../transport/datastore";
-import firebase from "firebase/app";
 import logo from "../assets/maishalogo.png";
 import logoutIcon from "../assets/logout.png";
 import uploadIcon from "../assets/uploadcsv.png";
@@ -35,7 +36,7 @@ class TopBar extends React.Component<{}, State> {
 
   _handleLogout = async () => {
     try {
-      await firebase.auth().signOut();
+      await dataStore.logout();
     } catch (e) {
       alert(`Error logging out: ${e}`);
     }

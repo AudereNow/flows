@@ -2,7 +2,7 @@ import "./ListItem.css";
 
 import React from "react";
 import { Task } from "../sharedtypes";
-import { dataStore } from "../transport/datastore";
+import { formatCurrency } from "../util/currency";
 
 export class ListItem extends React.Component<{
   tasks: Task[];
@@ -33,7 +33,7 @@ export class ListItem extends React.Component<{
           </span>
         </div>
         <div>
-          {"Total Reimbursement: " + dataStore.formatCurrency(claimsTotal)}
+          {"Total Reimbursement: " + formatCurrency(claimsTotal)}
         </div>
       </div>
     );

@@ -4,7 +4,7 @@ import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
 
 import { ClaimEntry, Task } from "../sharedtypes";
-import { PatientHistory, dataStore } from "../transport/datastore";
+import { Flag, PatientHistory } from "../transport/baseDatastore";
 import TextItem, { SearchContext } from "../Components/TextItem";
 
 import Button from "../Components/Button";
@@ -18,7 +18,9 @@ import PharmacyInfo from "../Components/PharmacyInfo";
 import React from "react";
 import ReactTable from "react-table";
 import { containsSearchTerm } from "../util/search";
+import { dataStore } from "../transport/datastore";
 import debounce from "../util/debounce";
+import { formatCurrency } from "../util/currency";
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 
@@ -31,8 +33,7 @@ const PATIENT_HISTORY_TABLE_COLUMNS = [
   {
     Header: "TOTAL AMOUNT",
     id: "totalAmount",
-    accessor: (row: any) =>
-      dataStore.formatCurrency(parseFloat(row.totalAmount)),
+    accessor: (row: any) => formatCurrency(parseFloat(row.totalAmount)),
     minWidth: 60,
   },
   { Header: "NUMBER OF CLAIMS", accessor: "claimCount", minWidth: 70 },
