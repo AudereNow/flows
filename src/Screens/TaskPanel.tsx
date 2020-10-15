@@ -26,6 +26,7 @@ import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import ClearSearchImg from "../assets/close.png";
 import DownloadImg from "../assets/downloadcsv.png";
+import { Flag } from "../transport/baseDatastore";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
 import { SearchContext } from "../Components/TextItem";
@@ -40,6 +41,7 @@ import memoize from "memoize-one";
 
 export interface DetailsComponentProps {
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   notesux: ReactNode;
   actionable?: boolean;
   registerActionCallback: (
@@ -71,6 +73,7 @@ type State = {
   allTasks: Task[];
   pharmacies: { [name: string]: Pharmacy };
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   changes: TaskChangeRecord[][];
   selectedTaskIndex: number;
   initialSelectedTaskID?: string;
@@ -88,6 +91,7 @@ class TaskPanel extends React.Component<Props, State> {
     allTasks: [],
     pharmacies: {},
     tasks: [],
+    flags: {},
     changes: [],
     selectedTaskIndex: -1,
     initialSelectedTaskID: undefined,
@@ -137,10 +141,18 @@ class TaskPanel extends React.Component<Props, State> {
     );
     let { notes, selectedTaskIndex } = this.state;
 
+    const flags = await dataStore.loadFlags(tasks);
+    const sortedTasks = tasks.sort((t1, t2) => {
+      const v1 = flags[t1.id] ? -1 : 0;
+      const v2 = flags[t2.id] ? -1 : 0;
+      return v1 - v2;
+    });
+
     this.setState(
       {
-        allTasks: tasks,
-        tasks,
+        allTasks: sortedTasks,
+        tasks: sortedTasks,
+        flags,
         changes,
         selectedTaskIndex,
         notes,
@@ -491,7 +503,6 @@ class TaskPanel extends React.Component<Props, State> {
           cannedNotes={this.state.cannedTaskNotes}
         />
       ) : null;
-
     return (
       <SearchContext.Provider
         value={{
@@ -520,6 +531,7 @@ class TaskPanel extends React.Component<Props, State> {
               hideImagesDefault={this.props.hideImagesDefault}
               showPreviousClaims={this.props.showPreviousClaims}
               tasks={this._groupTasks()[selectedTaskIndex]}
+              flags={this.state.flags}
               notesux={notesux}
               notes={notes}
               detailsComponent={this.props.detailsComponent}
@@ -538,6 +550,7 @@ export default withRouter(TaskPanel);
 
 interface DetailsWrapperProps {
   tasks: Task[];
+  flags: { [taskId: string]: Flag[] };
   notes: string;
   notesux: ReactNode;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
@@ -626,6 +639,7 @@ class DetailsWrapper extends React.Component<
         hideImagesDefault={this.props.hideImagesDefault}
         showPreviousClaims={this.props.showPreviousClaims}
         tasks={this.props.tasks}
+        flags={this.props.flags}
         notesux={this.props.notesux}
         key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}

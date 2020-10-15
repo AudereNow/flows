@@ -2,6 +2,7 @@ import "react-dates/initialize";
 import "react-dates/lib/css/_datepicker.css";
 import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
+import "./AuditorPanel.css";
 
 import { ClaimEntry, Task } from "../sharedtypes";
 import { Flag, PatientHistory } from "../transport/baseDatastore";
@@ -204,11 +205,23 @@ export class AuditorDetails extends React.Component<
     );
   };
 
+  _updateFlag = (value: string, checked: boolean) => {
+    const {
+      claimId,
+    }: { claimId: string; claimAction: ClaimAction } = JSON.parse(value);
+    this.props.updateSelectedAction(claimId, { flag: checked });
+  };
+
   _renderPatientDetails = (patient: PatientInfo, index: number) => {
     const { searchTermDetails, showImages } = this.state;
     const { tasks } = this.props;
     let patientProps = [];
     const entry = patient.currentClaims[0].claims[0];
+    const flags: Flag[] = patient.currentClaims
+      .map(group => group.claims.map(claim => this.props.flags[claim.claimID!]))
+      .flat()
+      .flat()
+      .filter(flag => flag);
     const disabledCheckbox =
       tasks[0].state === "REJECTED" || tasks[0].state === "COMPLETED"
         ? true
@@ -236,6 +249,11 @@ export class AuditorDetails extends React.Component<
     return (
       <LabelWrapper key={JSON.stringify("entry_" + index)} disableScroll={true}>
         <div className="mainview_padded">
+          {flags.length > 0 && (
+            <div className="mainview_row mainview_flag_box">
+              <strong>{flags.map(flag => flag.description).join(", ")}</strong>
+            </div>
+          )}
           <div className="mainview_row">
             <TextItem
               data={{
