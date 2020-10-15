@@ -125,7 +125,7 @@ class TaskPanel extends React.Component<Props, State> {
 
   _onTasksChanged = async (tasks: Task[]) => {
     const changes = await Promise.all(
-      tasks.map((t) => dataStore.getChanges(t.id))
+      tasks.map(t => dataStore.getChanges(t.id))
     );
     let { notes, selectedTaskIndex } = this.state;
 
@@ -237,10 +237,10 @@ class TaskPanel extends React.Component<Props, State> {
   _computeFilteredTasks = (searchTerm: string, dateRange: DateRange) => {
     let newTasks: any[] = [];
 
-    this.state.allTasks.forEach((task) => {
+    this.state.allTasks.forEach(task => {
       if (this._checkOwner(task.site.name)) {
         let foundCount = 0;
-        task.entries.forEach((entry) => {
+        task.entries.forEach(entry => {
           (entry as any).pharmacy = task.site.name;
           if (
             withinDateRange(dateRange, entry) &&
@@ -270,17 +270,17 @@ class TaskPanel extends React.Component<Props, State> {
   _updateTasks = async () => {
     const { tasks } = this.state;
     const pharmacyNames: { [name: string]: boolean } = {};
-    tasks.forEach((task) => (pharmacyNames[task.site.name] = true));
+    tasks.forEach(task => (pharmacyNames[task.site.name] = true));
     const pharmacies: { [name: string]: Pharmacy } = {};
     await Promise.all(
-      Object.keys(pharmacyNames).map(async (siteName) => {
+      Object.keys(pharmacyNames).map(async siteName => {
         if (this.state.pharmacies.hasOwnProperty(siteName)) {
           return;
         }
         pharmacies[siteName] = await dataStore.getPharmacyDetails(siteName);
       })
     );
-    await new Promise((res) =>
+    await new Promise(res =>
       this.setState(
         { pharmacies: { ...this.state.pharmacies, ...pharmacies } },
         res
@@ -292,7 +292,7 @@ class TaskPanel extends React.Component<Props, State> {
     );
 
     const changes = await Promise.all(
-      filteredTasks.map((t) => dataStore.getChanges(t.id))
+      filteredTasks.map(t => dataStore.getChanges(t.id))
     );
 
     this.setState({
@@ -306,7 +306,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { allTasks } = this.state;
     this._inputRef.current!.value = "";
     const changes = await Promise.all(
-      allTasks.map((t) => dataStore.getChanges(t.id))
+      allTasks.map(t => dataStore.getChanges(t.id))
     );
 
     this.setState({
@@ -340,8 +340,8 @@ class TaskPanel extends React.Component<Props, State> {
     const fileName = this._getDownloadFilename();
     let rows: any[] = [];
     const json2csvOptions = { checkSchemaDifferences: false };
-    tasks.forEach((task) => {
-      task.entries.forEach((entry) => {
+    tasks.forEach(task => {
+      task.entries.forEach(entry => {
         let entryCopy = Object.assign(
           {
             id: task.id,
@@ -377,7 +377,7 @@ class TaskPanel extends React.Component<Props, State> {
 
   _onOwnersFilterToggle = () => {
     this.setState(
-      (state) => ({
+      state => ({
         disableOwnersFilter: !state.disableOwnersFilter,
       }),
       this._updateTasks
@@ -465,7 +465,7 @@ class TaskPanel extends React.Component<Props, State> {
     if (this.props.config.groupTasksByPharmacy) {
       return groupTasksByPharmacy(tasks);
     } else {
-      return tasks.map((task) => [task]);
+      return tasks.map(task => [task]);
     }
   };
 
@@ -507,20 +507,18 @@ class TaskPanel extends React.Component<Props, State> {
               className="mainview_tasklist"
             />
           </LabelWrapper>
-          <div style={{ width: "100%" }}>
-            {selectedTaskIndex >= 0 && (
-              <ConfiguredDetailsWrapper
-                hideImagesDefault={this.props.hideImagesDefault}
-                showPreviousClaims={this.props.showPreviousClaims}
-                tasks={this._groupTasks()[selectedTaskIndex]}
-                notesux={notesux}
-                notes={notes}
-                detailsComponent={this.props.detailsComponent}
-                actions={this.props.actions}
-                key={this.state.tasks[selectedTaskIndex].id}
-              />
-            )}
-          </div>
+          {selectedTaskIndex >= 0 && (
+            <ConfiguredDetailsWrapper
+              hideImagesDefault={this.props.hideImagesDefault}
+              showPreviousClaims={this.props.showPreviousClaims}
+              tasks={this._groupTasks()[selectedTaskIndex]}
+              notesux={notesux}
+              notes={notes}
+              detailsComponent={this.props.detailsComponent}
+              actions={this.props.actions}
+              key={this.state.tasks[selectedTaskIndex].id}
+            />
+          )}
         </div>
       </SearchContext.Provider>
     );
@@ -570,7 +568,7 @@ class DetailsWrapper extends React.Component<
   };
 
   _onActionClick = async (key: string) => {
-    this.setState((state) => ({
+    this.setState(state => ({
       buttonsBusy: {
         ...state.buttonsBusy,
         [key]: true,
@@ -580,7 +578,7 @@ class DetailsWrapper extends React.Component<
     let result: ActionCallbackResult;
     if (this._actionCallbacks[key]) {
       result = await this._actionCallbacks[key]();
-      this.setState((state) => ({
+      this.setState(state => ({
         buttonsBusy: {
           ...state.buttonsBusy,
           [key]: false,
@@ -646,8 +644,8 @@ const ConfiguredDetailsWrapper = configuredComponent<
 >(DetailsWrapper, (config, props) => {
   const configProps: Partial<RemoteConfig> = {};
   Object.values(props.actions)
-    .map((action) => action.disableOnConfig || action.enableOnConfig)
-    .forEach((configName) => {
+    .map(action => action.disableOnConfig || action.enableOnConfig)
+    .forEach(configName => {
       if (configName) {
         (configProps as any)[configName] = (config as any)[configName];
       }
@@ -657,7 +655,7 @@ const ConfiguredDetailsWrapper = configuredComponent<
 
 const groupTasksByPharmacy = memoize((tasks: Task[]) => {
   const tasksByPharmacy: { [pharmacyName: string]: Task[] } = {};
-  tasks.forEach((task) => {
+  tasks.forEach(task => {
     if (tasksByPharmacy[task.site.name]) {
       tasksByPharmacy[task.site.name].push(task);
     } else {
@@ -678,8 +676,8 @@ const computeSelectedTaskId = memoize(
       newSelectedTaskIndex = -1;
       selectedTaskId = undefined;
     } else {
-      newSelectedTaskIndex = groupedTasks.findIndex((tasks) =>
-        tasks.some((task) => task.id === selectedTaskId)
+      newSelectedTaskIndex = groupedTasks.findIndex(tasks =>
+        tasks.some(task => task.id === selectedTaskId)
       );
       if (newSelectedTaskIndex === -1) {
         newSelectedTaskIndex = Math.min(

@@ -17,7 +17,7 @@
 }
 
 .labelwrapper_inner {
-  max-height: 85vh;
+  flex-grow: 1;
   overflow-y: scroll;
 }
 

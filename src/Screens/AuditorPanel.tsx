@@ -234,7 +234,7 @@ export class AuditorDetails extends React.Component<
     }
 
     return (
-      <LabelWrapper key={JSON.stringify(entry + "_" + index)}>
+      <LabelWrapper key={JSON.stringify("entry_" + index)} disableScroll={true}>
         <div className="mainview_padded">
           <div className="mainview_row">
             <TextItem
