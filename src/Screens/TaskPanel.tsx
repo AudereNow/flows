@@ -810,6 +810,12 @@ class DetailsWrapper extends React.Component<
         return true;
       }
     );
+    const showActionsCounter =
+      this.props.taskConfig.manualReviewMinimumRatio > 0;
+    const actionsStats = showActionsCounter && this._countActions();
+    const numToReview = Math.ceil(
+      this.props.taskConfig.manualReviewMinimumRatio * this.props.tasks.length
+    );
     return (
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
@@ -819,8 +825,26 @@ class DetailsWrapper extends React.Component<
         notesux={this.props.notesux}
         key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}
+        updateSelectedAction={this._updateSelectedAction}
+        selectedActions={this.state.selectedActions}
         taskConfig={this.props.taskConfig}
       >
+        {actionsStats && (
+          <div className="mainview_claim_action_stats">
+            <span
+              className={
+                actionsStats[ClaimAction.APPROVE] < numToReview
+                  ? "warn"
+                  : "good"
+              }
+            >
+              {actionsStats[ClaimAction.APPROVE]} of {numToReview} Approved
+            </span>
+            <span>{actionsStats[ClaimAction.REJECT]} Rejected</span>
+            <span>{actionsStats[ClaimAction.HOLD]} Held</span>
+            <span>{actionsStats.unreviewed} Non-Selected</span>
+          </div>
+        )}
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (
             <Button
