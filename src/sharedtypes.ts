@@ -95,6 +95,7 @@ export type TaskChangeRecord = {
 export type PaymentRecord = {
   paymentType: PaymentType;
   amount: number;
+  confirmationNumber?: string;
   bundledUnderTaskId?: string;
   bundledTaskIds?: string[];
   recipient?: PaymentRecipient;
