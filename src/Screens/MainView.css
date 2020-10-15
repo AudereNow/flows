@@ -87,6 +87,27 @@ button:active {
   padding: 10px;
 }
 
+.mainview_claim_action_stats {
+  margin: 10px;
+}
+.mainview_claim_action_stats span {
+  padding: 0px 10px;
+  border-left: 1px solid black;
+}
+
+.mainview_claim_action_stats span:first-child {
+  border-left: none;
+}
+
+.mainview_claim_action_stats span.warn {
+  font-weight: bold;
+}
+
+.mainview_claim_action_stats span.good {
+  font-weight: bold;
+  color: var(--primary-color-dark);
+}
+
 .mainview_button_row {
   display: flex;
   flex-direction: row;
