@@ -1,7 +1,13 @@
 import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
-import { ActionConfig, TaskConfig, defaultConfig } from "../store/config";
+import {
+  ActionConfig,
+  DataStoreType,
+  TaskConfig,
+  defaultConfig,
+} from "../store/config";
 import { DateRange, containsSearchTerm, withinDateRange } from "../util/search";
 import { DateRangePicker, FocusedInputShape } from "react-dates";
 import {
@@ -42,6 +48,7 @@ export interface DetailsComponentProps {
   ) => void;
   hideImagesDefault?: boolean;
   showPreviousClaims: boolean;
+  taskConfig: TaskConfig;
 }
 
 type Props = RouteComponentProps & {
@@ -57,6 +64,7 @@ type Props = RouteComponentProps & {
   filterByOwners: boolean;
   hideImagesDefault: boolean;
   showPreviousClaims: boolean;
+  taskConfig: TaskConfig;
 };
 
 type State = {
@@ -517,6 +525,7 @@ class TaskPanel extends React.Component<Props, State> {
               detailsComponent={this.props.detailsComponent}
               actions={this.props.actions}
               key={this.state.tasks[selectedTaskIndex].id}
+              taskConfig={this.props.taskConfig}
             />
           )}
         </div>
@@ -536,6 +545,7 @@ interface DetailsWrapperProps {
   remoteConfig: Partial<RemoteConfig>;
   hideImagesDefault: boolean;
   showPreviousClaims: boolean;
+  taskConfig: TaskConfig;
 }
 
 interface DetailsWrapperState {
@@ -619,6 +629,7 @@ class DetailsWrapper extends React.Component<
         notesux={this.props.notesux}
         key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}
+        taskConfig={this.props.taskConfig}
       >
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (

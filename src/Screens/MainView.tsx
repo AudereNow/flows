@@ -160,6 +160,7 @@ class MainView extends React.Component<Props, State> {
                 }
                 hideImagesDefault={tabConfig.hideImagesDefault || false}
                 showPreviousClaims={tabConfig.showPreviousClaims || false}
+                taskConfig={tabConfig}
               />
             );
           }
