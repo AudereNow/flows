@@ -247,7 +247,8 @@ class TaskPanel extends React.Component<Props, State> {
   };
 
   _renderTaskListItem = (tasks: TaskGroup, isSelected: boolean) => {
-    return <this.props.itemComponent tasks={tasks} isSelected={isSelected} />;
+    const ItemComponent = this.props.itemComponent;
+    return <ItemComponent tasks={tasks} isSelected={isSelected} />;
   };
 
   _onSearchClick = () => {
