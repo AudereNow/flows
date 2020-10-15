@@ -15,6 +15,7 @@ import { FirebaseDataStore } from "../transport/firestore";
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import ReactTooltip from "react-tooltip";
+import { RestDataStore } from "../transport/maishaDatastore";
 import SearchableTable from "../Components/SearchableTable";
 import { configuredComponent } from "../util/configuredComponent";
 import { dataStore } from "../transport/datastore";
@@ -229,6 +230,12 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
     }
   };
 
+  _resetClaims = async () => {
+    if (dataStore instanceof RestDataStore) {
+      await dataStore.resetAllClaims();
+    }
+  };
+
   _sendPayment = async () => {
     const { amount, phoneNumber } = this.state.paymentForm;
     if (!amount) {
@@ -415,10 +422,21 @@ class AdminPanel extends React.Component<RouteComponentProps & Props, State> {
                 disabled={this.state.paymentForm.sending}
               />
             </div>
-            <div>
-              <div>Update Patients Collection:</div>
-              <Button onClick={this._updatePatientsTaskLists} label="Update" />
-            </div>
+            {dataStore instanceof FirebaseDataStore && (
+              <div>
+                <div>Update Patients Collection:</div>
+                <Button
+                  onClick={this._updatePatientsTaskLists}
+                  label="Update"
+                />
+              </div>
+            )}
+            {dataStore instanceof RestDataStore && (
+              <div>
+                <div>Reset claims</div>
+                <Button onClick={this._resetClaims} label="Reset" />
+              </div>
+            )}
           </TabPanel>
         </Tabs>
       </div>
