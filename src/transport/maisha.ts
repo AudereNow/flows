@@ -204,6 +204,15 @@ export class MaishaApi {
     );
   }
 
+  async postReviewNote(body: {
+    review_note: {
+      care_pathway_instance_id: string;
+      message: string;
+    };
+  }): Promise<void> {
+    await this.fetchWithToken("/review_note", "POST", body);
+  }
+
   async fetchWithToken(
     path: string,
     method: string = "GET",
