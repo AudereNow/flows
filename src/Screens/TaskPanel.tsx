@@ -807,9 +807,7 @@ class DetailsWrapper extends React.Component<
         return true;
       }
     );
-    const showActionsCounter =
-      this.props.taskConfig.manualReviewMinimumRatio > 0;
-    const actionsStats = showActionsCounter && this._countActions();
+    const actionsStats = this._countActions();
     const numToReview = Math.ceil(
       this.props.taskConfig.manualReviewMinimumRatio * this.props.tasks.length
     );
@@ -830,15 +828,19 @@ class DetailsWrapper extends React.Component<
       >
         {actionsStats && (
           <div className="mainview_claim_action_stats">
-            <span
-              className={
-                actionsStats[ClaimAction.APPROVE] < numToReview
-                  ? "warn"
-                  : "good"
-              }
-            >
-              {actionsStats[ClaimAction.APPROVE]} of {numToReview} Approved
-            </span>
+            {numToReview > 0 && (
+              <span
+                className={
+                  actionsStats[ClaimAction.APPROVE] < numToReview
+                    ? "warn"
+                    : "good"
+                }
+              >
+                {actionsStats[ClaimAction.APPROVE]} of {numToReview} Review
+                Required
+              </span>
+            )}
+            <span>{actionsStats[ClaimAction.APPROVE]} Approved</span>
             <span>{actionsStats[ClaimAction.REJECT]} Rejected</span>
             <span>{actionsStats[ClaimAction.HOLD]} Held</span>
             <span>{actionsStats.unreviewed} Non-Selected</span>
