@@ -92,6 +92,7 @@ class TopBar extends React.Component<{}, State> {
 
   render() {
     const { roles, showFileSelector, uploading } = this.state;
+    const showUpload = defaultConfig.dataStore.type === DataStoreType.FIREBASE;
     const uploadButton =
       roles.includes(UserRole.AUDITOR) && !showFileSelector ? (
         <div
@@ -128,12 +129,16 @@ class TopBar extends React.Component<{}, State> {
         </a>
 
         <div className="topbar_details">
-          <span>{firebase.auth().currentUser!.displayName}</span>
+          <span>Logged in as {dataStore.getBestUserName()}</span>
           <div className="topbar_row">
-            {overlay}
-            {uploadButton}
-            {uploader}
-            <span className="topbar_divider topbar_item" />
+            {showUpload && (
+              <>
+                {overlay}
+                {uploadButton}
+                {uploader}
+                <span className="topbar_divider topbar_item" />
+              </>
+            )}
             <div
               className="topbar_logout topbar_pointer"
               onClick={this._handleLogout}
