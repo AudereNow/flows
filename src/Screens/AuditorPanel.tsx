@@ -518,37 +518,14 @@ export class AuditorDetails extends React.Component<
 }
 
 function getPatients(tasks: Task[]): PatientInfo[] {
-  const entriesByPatient: { [id: string]: PatientInfo } = {};
-  tasks.forEach((task, taskIndex) =>
-    task.entries.forEach((entry, index) => {
-      const id = entry.patientID || `Patient ${index}`;
-      (entry as any).originalIndex = index;
-      if (entriesByPatient[id]) {
-        const taskGroup = entriesByPatient[id].currentClaims.find(
-          entry => entry.taskIndex === taskIndex
-        );
-        if (taskGroup) {
-          taskGroup.claims.push(entry);
-        } else {
-          entriesByPatient[id].currentClaims.push({
-            taskIndex,
-            claims: [entry],
-          });
-        }
-      } else {
-        entriesByPatient[id] = {
-          patientId: id,
-          currentClaims: [
-            {
-              taskIndex,
-              claims: [entry],
-            },
-          ],
-        };
-      }
-    })
-  );
-  return Object.values(entriesByPatient).sort(
-    (a, b) => b.currentClaims.length - a.currentClaims.length
-  );
+  return tasks.map((task, index) => ({
+    patientId: task.entries[0].patientID || "",
+    currentClaims: [
+      {
+        taskIndex: index,
+        claims: task.entries,
+      },
+    ],
+  }));
+}
 }
