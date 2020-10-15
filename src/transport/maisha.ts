@@ -138,7 +138,7 @@ export class MaishaApi {
     }
   }
 
-  async loyaltyPayment(body: {
+  async postLoyaltyPayment(body: {
     loyalty_payment: {
       care_pathway_instance_ids: string[];
       notes: string;
@@ -150,7 +150,7 @@ export class MaishaApi {
     await this.fetchWithToken("/loyalty_payment", "POST", body);
   }
 
-  async updateApprovalStatus(body: {
+  async postApprovalStatusUpdate(body: {
     care_pathway_instance_approval_status_update_event: {
       care_pathway_instance_ids: string[];
       manually_reviewed_ids: string[];
@@ -169,11 +169,11 @@ export class MaishaApi {
     );
   }
 
-  async facilities(): Promise<{ facilities: MaishaFacility[] }> {
+  async getFacilities(): Promise<{ facilities: MaishaFacility[] }> {
     return await this.fetchWithToken("/facilities?loyalty_enabled=true");
   }
 
-  async carePathwayInstances(
+  async getCarePathwayInstances(
     facilityId: string,
     cursor: string,
     approvalStatus?: MaishaApprovalStatus,
@@ -191,7 +191,7 @@ export class MaishaApi {
     );
   }
 
-  async complianceFlags(
+  async getComplianceFlags(
     carePathwayInstanceIds: string[]
   ): Promise<MaishaFlagsResponse> {
     const params = new URLSearchParams();

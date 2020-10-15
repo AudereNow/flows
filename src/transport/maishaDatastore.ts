@@ -139,7 +139,7 @@ export class RestDataStore extends DataStore {
     notes: string,
     payment: PaymentRecord
   ) {
-    await this.maishaApi.loyaltyPayment({
+    await this.maishaApi.postLoyaltyPayment({
       loyalty_payment: {
         care_pathway_instance_ids: claimIds,
         notes,
@@ -157,7 +157,7 @@ export class RestDataStore extends DataStore {
     approvalStatus: MaishaApprovalStatus,
     notes: string
   ) {
-    await this.maishaApi.updateApprovalStatus({
+    await this.maishaApi.postApprovalStatusUpdate({
       care_pathway_instance_approval_status_update_event: {
         care_pathway_instance_ids: claimIds,
         manually_reviewed_ids: reviewedClaimIds,
@@ -272,14 +272,14 @@ export class RestDataStore extends DataStore {
 
   async loadTasks(taskState?: TaskState): Promise<Task[]> {
     const claimFilters = this.getClaimQuery(taskState);
-    const { facilities } = await this.maishaApi.facilities();
+    const { facilities } = await this.maishaApi.getFacilities();
     return (
       await Promise.all(
         facilities.map(async facility => {
           const cursor = "";
           const {
             care_pathway_instances: carePathwayInstances,
-          } = await this.maishaApi.carePathwayInstances(
+          } = await this.maishaApi.getCarePathwayInstances(
             facility.id,
             cursor,
             claimFilters.approvalStatus,
@@ -312,7 +312,7 @@ export class RestDataStore extends DataStore {
     if (tasks.length === 0) {
       return {};
     }
-    const result = await this.maishaApi.complianceFlags(
+    const result = await this.maishaApi.getComplianceFlags(
       tasks.map(task => task.id)
     );
     const flagsById: { [taskId: string]: Flag[] } = {};
