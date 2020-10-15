@@ -65,6 +65,15 @@ interface PatientInfo {
   history?: PatientHistory;
 }
 
+type LabeledPhoto = {
+  url: string;
+  label: {
+    displayKey?: string;
+    value: string;
+    searchKey: string;
+  };
+};
+
 function getInitialState(props: DetailsComponentProps): State {
   const patients = getPatients(props.tasks);
   return {
@@ -108,7 +117,7 @@ export class AuditorDetails extends React.Component<
           id: task.id,
           total: 0,
           count: 0,
-          date: new Date(task.entries[0].timestamp).toLocaleDateString(),
+          date: new Date(task.entries[0].startTime).toLocaleDateString(),
         };
 
         task.entries.forEach(entry => {
@@ -157,43 +166,31 @@ export class AuditorDetails extends React.Component<
       this.state.patients.map(patient => patient.patientId)
     );
     this.setState({
-      patients: this.state.patients.map(patient => ({
-        ...patient,
-        history: {
-          tasks: histories[patient.patientId].tasks.filter(task =>
-            this.props.tasks.every(
-              currentTask => task.taskId !== currentTask.id
-            )
-          ),
-        },
-      })),
+      patients: this.state.patients.map(patient => {
+        const history = histories[patient.patientId];
+        return {
+          ...patient,
+          history: {
+            tasks: history
+              ? history.tasks.filter(task =>
+                  this.props.tasks.every(
+                    currentTask => task.taskId !== currentTask.id
+                  )
+                )
+              : [],
+          },
+        };
+      }),
     });
   };
 
-  _extractImages = (claim: ClaimEntry) => {
-    const claimImages = [];
-    if (!!claim.photoMedUri) {
-      claimImages.push({
-        url: claim.photoMedUri,
-        label: { value: claim.item, searchKey: "item" },
-      });
-    }
-    if (!!claim.photoIDUri) {
-      claimImages.push({
-        url: claim.photoIDUri,
-        label: {
-          displayKey: "ID",
-          value: claim.patientID || "",
-          searchKey: "patient",
-        },
-      });
-    }
-    if (!!claim.photoMedBatchUri) {
-      claimImages.push({
-        url: claim.photoMedBatchUri,
-        label: { value: "Barcode", searchKey: "" },
-      });
-    }
+  _extractImages = (claim: ClaimEntry): LabeledPhoto[] => {
+    const claimImages: LabeledPhoto[] = claim.photos
+      ? claim.photos.map(({ url, caption }) => ({
+          url,
+          label: { value: caption || "", searchKey: "item" },
+        }))
+      : [];
     return claimImages;
   };
 
@@ -233,7 +230,8 @@ export class AuditorDetails extends React.Component<
       .flat(2)
       .filter(flag => flag);
     const disabledCheckbox =
-      tasks[0].state === "REJECTED" || tasks[0].state === "COMPLETED"
+      tasks[0].state === TaskState.REJECTED ||
+      tasks[0].state === TaskState.COMPLETED
         ? true
         : false;
     if (!!entry.patientAge) patientProps.push(entry.patientAge);
@@ -242,12 +240,10 @@ export class AuditorDetails extends React.Component<
     const patientInfo =
       patientProps.length > 0 ? `(${patientProps.join(", ")})` : "";
 
-    const date = new Date(entry.timestamp).toLocaleDateString();
-    const patientString = `${entry.patientFirstName} ${
-      entry.patientLastName
-    } ${patientInfo} ${entry.phone || ""}`;
+    const patientString = `${entry.patientFirstName} ${entry.patientLastName} ${patientInfo}`;
+    const patientPhone = entry.phone || "Check ID";
 
-    let checkEntry = Object.assign({}, entry, date, patient);
+    let checkEntry = Object.assign({}, entry, patient);
 
     if (
       !!searchTermDetails &&
@@ -276,6 +272,15 @@ export class AuditorDetails extends React.Component<
               }}
             />
           </div>
+          <div className="mainview_row">
+            <TextItem
+              data={{
+                displayKey: "Phone",
+                searchKey: "phone",
+                value: patientPhone,
+              }}
+            />
+          </div>
           {patient.currentClaims.map((task, taskIndex) =>
             task.claims.map((claim, claimIndex) => (
               <React.Fragment key={`${index}_${taskIndex}_${claimIndex}`}>
@@ -283,7 +288,7 @@ export class AuditorDetails extends React.Component<
                   data={{
                     displayKey: "Date",
                     searchKey: "date",
-                    value: new Date(claim.timestamp).toLocaleDateString(),
+                    value: getDateString(claim),
                   }}
                 />
                 <ImageRow
@@ -420,13 +425,13 @@ export class AuditorDetails extends React.Component<
     tasks.forEach(task =>
       task.entries.forEach(entry => {
         rows.push({
-          date: new Date(entry.timestamp).toLocaleDateString(),
+          date: new Date(entry.startTime).toLocaleDateString(),
           first: entry.patientFirstName,
           last: entry.patientLastName,
           id: entry.patientID,
           sex: entry.patientSex,
           phone: entry.phone,
-          item: entry.item,
+          item: "",
           "claimed cost": entry.claimedCost,
           rejected: (entry as any).rejected || false,
           notes: (entry as any).notes || "",
@@ -509,7 +514,10 @@ export class AuditorDetails extends React.Component<
             .slice(this.state.numPatients)
 
             .map((patient, index) => {
-              return this._renderPatientDetails(patient, index);
+              return this._renderPatientDetails(
+                patient,
+                patients.length + index
+              );
             })}
 
         {this.props.notesux}
@@ -553,4 +561,18 @@ function getPatients(tasks: Task[]): PatientInfo[] {
   return Object.values(entriesByPatient).sort(
     (a, b) => b.currentClaims.length - a.currentClaims.length
   );
+}
+
+function getDateString(claim: ClaimEntry): string {
+  const start = new Date(claim.startTime);
+  const end = new Date(claim.endTime);
+  const startDate = moment(claim.startTime).format("MMM DD");
+  const endDate = moment(claim.endTime).format("MMM DD");
+  const startTime = start.toLocaleTimeString();
+  const endTime = end.toLocaleTimeString();
+  if (startDate === endDate) {
+    return `${startDate} ${startTime} - ${endTime}`;
+  } else {
+    return `${startDate} ${startTime} - ${endDate} ${endTime}`;
+  }
 }
