@@ -39,6 +39,23 @@ import debounce from "../util/debounce";
 import { json2csv } from "json-2-csv";
 import memoize from "memoize-one";
 
+const SELECTED_ACTIONS_STORAGE_KEY = "selectedActions";
+
+type SelectedActions = {
+  [claimId: string]: ClaimActions;
+};
+
+export type ClaimActions = {
+  action?: ClaimAction;
+  flag: boolean;
+};
+
+export enum ClaimAction {
+  APPROVE = "APPROVE",
+  REJECT = "REJECT",
+  HOLD = "HOLD",
+}
+
 export interface DetailsComponentProps {
   tasks: Task[];
   flags: { [taskId: string]: Flag[] };
@@ -50,6 +67,11 @@ export interface DetailsComponentProps {
   ) => void;
   hideImagesDefault?: boolean;
   showPreviousClaims: boolean;
+  updateSelectedAction: (
+    taskId: string,
+    action?: Partial<ClaimActions>
+  ) => void;
+  selectedActions: SelectedActions;
   taskConfig: TaskConfig;
 }
 
@@ -563,6 +585,7 @@ interface DetailsWrapperProps {
 
 interface DetailsWrapperState {
   buttonsBusy: { [key: string]: boolean };
+  selectedActions: SelectedActions;
 }
 
 export interface ActionCallbackResult {
@@ -577,11 +600,26 @@ class DetailsWrapper extends React.Component<
 > {
   state: DetailsWrapperState = {
     buttonsBusy: {},
+    selectedActions: getSavedSelectedActions(this.props.taskConfig.taskState),
   };
 
   _actionCallbacks: {
     [key: string]: () => Promise<ActionCallbackResult>;
   } = [] as any;
+
+  _updateSelectedAction = (taskId: string, action?: Partial<ClaimActions>) => {
+    this.setState(state => {
+      const { selectedActions } = this.state;
+      const newActions = { ...selectedActions };
+      const oldAction = newActions[taskId] || { flag: false };
+      const newAction = Object.assign({}, oldAction, action);
+      newActions[taskId] = newAction;
+      saveSelectedActions(this.props.taskConfig.taskState, newActions);
+      return {
+        selectedActions: newActions,
+      };
+    });
+  };
 
   _registerActionCallback = (
     key: string,
