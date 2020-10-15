@@ -18,7 +18,7 @@ import {
   TaskChangeRecord,
   TaskState,
 } from "../sharedtypes";
-import React, { Fragment, ReactNode } from "react";
+import React, { ChangeEvent, Fragment, ReactNode } from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import moment, { Moment } from "moment";
 
@@ -34,6 +34,7 @@ import SearchIcon from "../assets/search.png";
 import TaskList from "../Components/TaskList";
 import { ToolTipIcon } from "../Components/ToolTipIcon";
 import { configuredComponent } from "../util/configuredComponent";
+import { confirmAlert } from "react-confirm-alert";
 import { dataStore } from "../transport/datastore";
 import debounce from "../util/debounce";
 import { json2csv } from "json-2-csv";
@@ -590,7 +591,6 @@ interface DetailsWrapperState {
 
 export interface ActionCallbackResult {
   success: boolean;
-  tasks?: Task[];
   payments?: PaymentRecord[];
 }
 
@@ -635,30 +635,164 @@ class DetailsWrapper extends React.Component<
         [key]: true,
       },
     }));
-    let tasks: Task[] = this.props.tasks;
-    let result: ActionCallbackResult;
-    if (this._actionCallbacks[key]) {
-      result = await this._actionCallbacks[key]();
-      this.setState(state => ({
-        buttonsBusy: {
-          ...state.buttonsBusy,
-          [key]: false,
-        },
-      }));
-      tasks = result.tasks || tasks;
-    }
+    await this._performActions(key);
+    this.setState(state => ({
+      buttonsBusy: {
+        ...state.buttonsBusy,
+        [key]: false,
+      },
+    }));
+  };
 
-    await Promise.all(
-      tasks.map((task, index) =>
-        dataStore.changeTaskState(
-          task,
-          this.props.actions[key].nextTaskState,
-          this.props.notes,
-          result && result.payments ? result.payments[index] : undefined
-        )
-      )
+  _countActions = () => {
+    return this.props.tasks.reduce(
+      (stats, task) => {
+        const action =
+          this.state.selectedActions[task.id]?.action || "unreviewed";
+        return {
+          ...stats,
+          [action]: stats[action] + 1,
+        };
+      },
+      {
+        [ClaimAction.APPROVE]: 0,
+        [ClaimAction.REJECT]: 0,
+        [ClaimAction.HOLD]: 0,
+        unreviewed: 0,
+      }
     );
   };
+
+  _performActions = async (key: string) => {
+    const tasks: Task[] = this.props.tasks;
+    const action = this.props.actions[key];
+    const stats = this._countActions();
+    const additionalReviewsNeeded =
+      Math.ceil(tasks.length * this.props.taskConfig.manualReviewMinimumRatio) -
+      stats[ClaimAction.APPROVE];
+    if (
+      action.claimAction === ClaimAction.APPROVE &&
+      additionalReviewsNeeded > 0
+    ) {
+      const approveBelowThreshold = await new Promise(res =>
+        confirmAlert({
+          title: `${additionalReviewsNeeded} more approvals needed`,
+          message:
+            "You have manually reviewed fewer than 20% of the claims for this facility, are you sure you want to continue?",
+          buttons: [
+            {
+              label: "Yes",
+              onClick: () => res(true),
+            },
+            {
+              label: "No",
+              onClick: () => res(false),
+            },
+          ],
+        })
+      );
+      if (!approveBelowThreshold) {
+        return;
+      }
+    }
+    if (action.claimAction === ClaimAction.REJECT) {
+      const confirmReject = await new Promise(res =>
+        confirmAlert({
+          customUI: ({ onClose }) => (
+            <RejectAllDialog
+              confirm={value => {
+                res(value);
+                onClose();
+              }}
+            />
+          ),
+          buttons: [
+            {
+              label: "Yes",
+              onClick: () => res(true),
+            },
+            {
+              label: "No",
+              onClick: () => res(false),
+            },
+          ],
+        })
+      );
+      if (!confirmReject) {
+        return;
+      }
+    }
+    let approvedTasks = tasks.filter(
+      task =>
+        this.state.selectedActions[task.id]?.action === ClaimAction.APPROVE
+    );
+    let rejectedTasks = tasks.filter(
+      task => this.state.selectedActions[task.id]?.action === ClaimAction.REJECT
+    );
+    let flaggedTasks = tasks.filter(
+      task => this.state.selectedActions[task.id]?.flag
+    );
+    let unreviewedTasks = tasks.filter(
+      task => this.state.selectedActions[task.id]?.action === undefined
+    );
+
+    let result: ActionCallbackResult | undefined = undefined;
+    if (this._actionCallbacks[key]) {
+      result = await this._actionCallbacks[key]();
+      if (!result.success) {
+        return;
+      }
+    }
+
+    const approveAction = Object.values(this.props.actions).find(
+      action => action.claimAction === ClaimAction.APPROVE
+    );
+    const rejectAction = Object.values(this.props.actions).find(
+      action => action.claimAction === ClaimAction.REJECT
+    );
+
+    if (!approveAction || !rejectAction) {
+      throw new Error("Missing action config");
+    }
+
+    await this.performAction(
+      action.claimAction,
+      approveAction,
+      approvedTasks,
+      unreviewedTasks,
+      flaggedTasks,
+      result && result.payments && result.payments[0]
+    );
+    await this.performAction(
+      action.claimAction,
+      rejectAction,
+      rejectedTasks,
+      unreviewedTasks,
+      flaggedTasks
+    );
+  };
+
+  async performAction(
+    selectedClaimAction: ClaimAction,
+    action: ActionConfig,
+    reviewedTasks: Task[],
+    unreviewedTasks: Task[],
+    flaggedTasks: Task[],
+    payment?: PaymentRecord
+  ) {
+    let tasks = [...reviewedTasks];
+    if (action.claimAction === selectedClaimAction) {
+      tasks.push(...unreviewedTasks);
+    }
+    await dataStore.changeTaskState(
+      tasks,
+      reviewedTasks,
+      selectedClaimAction === ClaimAction.APPROVE ? flaggedTasks : [],
+      action.nextTaskState,
+      this.props.notes,
+      payment
+    );
+  }
 
   render() {
     const buttons = Object.entries(this.props.actions).filter(
@@ -753,3 +887,97 @@ const computeSelectedTaskId = memoize(
     return { selectedTaskIndex: newSelectedTaskIndex, selectedTaskId };
   }
 );
+
+function getSelectedActionsStorageKey(taskState: TaskState) {
+  return `${SELECTED_ACTIONS_STORAGE_KEY}_${taskState}`;
+}
+
+function getSavedSelectedActions(taskState: TaskState): SelectedActions {
+  const actionsString = localStorage.getItem(
+    getSelectedActionsStorageKey(taskState)
+  );
+  if (!actionsString) {
+    return {};
+  }
+  return JSON.parse(actionsString);
+}
+
+function saveSelectedActions(
+  taskState: TaskState,
+  selectedActions: SelectedActions
+) {
+  localStorage.setItem(
+    getSelectedActionsStorageKey(taskState),
+    JSON.stringify(selectedActions)
+  );
+}
+
+interface RejectAllDialogProps {
+  confirm: (value: boolean) => void;
+}
+interface RejectAllDialogState {
+  textboxValue: string;
+  showValidation: boolean;
+}
+class RejectAllDialog extends React.Component<
+  RejectAllDialogProps,
+  RejectAllDialogState
+> {
+  state: RejectAllDialogState = {
+    textboxValue: "",
+    showValidation: false,
+  };
+
+  _updateTextboxValue = (e: ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      textboxValue: e.target.value,
+    });
+  };
+
+  render() {
+    const { confirm } = this.props;
+    const { textboxValue, showValidation } = this.state;
+    return (
+      <div className="react-confirm-alert-body">
+        <h1>Are you sure you want to reject all of these claims?</h1>
+        <p>
+          This will reject every unreviewed claim in the batch, are you sure you
+          want to continue?
+        </p>
+        <div>
+          Type "Reject All" to confirm:{" "}
+          <input
+            type="text"
+            value={textboxValue}
+            onChange={this._updateTextboxValue}
+          ></input>
+          {showValidation && (
+            <div style={{ color: "red" }}>
+              Fill out the textbox above to continue
+            </div>
+          )}
+        </div>
+        <div className="react-confirm-alert-button-group">
+          <button
+            onClick={() => {
+              if (textboxValue.toLowerCase() === "reject all") {
+                confirm(true);
+              } else {
+                this.setState({ showValidation: true });
+              }
+            }}
+          >
+            Reject All
+          </button>
+          <button
+            onClick={() => {
+              confirm(false);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+}

@@ -16,6 +16,7 @@
     "json-2-csv": "^3.5.7",
     "memoize-one": "^5.1.1",
     "react": "^16.9.0",
+    "react-confirm-alert": "^2.6.2",
     "react-dates": "^21.2.1",
     "react-dom": "^16.9.0",
     "react-firebaseui": "^4.0.0",
