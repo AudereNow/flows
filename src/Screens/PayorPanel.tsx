@@ -12,8 +12,9 @@ import ReactTable from "react-table";
 import TextItem from "../Components/TextItem";
 import { configuredComponent } from "../util/configuredComponent";
 import { dataStore } from "../transport/datastore";
+import { formatCurrency } from "../util/currency";
 
-const STATE_DESCRIPTIONS: { [key in TaskState]: string } = {
+const STATE_DESCRIPTIONS: { [key in TaskState]?: string } = {
   [TaskState.AUDIT]: "Awaiting Audit",
   [TaskState.PAY]: "Awaiting Payment",
   [TaskState.FOLLOWUP]: "Needs Ops Followup",
@@ -37,12 +38,6 @@ const PATIENT_CLAIMS_TABLE_COLUMNS = [
     minWidth: 90,
   },
   { id: "Item", Header: "ITEM", accessor: "item", minWidth: 60 },
-  {
-    id: "Reimbursement",
-    Header: "REIMBURSEMENT",
-    accessor: (entry: any) => dataStore.formatCurrency(entry.claimedCost),
-    minWidth: 50,
-  },
   {
     id: "Rejected",
     Header: "REJECTED",
@@ -76,7 +71,7 @@ const RELATED_TASKS_TABLE_COLUMNS = [
     id: "Total Amount",
     Header: "Total Amount",
     accessor: (task: any) => {
-      return dataStore.formatCurrency(
+      return formatCurrency(
         task.entries.reduce(
           (total: any, entry: any) => total + entry.claimedCost,
           0
@@ -206,7 +201,7 @@ class ConfigurablePayorDetails extends React.Component<
                 ).toLocaleDateString()
               : "",
             Claims: relatedTask.entries.length,
-            "Total Amount": dataStore.formatCurrency(
+            "Total Amount": formatCurrency(
               relatedTask.entries.reduce(
                 (total, entry) => total + entry.claimedCost,
                 0
@@ -232,7 +227,7 @@ class ConfigurablePayorDetails extends React.Component<
             data={{
               displayKey: "Total Reimbursement",
               searchKey: "reimbursement",
-              value: dataStore.formatCurrency(claimsTotal),
+              value: formatCurrency(claimsTotal),
             }}
           />
 

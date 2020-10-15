@@ -1,10 +1,10 @@
 import "./TaskList.css";
 
-import { ActiveTask, dataStore } from "../transport/datastore";
-
+import { ActiveTask } from "../transport/baseDatastore";
 import React from "react";
 import ReactTooltip from "react-tooltip";
 import { Task } from "../sharedtypes";
+import { dataStore } from "../transport/datastore";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 

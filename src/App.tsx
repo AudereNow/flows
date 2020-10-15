@@ -12,7 +12,6 @@ import LoginScreen from "./Screens/LoginScreen";
 import MainView from "./Screens/MainView";
 import React from "react";
 import { defaultConfig } from "./store/config";
-import firebase from "firebase/app";
 import { initializeStore } from "./transport/datastore";
 
 type Props = {};
@@ -27,13 +26,13 @@ class App extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    initializeStore(defaultConfig.dataStore);
+    const datastore = initializeStore(defaultConfig.dataStore);
 
-    firebase.auth().onAuthStateChanged(this._onAuthChanged);
+    datastore.onAuthStateChanged(this._onAuthChanged);
   }
 
-  _onAuthChanged = (user: firebase.User | null) => {
-    this.setState({ authenticated: !!user });
+  _onAuthChanged = (authenticated: boolean) => {
+    this.setState({ authenticated });
   };
 
   _renderLinkedMainView = (routeProps: RouteComponentProps) => {
@@ -69,7 +68,7 @@ class App extends React.Component<Props, State> {
         </Router>
       );
     } else {
-      return <LoginScreen />;
+      return <LoginScreen dataStoreConfig={defaultConfig.dataStore} />;
     }
   }
 }

@@ -7,6 +7,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { Link } from "react-router-dom";
 import ReactTooltip from "react-tooltip";
 import { dataStore } from "../transport/datastore";
+import { formatCurrency } from "../util/currency";
 import moment from "moment";
 
 interface Props {
@@ -65,13 +66,13 @@ const CHANGE_MESSAGES: {
         );
       }
       if (change.payment.paymentType === PaymentType.MANUAL) {
-        return `${by} manually paid ${dataStore.formatCurrency(
+        return `${by} manually paid ${formatCurrency(
           change.payment.amount
         )} ${when}`;
       } else {
-        return `${by} paid ${dataStore.formatCurrency(
-          change.payment.amount
-        )} to ${change.payment.recipient!.phoneNumber} ${when}`;
+        return `${by} paid ${formatCurrency(change.payment.amount)} to ${
+          change.payment.recipient!.phoneNumber
+        } ${when}`;
       }
     },
   },

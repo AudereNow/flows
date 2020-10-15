@@ -24,13 +24,12 @@ import {
   UserRole,
   removeEmptyFieldsInPlace,
 } from "../sharedtypes";
-import { ActiveTask, DataStore, PatientHistory } from "./datastore";
+import { ActiveTask, DataStore, PatientHistory } from "./baseDatastore";
 
 import firebaseConfig from "./firebaseconfig.json";
 import { formatCurrency } from "../util/currency";
 
 const FIREBASE_CONFIG = firebaseConfig;
-const CurrencyType: string = "KSh";
 
 export class FirebaseDataStore extends DataStore {
   initializeStore() {

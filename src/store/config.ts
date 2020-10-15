@@ -38,14 +38,15 @@ export enum DataStoreType {
   REST = "REST",
 }
 
-export type DataStoreConfig =
-  | {
-      type: DataStoreType.FIREBASE;
-    }
-  | {
-      type: DataStoreType.REST;
-      endpointRoot: string;
-    };
+export type DataStoreConfig = FirebaseDataStoreConfig | RestDataStoreConfig;
+export type FirebaseDataStoreConfig = {
+  type: DataStoreType.FIREBASE;
+  authUiConfig: firebaseui.auth.Config;
+};
+export type RestDataStoreConfig = {
+  type: DataStoreType.REST;
+  endpointRoot: string;
+};
 
 export interface AppConfig {
   tabs: {
@@ -180,6 +181,7 @@ export const defaultConfig: AppConfig = {
     },
   },
   dataStore: {
-    type: DataStoreType.FIREBASE,
+    type: DataStoreType.REST,
+    endpointRoot: "https://staging-service.maishameds.org",
   },
 };
