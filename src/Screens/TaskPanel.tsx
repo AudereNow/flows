@@ -868,6 +868,9 @@ class DetailsWrapper extends React.Component<
     );
     const actionsStats = this._countActions();
     const numToReview = actionsStats.reviewsRequired;
+    const showActionsStats =
+      this.props.taskConfig.detailsComponent === "AuditTask" &&
+      Object.values(this.props.taskConfig.actions).length > 0;
     return (
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
@@ -881,7 +884,7 @@ class DetailsWrapper extends React.Component<
         selectedActions={this.state.selectedActions}
         taskConfig={this.props.taskConfig}
       >
-        {actionsStats && (
+        {showActionsStats && (
           <div className="mainview_claim_action_stats">
             {numToReview > 0 && (
               <span
