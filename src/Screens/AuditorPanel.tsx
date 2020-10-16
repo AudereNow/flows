@@ -538,12 +538,10 @@ function getPatients(tasks: Task[]): PatientInfo[] {
 }
 
 function getDateString(claim: ClaimEntry): string {
-  const start = new Date(claim.startTime);
-  const end = new Date(claim.endTime);
   const startDate = moment(claim.startTime).format("MMM DD");
   const endDate = moment(claim.endTime).format("MMM DD");
-  const startTime = start.toLocaleTimeString();
-  const endTime = end.toLocaleTimeString();
+  const startTime = new Date(claim.startTime).toLocaleTimeString();
+  const endTime = new Date(claim.endTime).toLocaleTimeString();
   if (startDate === endDate) {
     return `${startDate} ${startTime} - ${endTime}`;
   } else {
