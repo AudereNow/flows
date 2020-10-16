@@ -1,40 +1,42 @@
 import "./ListItem.css";
 
+import BarLoader from "react-spinners/BarLoader";
+import { PharmacyLoadingState } from "../transport/baseDatastore";
 import React from "react";
-import { Task } from "../sharedtypes";
+import { TaskGroup } from "./TaskList";
 import { formatCurrency } from "../util/currency";
 
 export class ListItem extends React.Component<{
-  tasks: Task[];
+  tasks: TaskGroup;
   isSelected: boolean;
 }> {
   render() {
     const { tasks, isSelected } = this.props;
     const previewName = "listitem" + (isSelected ? " selected" : "");
-    const claimAmounts = tasks
-      .map(task =>
-        task.entries.map(entry => {
-          return !entry.rejected ? entry.claimedCost : 0;
-        })
-      )
-      .flat();
-    const claimsTotal = claimAmounts.reduce(
-      (sum, claimedCost) => sum + claimedCost
-    );
-    const claimCount = tasks
-      .map(task => task.entries.length)
-      .reduce((a, b) => a + b, 0);
+    const claimCount = tasks.stats
+      ? tasks.stats.claimCount
+      : tasks.tasks.map(task => task.entries.length).reduce((a, b) => a + b, 0);
+    const totalReimbursement = tasks.stats?.totalReimbursement;
+    const loading = tasks.stats?.loadingState === PharmacyLoadingState.LOADING;
     return (
-      <div className={previewName}>
-        <div className="listitem_header">
-          <span>{tasks[0].site.name}</span>
-          <span>
+      <div>
+        <div className={previewName}>
+          <div className="listitem_header">
+            <span>{tasks.site.name}</span>
+          </div>
+          <div>
             {claimCount} Claim{claimCount !== 1 ? "s" : ""}
-          </span>
+          </div>
+          {totalReimbursement !== undefined && (
+            <div>
+              Total Reimbursement:{" "}
+              <span style={{ whiteSpace: "nowrap" }}>
+                {formatCurrency(totalReimbursement)}
+              </span>
+            </div>
+          )}
         </div>
-        <div>
-          {"Total Reimbursement: " + formatCurrency(claimsTotal)}
-        </div>
+        {loading && <BarLoader css="width: auto" color="#275d5f" />}
       </div>
     );
   }

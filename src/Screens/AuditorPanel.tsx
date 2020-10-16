@@ -53,6 +53,7 @@ type State = {
   numPatients: number;
   patients: PatientInfo[];
   previousClaims: TaskTotal[];
+  pageNumber: number;
 };
 
 interface PatientInfo {
@@ -82,6 +83,7 @@ function getInitialState(props: DetailsComponentProps): State {
     previousClaims: [],
     numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
+    pageNumber: 0,
   };
 }
 
@@ -425,13 +427,53 @@ export class AuditorDetails extends React.Component<
     });
   };
 
+  _previousPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber - 1,
+    });
+  };
+
+  _nextPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber + 1,
+    });
+  };
+
+  _renderPageButtons() {
+    const pages = Math.ceil(this.props.tasks.length / SAMPLES_PER_PAGE);
+    if (pages === 1) {
+      return null;
+    }
+    return (
+      <div className="auditor_pageButtons">
+        <button
+          disabled={this.state.pageNumber === 0}
+          onClick={this._previousPage}
+          className="mainview_button"
+        >
+          ‹ Previous
+        </button>
+        <div className="auditor_pageNumber">
+          Page {this.state.pageNumber + 1} of {pages}
+        </div>
+        <button
+          disabled={this.state.pageNumber === pages - 1}
+          onClick={this._nextPage}
+          className="mainview_button"
+        >
+          Next ›
+        </button>
+      </div>
+    );
+  }
+
   render() {
     const { searchTermGlobal } = this.context;
-    const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { tasks } = this.props;
     const { showImages } = this.state;
-    const patients = getPatients(tasks).slice(0, this.state.numPatients);
-    const remaining = this.state.patients.length - this.state.numPatients;
+    const patients = getPatients(tasks);
+    const showPharmacyHistory =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <LabelWrapper key={searchTermGlobal} className="mainview_details">
@@ -445,12 +487,14 @@ export class AuditorDetails extends React.Component<
             .reduce((a, b) => a + b, 0)}
           showPreviousClaims={this.props.showPreviousClaims}
         />
-        <Button
-          className="mainview_button"
-          label="Download Pharmacy Report"
-          labelImg={DownloadCSVImg}
-          onClick={this._downloadPharmacyReport}
-        />
+        {showPharmacyHistory && (
+          <Button
+            className="mainview_button"
+            label="Download Pharmacy Report"
+            labelImg={DownloadCSVImg}
+            onClick={this._downloadPharmacyReport}
+          />
+        )}
         <div className="mainview_row">
           <input
             className="mainview_search_input"
@@ -464,34 +508,19 @@ export class AuditorDetails extends React.Component<
               .reduce((a, b) => a + b, 0)})`}</span>
           )}
         </div>
-        {patients.map((patient, index) => {
-          return this._renderPatientDetails(patient, index);
-        })}
-        {remaining > 0 && (
-          <div className="mainview_button_row">
-            <Button
-              className="mainview_show_more_button"
-              label={
-                showAllEntries
-                  ? `- Hide ${remaining} Additional Claims`
-                  : `+ Show ${remaining} Additional Claims`
-              }
-              onClick={this._onShowAll}
-            />
-          </div>
-        )}
-        {remaining > 0 &&
-          showAllEntries &&
-          this.state.patients
-            .slice(this.state.numPatients)
-
-            .map((patient, index) => {
-              return this._renderPatientDetails(
-                patient,
-                patients.length + index
-              );
-            })}
-
+        {this._renderPageButtons()}
+        {patients
+          .slice(
+            this.state.pageNumber * SAMPLES_PER_PAGE,
+            (this.state.pageNumber + 1) * SAMPLES_PER_PAGE
+          )
+          .map((patient, index) => {
+            return this._renderPatientDetails(
+              patient,
+              this.state.pageNumber * SAMPLES_PER_PAGE + index
+            );
+          })}
+        {this._renderPageButtons()}
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>

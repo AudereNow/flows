@@ -2,6 +2,7 @@ import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
 
 import { ActionCallbackResult, DetailsComponentProps } from "./TaskPanel";
+import { DataStoreType, defaultConfig } from "../store/config";
 import { PaymentRecord, PaymentType, Task, TaskState } from "../sharedtypes";
 
 import Button from "../Components/Button";
@@ -116,7 +117,7 @@ class ConfigurablePayorDetails extends React.Component<
     const reimburseAmount = _getReimbursementTotal(tasks);
 
     const bundledTaskIds: string[] = [];
-    const bundledPayments: PaymentRecord[] = tasks.slice(1).map((task) => {
+    const bundledPayments: PaymentRecord[] = tasks.slice(1).map(task => {
       bundledTaskIds.push(task.id);
       return {
         paymentType: PaymentType.BUNDLED,
@@ -150,7 +151,7 @@ class ConfigurablePayorDetails extends React.Component<
       amount: reimburseAmount,
       reason: "PromotionPayment",
       metadata: {
-        taskIDs: tasks.map((task) => task.id),
+        taskIDs: tasks.map(task => task.id),
         payorName: dataStore.getBestUserName(),
         payeeName: tasks[0].site.name,
       },
@@ -183,16 +184,16 @@ class ConfigurablePayorDetails extends React.Component<
       dataStore
         .loadPreviousTasks(
           this.props.tasks[0].site.name,
-          this.props.tasks.map((task) => task.id)
+          this.props.tasks.map(task => task.id)
         )
-        .then((relatedTasks) => this.setState({ relatedTasks }));
+        .then(relatedTasks => this.setState({ relatedTasks }));
     }
     this.setState({ showPreviousClaims: !this.state.showPreviousClaims });
   };
 
   _formatRelatedTasks = () => {
     return this.state.relatedTasks
-      ? this.state.relatedTasks.map((relatedTask) => {
+      ? this.state.relatedTasks.map(relatedTask => {
           return {
             Date: relatedTask.updatedAt
               ? new Date(
@@ -246,15 +247,17 @@ class ConfigurablePayorDetails extends React.Component<
             ]}
           />
         </div>
-        <Button
-          className="mainview_show_more_button"
-          label={
-            this.state.showPreviousClaims
-              ? "- Hide Previous Claims"
-              : "+ Show Previous Claims"
-          }
-          onClick={this._toggleShowPreviousClaims}
-        />
+        {defaultConfig.dataStore.type === DataStoreType.FIREBASE && (
+          <Button
+            className="mainview_show_more_button"
+            label={
+              this.state.showPreviousClaims
+                ? "- Hide Previous Claims"
+                : "+ Show Previous Claims"
+            }
+            onClick={this._toggleShowPreviousClaims}
+          />
+        )}
         {this.state.showPreviousClaims &&
           (relatedTasks ? (
             relatedTasks.length > 0 ? (
@@ -288,17 +291,17 @@ class ConfigurablePayorDetails extends React.Component<
 export const PayorDetails = configuredComponent<
   DetailsComponentProps,
   RemoteProps
->(ConfigurablePayorDetails, (config) => ({
+>(ConfigurablePayorDetails, config => ({
   realPayments: config.enableRealPayments,
 }));
 
 function _getReimbursementTotal(tasks: Task[]): number {
   const claimAmounts = tasks
-    .map((task) =>
-      task.entries.map((entry) => {
+    .map(task =>
+      task.entries.map(entry => {
         return entry.rejected ? 0 : entry.claimedCost;
       })
     )
     .flat();
-  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
+  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost, 0);
 }

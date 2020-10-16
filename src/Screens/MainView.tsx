@@ -14,6 +14,7 @@ import MainChrome from "./MainChrome";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
 import React from "react";
+import { TaskGroup } from "../Components/TaskList";
 import { dataStore } from "../transport/datastore";
 
 type Props = RouteComponentProps & {
@@ -35,7 +36,7 @@ const PanelComponents: {
 };
 
 const ItemComponents: {
-  [key: string]: React.ComponentType<{ tasks: Task[]; isSelected: boolean }>;
+  [key: string]: React.ComponentType<{ tasks: TaskGroup; isSelected: boolean }>;
 } = {
   default: ListItem,
 };
@@ -147,7 +148,7 @@ class MainView extends React.Component<Props, State> {
             panelElement = (
               <TaskPanel
                 config={tabConfig}
-                initialSelectedTaskID={this.props.selectedTaskID}
+                initialSelectedPharmacyID={this.props.selectedTaskID}
                 taskState={tabConfig.taskState}
                 itemComponent={ItemComponents[tabConfig.taskListComponent]}
                 detailsComponent={DetailsComponents[tabConfig.detailsComponent]}
