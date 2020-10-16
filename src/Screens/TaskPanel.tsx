@@ -817,6 +817,8 @@ class DetailsWrapper extends React.Component<
         key={this.props.tasks[0].id}
         registerActionCallback={this._registerActionCallback}
         taskConfig={this.props.taskConfig}
+        updateSelectedAction={this._updateSelectedAction}
+        selectedActions={this.state.selectedActions}
       >
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (
