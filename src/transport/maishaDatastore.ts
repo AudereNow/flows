@@ -137,7 +137,7 @@ export class RestDataStore extends DataStore {
         notes
       );
     }
-    await this.refreshTasks(tasks[0].state, tasks[0].site.id);
+    await this.refreshTasks(tasks[0].state, tasks[0].site.id, true);
   }
 
   async markClaimsPaid(
@@ -345,7 +345,11 @@ export class RestDataStore extends DataStore {
     this.taskCallbacks[taskState]?.forEach(cb => cb(tasks, stats));
   }
 
-  async refreshTasks(taskState: TaskState, selectedPharmacyId?: string) {
+  async refreshTasks(
+    taskState: TaskState,
+    selectedPharmacyId?: string,
+    force?: boolean
+  ) {
     const claimFilters = this.getClaimQuery(taskState);
     if (
       !selectedPharmacyId ||
@@ -363,7 +367,10 @@ export class RestDataStore extends DataStore {
       this.callTaskCallbacks(taskState);
       return;
     }
-    if (pharmacyCache.loadingState === PharmacyLoadingState.LOADING) {
+    if (
+      pharmacyCache.loadingState === PharmacyLoadingState.LOADING ||
+      (!force && pharmacyCache.loadingState === PharmacyLoadingState.LOADED)
+    ) {
       // No need to re-refresh
       return;
     }
