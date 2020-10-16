@@ -431,7 +431,14 @@ export class RestDataStore extends DataStore {
     task: Task,
     claimIndex: number,
     notes: string
-  ): Promise<void> {}
+  ): Promise<void> {
+    await this.maishaApi.postReviewNote({
+      review_notes: {
+        care_pathway_instance_id: task.id,
+        message: notes,
+      },
+    });
+  }
 }
 
 function getTaskState(

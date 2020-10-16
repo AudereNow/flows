@@ -458,6 +458,8 @@ class TaskPanel extends React.Component<Props, State> {
 
   _renderSearchPanel = () => {
     const { focusedInput, searchDates } = this.state;
+    const showDownloadCSV =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <div
@@ -518,12 +520,14 @@ class TaskPanel extends React.Component<Props, State> {
             onClick={this._clearSearch}
           />
 
-          <Button
-            className="mainview_clear_search_button"
-            labelImg={DownloadImg}
-            label={"Download CSV"}
-            onClick={this._downloadCSV}
-          />
+          {showDownloadCSV && (
+            <Button
+              className="mainview_clear_search_button"
+              labelImg={DownloadImg}
+              label={"Download CSV"}
+              onClick={this._downloadCSV}
+            />
+          )}
         </div>
       </div>
     );

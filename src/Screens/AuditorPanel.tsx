@@ -501,6 +501,8 @@ export class AuditorDetails extends React.Component<
     const { tasks } = this.props;
     const { showImages } = this.state;
     const patients = getPatients(tasks);
+    const showPharmacyHistory =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <LabelWrapper key={searchTermGlobal} className="mainview_details">
@@ -514,12 +516,14 @@ export class AuditorDetails extends React.Component<
             .reduce((a, b) => a + b, 0)}
           showPreviousClaims={this.props.showPreviousClaims}
         />
-        <Button
-          className="mainview_button"
-          label="Download Pharmacy Report"
-          labelImg={DownloadCSVImg}
-          onClick={this._downloadPharmacyReport}
-        />
+        {showPharmacyHistory && (
+          <Button
+            className="mainview_button"
+            label="Download Pharmacy Report"
+            labelImg={DownloadCSVImg}
+            onClick={this._downloadPharmacyReport}
+          />
+        )}
         <div className="mainview_row">
           <input
             className="mainview_search_input"
