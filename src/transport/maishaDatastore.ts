@@ -1,6 +1,7 @@
 import {
   AuthState,
   CarePathwayInstance,
+  GetCarePathwayInstancesResult,
   MaishaApi,
   MaishaApprovalStatus,
   MaishaPaidStatus,
@@ -14,7 +15,12 @@ import {
   TaskState,
   UserRole,
 } from "../sharedtypes";
-import { DataStore, Flag } from "./baseDatastore";
+import {
+  DataStore,
+  Flag,
+  PharmacyLoadingState,
+  PharmacyStats,
+} from "./baseDatastore";
 
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
@@ -105,17 +111,17 @@ export class RestDataStore extends DataStore {
       return;
     }
     const claimIds = tasks
-        .map(task => task.entries.map(entry => entry.claimID))
-        .flat()
-        .filter(id => id);
+      .map(task => task.entries.map(entry => entry.claimID))
+      .flat()
+      .filter(id => id);
     const reviewedClaimIds = reviewedTasks
-        .map(task => task.entries.map(entry => entry.claimID))
-        .flat()
-        .filter(id => id);
+      .map(task => task.entries.map(entry => entry.claimID))
+      .flat()
+      .filter(id => id);
     const flaggedClaimIds = flaggedTasks
-        .map(task => task.entries.map(entry => entry.claimID))
-        .flat()
-        .filter(id => id);
+      .map(task => task.entries.map(entry => entry.claimID))
+      .flat()
+      .filter(id => id);
     if (newState === TaskState.COMPLETED) {
       // Changing to COMPLETED changes the paid state, not approval status
       if (!payment) {
@@ -179,6 +185,7 @@ export class RestDataStore extends DataStore {
       );
       return;
     }
+    /*
     const tasks: Task[] = await this.loadTasks();
     const claimIds = tasks.reduce(
       (ids: string[], task: Task) =>
@@ -194,6 +201,7 @@ export class RestDataStore extends DataStore {
       MaishaApprovalStatus.RECEIVED,
       ""
     );
+    */
   }
 
   getUserEmail(): string {
@@ -212,30 +220,25 @@ export class RestDataStore extends DataStore {
   }
 
   taskCallbacks: {
-    [key in TaskState]?: ((tasks: Task[]) => void)[];
+    [key in TaskState]?: ((tasks: Task[], stats: PharmacyStats) => void)[];
   } = {};
   subscribeToTasks(
     state: TaskState,
-    callback: (tasks: Task[]) => void
+    callback: (tasks: Task[], stats: PharmacyStats) => void,
+    selectedPharmacyId: string
   ): () => void {
     if (this.taskCallbacks[state]) {
       this.taskCallbacks[state]!.push(callback);
     } else {
       this.taskCallbacks[state] = [callback];
     }
-    this.refreshTasks(state);
+    this.refreshTasks(state, selectedPharmacyId);
     return () => {
       this.taskCallbacks[state]!.splice(
         this.taskCallbacks[state]!.indexOf(callback),
         1
       );
     };
-  }
-
-  async refreshTasks(state: TaskState) {
-    const tasks = await this.loadTasks(state);
-    this.taskCallbacks[state] &&
-      this.taskCallbacks[state]!.forEach(cb => cb(tasks));
   }
 
   getApprovalStatus(taskState: TaskState): MaishaApprovalStatus {
@@ -270,42 +273,117 @@ export class RestDataStore extends DataStore {
     };
   }
 
-  async loadTasks(taskState?: TaskState): Promise<Task[]> {
+  taskCache: {
+    [taskState in TaskState]?: {
+      [pharmacyId: string]: {
+        tasks: Task[];
+        site: Site;
+        loadingState: PharmacyLoadingState;
+        stats?: {
+          claimCount: number;
+          totalReimbursement: number;
+        };
+      };
+    };
+  } = {};
+
+  async loadPharmacies(taskState: TaskState) {
     const claimFilters = this.getClaimQuery(taskState);
     const { facilities } = await this.maishaApi.getFacilities();
-    return (
-      await Promise.all(
-        facilities.map(async facility => {
-          const cursor = "";
-          const {
-            care_pathway_instances: carePathwayInstances,
-          } = await this.maishaApi.getCarePathwayInstances(
-            facility.id,
-            cursor,
-            claimFilters.approvalStatus,
-            claimFilters.paidStatus
-          );
-          const site: Site = {
-            location: facility.address,
-            name: facility.name,
-            phone: facility.phone_number || "",
-          };
-          const tasks: Task[] = carePathwayInstances.map(instance => {
-            return {
-              createdAt: 0,
-              entries: [carePathwayInstanceToClaimEntry(instance)],
-              id: instance.id,
-              site,
-              state: getTaskState(
-                instance.approval_status,
-                instance.payment_status
-              ),
-            };
-          });
-          return tasks;
-        })
-      )
-    ).flat();
+    const {
+      facility_stats: allFacilityStats,
+    } = await this.maishaApi.getLoyaltyFacilityStats();
+    facilities.forEach(facility => {
+      const site: Site = {
+        location: facility.address,
+        name: facility.name,
+        phone: facility.phone_number || "",
+      };
+      const facilityStats = allFacilityStats.find(
+        stats => stats.facility_id === facility.id
+      );
+      const stateStats = facilityStats
+        ? facilityStats.stats.find(
+            stats =>
+              stats.approval_status === claimFilters.approvalStatus &&
+              stats.payment_status === claimFilters.paidStatus
+          )
+        : undefined;
+      if (!this.taskCache[taskState]) {
+        this.taskCache[taskState] = {};
+      }
+      this.taskCache[taskState]![facility.id] = {
+        tasks: [],
+        site,
+        loadingState: PharmacyLoadingState.NOT_LOADED,
+        stats: stateStats
+          ? {
+              claimCount: stateStats.count,
+              totalReimbursement:
+                stateStats.total_reimbursement_amount_cents / 100,
+            }
+          : undefined,
+      };
+    });
+  }
+
+  callTaskCallbacks(taskState: TaskState) {
+    const stateCache = this.taskCache[taskState]!;
+    const tasks = Object.values(stateCache).flatMap(cache => cache.tasks);
+    const stats: PharmacyStats = {};
+    Object.entries(stateCache).forEach(([pharmacyId, cache]) => {
+      if (cache.stats) {
+        stats[pharmacyId] = {
+          ...cache.stats,
+          loadingState: cache.loadingState,
+        };
+      }
+    });
+    this.taskCallbacks[taskState]?.forEach(cb => cb(tasks, stats));
+  }
+
+  async refreshTasks(taskState: TaskState, selectedPharmacyId?: string) {
+    const claimFilters = this.getClaimQuery(taskState);
+    if (
+      !selectedPharmacyId ||
+      !this.taskCache[taskState] ||
+      (selectedPharmacyId && !this.taskCache[taskState]![selectedPharmacyId])
+    ) {
+      await this.loadPharmacies(taskState);
+    }
+    if (!selectedPharmacyId) {
+      this.callTaskCallbacks(taskState);
+      return;
+    }
+    const pharamcyCache = this.taskCache[taskState]![selectedPharmacyId];
+    pharamcyCache.loadingState = PharmacyLoadingState.LOADING;
+    let cursor = "";
+    let result: GetCarePathwayInstancesResult;
+    do {
+      this.callTaskCallbacks(taskState);
+      result = await this.maishaApi.getCarePathwayInstances(
+        selectedPharmacyId,
+        cursor,
+        claimFilters.approvalStatus,
+        claimFilters.paidStatus
+      );
+      cursor = result.next_cursor;
+      const tasks: Task[] = result.care_pathway_instances.map(instance => {
+        return {
+          createdAt: 0,
+          entries: [carePathwayInstanceToClaimEntry(instance)],
+          id: instance.id,
+          site: pharamcyCache.site,
+          state: getTaskState(
+            instance.approval_status,
+            instance.payment_status
+          ),
+        };
+      });
+      pharamcyCache.tasks.push(...tasks);
+    } while (result.has_next);
+    pharamcyCache.loadingState = PharmacyLoadingState.LOADED;
+    this.callTaskCallbacks(taskState);
   }
 
   async loadFlags(tasks: Task[]): Promise<{ [taskId: string]: Flag[] }> {

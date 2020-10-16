@@ -115,6 +115,14 @@ export type CarePathwayInstance = {
   completed_at: string;
 };
 
+export type GetCarePathwayInstancesResult = {
+  care_pathway_instances: CarePathwayInstance[];
+  count: number;
+  cursor: string;
+  has_next: boolean;
+  next_cursor: string;
+};
+
 export type MaishaFlagsResponse = {
   compliance_flags: {
     care_pathway_instance_id: string;
@@ -190,7 +198,7 @@ export class MaishaApi {
     cursor: string,
     approvalStatus?: MaishaApprovalStatus,
     paymentStatus?: MaishaPaidStatus
-  ): Promise<{ care_pathway_instances: CarePathwayInstance[] }> {
+  ): Promise<GetCarePathwayInstancesResult> {
     const params = new URLSearchParams({ cursor });
     if (approvalStatus) {
       params.append("approval_status", approvalStatus);
