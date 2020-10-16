@@ -145,9 +145,11 @@ class TaskPanel extends React.Component<Props, State> {
       this.props.initialSelectedPharmacyID
     );
     this.props.registerForTabSelectCallback(this._onTabSelect);
-    this.setState({
-      cannedTaskNotes: await dataStore.getNotes("task"),
-    });
+    const cannedTaskNotes = [
+      ...(await dataStore.getNotes("task")),
+      ...(this.props.taskConfig.cannedResponses || []),
+    ];
+    this.setState({ cannedTaskNotes });
   }
 
   componentWillUnmount() {

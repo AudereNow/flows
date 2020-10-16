@@ -1,8 +1,10 @@
-import React, { Fragment } from "react";
-import { TaskChangeRecord } from "../sharedtypes";
-import LabelTextInput from "./LabelTextInput";
 import "./Notes.css";
+
+import React, { Fragment } from "react";
+
+import LabelTextInput from "./LabelTextInput";
 import NotesAudit from "./NotesAudit";
+import { TaskChangeRecord } from "../sharedtypes";
 
 interface Props {
   changes: TaskChangeRecord[];
@@ -22,7 +24,7 @@ const Notes = (props: Props) => {
       })}
       {!!actionable && (
         <Fragment>
-          {cannedNotes && (
+          {cannedNotes && cannedNotes.length > 0 && (
             <select
               className="notes_canned_responses"
               onChange={event =>

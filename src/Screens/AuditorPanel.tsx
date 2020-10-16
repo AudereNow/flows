@@ -381,6 +381,7 @@ export class AuditorDetails extends React.Component<
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
                   notes={claim.notes || ""}
+                  cannedNotes={this.props.taskConfig.cannedResponses || []}
                 />
               </React.Fragment>
             ))

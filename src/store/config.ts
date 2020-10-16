@@ -38,6 +38,7 @@ export interface TaskConfig extends TabConfig {
   showFlagForReview?: string;
   manualReviewMinimumRatio: number;
   showBatchNotes?: boolean;
+  cannedResponses?: string[];
 }
 
 export enum DataStoreType {
@@ -100,6 +101,13 @@ export const defaultConfig: AppConfig = {
           labelImg: DeclineImg,
         },
       },
+      cannedResponses: [
+        "Blurry photo",
+        "Incorrect photo",
+        "Photo missing batch",
+        "No patient initials",
+        "Incorrect code",
+      ],
     },
     "Patient Review": {
       taskState: TaskState.NEEDS_PATIENT_REVIEW,
@@ -132,6 +140,12 @@ export const defaultConfig: AppConfig = {
           labelImg: DeclineImg,
         },
       },
+      cannedResponses: [
+        "Unable to connect",
+        "Call back requested",
+        "Connected - confirmed",
+        "Connected - issues",
+      ],
     },
     "Final Approval": {
       taskState: TaskState.NEEDS_FINAL_APPROVAL,
