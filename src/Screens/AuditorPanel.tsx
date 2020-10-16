@@ -4,14 +4,15 @@ import "react-tabs/style/react-tabs.css";
 import "./MainView.css";
 import "./AuditorPanel.css";
 
-import { ClaimEntry, Task } from "../sharedtypes";
+import { ClaimAction, DetailsComponentProps } from "./TaskPanel";
+import { ClaimEntry, Task, TaskState } from "../sharedtypes";
+import { DataStoreType, defaultConfig } from "../store/config";
 import { Flag, PatientHistory } from "../transport/baseDatastore";
 import TextItem, { SearchContext } from "../Components/TextItem";
 
 import Button from "../Components/Button";
 import CheckBox from "../Components/CheckBox";
 import ClaimNotes from "../Components/ClaimNotes";
-import { DetailsComponentProps } from "./TaskPanel";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import ImageRow from "../Components/ImageRow";
 import LabelWrapper from "../Components/LabelWrapper";
@@ -205,6 +206,16 @@ export class AuditorDetails extends React.Component<
     );
   };
 
+  _updateClaimAction = (value: string, checked: boolean) => {
+    const {
+      claimId,
+      claimAction,
+    }: { claimId: string; claimAction: ClaimAction } = JSON.parse(value);
+    this.props.updateSelectedAction(claimId, {
+      action: checked ? claimAction : undefined,
+    });
+  };
+
   _updateFlag = (value: string, checked: boolean) => {
     const {
       claimId,
@@ -266,8 +277,8 @@ export class AuditorDetails extends React.Component<
             />
           </div>
           {patient.currentClaims.map((task, taskIndex) =>
-            task.claims.map((claim, index) => (
-              <React.Fragment key={`${claim.totalCost}_${index}`}>
+            task.claims.map((claim, claimIndex) => (
+              <React.Fragment key={`${index}_${taskIndex}_${claimIndex}`}>
                 <TextItem
                   data={{
                     displayKey: "Date",
@@ -279,19 +290,85 @@ export class AuditorDetails extends React.Component<
                   showImages={showImages}
                   images={this._extractImages(claim)}
                 />
-                <CheckBox
-                  checked={
-                    claim.rejected === undefined ? false : claim.rejected
-                  }
-                  label={"Rejected"}
-                  value={JSON.stringify({
-                    claimIndex: (claim as any).originalIndex,
-                    taskIndex,
-                  })}
-                  onCheckBoxSelect={this._toggleRejectClaim}
-                  disabled={disabledCheckbox}
-                  key={index}
-                />
+                {claim.items.map((item, itemIndex) => (
+                  <React.Fragment key={item.name + itemIndex}>
+                    <TextItem
+                      data={{
+                        displayKey: "Item",
+                        searchKey: "item",
+                        value: item.name,
+                      }}
+                    />
+                    {item.photoUrl && (
+                      <ImageRow
+                        showImages={showImages}
+                        images={[item.photoUrl]}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+                {this.props.taskConfig.showFlagForReview && (
+                  <CheckBox
+                    checked={
+                      this.props.selectedActions[claim.claimID] &&
+                      this.props.selectedActions[claim.claimID].flag
+                    }
+                    label={this.props.taskConfig.showFlagForReview}
+                    value={JSON.stringify({ claimId: claim.claimID })}
+                    onCheckBoxSelect={this._updateFlag}
+                    disabled={disabledCheckbox}
+                  />
+                )}
+                <div className="claim_options_container">
+                  <CheckBox
+                    checked={
+                      this.props.selectedActions[claim.claimID] &&
+                      this.props.selectedActions[claim.claimID].action ===
+                        ClaimAction.APPROVE
+                    }
+                    label={"Approve"}
+                    value={JSON.stringify({
+                      claimAction: ClaimAction.APPROVE,
+                      claimId: claim.claimID,
+                    })}
+                    onCheckBoxSelect={this._updateClaimAction}
+                    disabled={disabledCheckbox}
+                    radio={true}
+                    className="claim_option"
+                  />
+                  <CheckBox
+                    checked={
+                      this.props.selectedActions[claim.claimID] &&
+                      this.props.selectedActions[claim.claimID].action ===
+                        ClaimAction.HOLD
+                    }
+                    label={"Hold"}
+                    value={JSON.stringify({
+                      claimAction: ClaimAction.HOLD,
+                      claimId: claim.claimID,
+                    })}
+                    onCheckBoxSelect={this._updateClaimAction}
+                    disabled={disabledCheckbox}
+                    radio={true}
+                    className="claim_option"
+                  />
+                  <CheckBox
+                    checked={
+                      this.props.selectedActions[claim.claimID] &&
+                      this.props.selectedActions[claim.claimID].action ===
+                        ClaimAction.REJECT
+                    }
+                    label={"Reject"}
+                    value={JSON.stringify({
+                      claimAction: ClaimAction.REJECT,
+                      claimId: claim.claimID,
+                    })}
+                    onCheckBoxSelect={this._updateClaimAction}
+                    disabled={disabledCheckbox}
+                    radio={true}
+                    className="claim_option"
+                  />
+                </div>
                 <ClaimNotes
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}

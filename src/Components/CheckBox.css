@@ -1,9 +1,12 @@
 .checkbox_input {
-  font-size: small;
-  cursor: pointer;
+  margin-left: 2px;
 }
 
 .checkbox_row {
   display: flex;
   align-items: center;
+  cursor: pointer;
+  padding: 4px 0px;
+  margin: 4px 0px;
+  font-size: var(--body-size);
 }
