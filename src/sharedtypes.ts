@@ -51,6 +51,7 @@ export enum UserRole {
 }
 
 export type Site = {
+  id: string;
   name: string;
   phone: string;
   location: string;
