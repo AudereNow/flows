@@ -823,8 +823,6 @@ class DetailsWrapper extends React.Component<
         updateSelectedAction={this._updateSelectedAction}
         selectedActions={this.state.selectedActions}
         taskConfig={this.props.taskConfig}
-        updateSelectedAction={this._updateSelectedAction}
-        selectedActions={this.state.selectedActions}
       >
         {actionsStats && (
           <div className="mainview_claim_action_stats">
