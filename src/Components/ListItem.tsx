@@ -2,6 +2,7 @@ import "./ListItem.css";
 
 import React from "react";
 import { Task } from "../sharedtypes";
+import { formatCurrency } from "../util/currency";
 
 export class ListItem extends React.Component<{
   tasks: Task[];
