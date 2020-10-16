@@ -122,6 +122,18 @@ export type MaishaFlagsResponse = {
   }[];
 };
 
+export type LoyaltyFacilityStatsResult = {
+  facility_stats: {
+    facility_id: string;
+    stats: {
+      approval_status: MaishaApprovalStatus;
+      payment_status: MaishaPaidStatus;
+      count: 0;
+      total_reimbursement_amount_cents: 0;
+    }[];
+  }[];
+};
+
 export class MaishaApi {
   constructor(
     readonly endpointRoot: string,
@@ -202,6 +214,10 @@ export class MaishaApi {
       `/compliance_flags/?${params.toString()}`,
       "GET"
     );
+  }
+
+  async getLoyaltyFacilityStats(): Promise<LoyaltyFacilityStatsResult> {
+    return await this.fetchWithToken("/loyalty_facility_stats");
   }
 
   async fetchWithToken(
