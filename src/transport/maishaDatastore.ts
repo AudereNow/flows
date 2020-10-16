@@ -358,13 +358,17 @@ export class RestDataStore extends DataStore {
       this.callTaskCallbacks(taskState);
       return;
     }
-    const pharamcyCache = this.taskCache[taskState]![selectedPharmacyId];
-    if (pharamcyCache.loadingState === PharmacyLoadingState.LOADING) {
+    const pharmacyCache = this.taskCache[taskState]![selectedPharmacyId];
+    if (!pharmacyCache) {
+      this.callTaskCallbacks(taskState);
+      return;
+    }
+    if (pharmacyCache.loadingState === PharmacyLoadingState.LOADING) {
       // No need to re-refresh
       return;
     }
-    pharamcyCache.loadingState = PharmacyLoadingState.LOADING;
-    pharamcyCache.tasks = [];
+    pharmacyCache.loadingState = PharmacyLoadingState.LOADING;
+    pharmacyCache.tasks = [];
     let cursor = "";
     let result: GetCarePathwayInstancesResult;
     do {
@@ -381,16 +385,16 @@ export class RestDataStore extends DataStore {
           createdAt: 0,
           entries: [carePathwayInstanceToClaimEntry(instance)],
           id: instance.id,
-          site: pharamcyCache.site,
+          site: pharmacyCache.site,
           state: getTaskState(
             instance.approval_status,
             instance.payment_status
           ),
         };
       });
-      pharamcyCache.tasks.push(...tasks);
+      pharmacyCache.tasks.push(...tasks);
     } while (result.has_next);
-    pharamcyCache.loadingState = PharmacyLoadingState.LOADED;
+    pharmacyCache.loadingState = PharmacyLoadingState.LOADED;
     this.callTaskCallbacks(taskState);
   }
 
