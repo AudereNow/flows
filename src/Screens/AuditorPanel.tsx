@@ -219,8 +219,7 @@ export class AuditorDetails extends React.Component<
     const entry = patient.currentClaims[0].claims[0];
     const flags: Flag[] = patient.currentClaims
       .map(group => group.claims.map(claim => this.props.flags[claim.claimID!]))
-      .flat()
-      .flat()
+      .flat(2)
       .filter(flag => flag);
     const disabledCheckbox =
       tasks[0].state === "REJECTED" || tasks[0].state === "COMPLETED"
