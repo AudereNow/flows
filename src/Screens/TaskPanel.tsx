@@ -646,6 +646,17 @@ class DetailsWrapper extends React.Component<
   };
 
   _countActions = () => {
+    const numTasks = this.props.tasks.length;
+    const reviewsRequired = Math.min(
+      numTasks,
+      Math.max(
+        this.props.taskConfig.manualReviewMinimumNumber,
+        Math.ceil(
+          this.props.tasks.length *
+            this.props.taskConfig.manualReviewMinimumRatio
+        )
+      )
+    );
     return this.props.tasks.reduce(
       (stats, task) => {
         const action =
@@ -660,6 +671,7 @@ class DetailsWrapper extends React.Component<
         [ClaimAction.REJECT]: 0,
         [ClaimAction.HOLD]: 0,
         unreviewed: 0,
+        reviewsRequired,
       }
     );
   };
@@ -669,8 +681,7 @@ class DetailsWrapper extends React.Component<
     const action = this.props.actions[key];
     const stats = this._countActions();
     const additionalReviewsNeeded =
-      Math.ceil(tasks.length * this.props.taskConfig.manualReviewMinimumRatio) -
-      stats[ClaimAction.APPROVE];
+      stats.reviewsRequired - stats[ClaimAction.APPROVE];
     if (
       action.claimAction === ClaimAction.APPROVE &&
       additionalReviewsNeeded > 0
@@ -808,9 +819,7 @@ class DetailsWrapper extends React.Component<
       }
     );
     const actionsStats = this._countActions();
-    const numToReview = Math.ceil(
-      this.props.taskConfig.manualReviewMinimumRatio * this.props.tasks.length
-    );
+    const numToReview = actionsStats.reviewsRequired;
     return (
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
