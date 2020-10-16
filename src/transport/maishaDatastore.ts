@@ -464,7 +464,9 @@ function carePathwayInstanceToClaimEntry(
     phone: instance.patient!.phone_number || "",
     items: instance.loyalty_sold_products!.map(product => {
       return {
-        name: product.api,
+        // TODO: split these out into separate fields, or maybe
+        // just use more readable versions of `loyalty_product_id`
+        name: `${product.api} (${product.loyalty_product_id})`,
       };
     }),
     photos: instance.care_pathway_answer_photos.map(photo => {
