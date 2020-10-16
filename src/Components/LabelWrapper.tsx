@@ -1,5 +1,6 @@
-import React, { Component, Fragment } from "react";
 import "./LabelWrapper.css";
+
+import React, { Component, Fragment } from "react";
 
 interface Props {
   label?: string;
@@ -7,6 +8,7 @@ interface Props {
   className?: string;
   renderLabelItems?: () => JSX.Element;
   searchPanel?: JSX.Element;
+  disableScroll?: boolean;
 }
 
 class LabelWrapper extends Component<Props> {
@@ -18,6 +20,7 @@ class LabelWrapper extends Component<Props> {
       postLabelElement,
       renderLabelItems,
       searchPanel,
+      disableScroll,
     } = this.props;
     return (
       <div className={`labelwrapper_container ${className}`}>
@@ -34,7 +37,9 @@ class LabelWrapper extends Component<Props> {
               </div>
             </div>
             {!!searchPanel && searchPanel}
-            <div className="labelwrapper_inner">{children}</div>
+            <div className={disableScroll ? "" : "labelwrapper_inner"}>
+              {children}
+            </div>
           </Fragment>
         }
       </div>

@@ -45,7 +45,23 @@ button:active {
 }
 
 .mainview_container {
-  margin: 16px;
+  margin: 0px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0px;
+  flex-grow: 1;
+}
+
+.react-tabs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0px;
+  flex-grow: 1;
+}
+
+.react-tabs__tab-panel--selected {
+  min-height: 0px;
+  flex-grow: 1;
 }
 
 .mainview_content {
