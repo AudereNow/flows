@@ -205,7 +205,7 @@ export class MaishaApi {
   }
 
   async postReviewNote(body: {
-    review_note: {
+    review_notes: {
       care_pathway_instance_id: string;
       message: string;
     };

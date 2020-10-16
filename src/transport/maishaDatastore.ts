@@ -328,7 +328,7 @@ export class RestDataStore extends DataStore {
     notes: string
   ): Promise<void> {
     await this.maishaApi.postReviewNote({
-      review_note: {
+      review_notes: {
         care_pathway_instance_id: task.id,
         message: notes,
       },
