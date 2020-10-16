@@ -1,4 +1,5 @@
 import { Flag } from "./baseDatastore";
+import { getLineAndCharacterOfPosition } from "typescript";
 
 const AUTH_STATE_KEY = "authState";
 export type AuthState = {
@@ -149,13 +150,10 @@ export class MaishaApi {
   ) {}
 
   async isLoggedIn(): Promise<boolean> {
-    try {
-      // TODO(ram): Use a status endpoint
-      await this.fetchWithToken("/facilities?loyalty_enabled=true");
-      return true;
-    } catch {
-      return false;
-    }
+    // Assume we're logged in if we have an auth state.
+    // A failed request due to expired credentials will trigger the onAuthFailed
+    // callback later, and this is faster than doing a test request
+    return this.getLocalAuthState() !== null;
   }
 
   async postLoyaltyPayment(body: {

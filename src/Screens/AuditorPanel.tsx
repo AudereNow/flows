@@ -26,6 +26,7 @@ import { formatCurrency } from "../util/currency";
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 
+const SAMPLES_PER_PAGE = 25;
 const MIN_SAMPLE_FRACTION = 0.2;
 const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
@@ -54,6 +55,7 @@ type State = {
   numPatients: number;
   patients: PatientInfo[];
   previousClaims: TaskTotal[];
+  pageNumber: number;
 };
 
 interface PatientInfo {
@@ -86,6 +88,7 @@ function getInitialState(props: DetailsComponentProps): State {
       MIN_SAMPLES
     ),
     patients,
+    pageNumber: 0,
   };
 }
 
@@ -453,13 +456,51 @@ export class AuditorDetails extends React.Component<
     });
   };
 
+  _previousPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber - 1,
+    });
+  };
+
+  _nextPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber + 1,
+    });
+  };
+
+  _renderPageButtons() {
+    const pages = Math.ceil(this.props.tasks.length / SAMPLES_PER_PAGE);
+    if (pages === 1) {
+      return null;
+    }
+    return (
+      <div className="auditor_pageButtons">
+        <button
+          disabled={this.state.pageNumber === 0}
+          onClick={this._previousPage}
+          className="mainview_button"
+        >
+          ‹ Previous
+        </button>
+        <div className="auditor_pageNumber">
+          Page {this.state.pageNumber + 1} of {pages}
+        </div>
+        <button
+          disabled={this.state.pageNumber === pages - 1}
+          onClick={this._nextPage}
+          className="mainview_button"
+        >
+          Next ›
+        </button>
+      </div>
+    );
+  }
+
   render() {
     const { searchTermGlobal } = this.context;
-    const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { tasks } = this.props;
     const { showImages } = this.state;
-    const patients = getPatients(tasks).slice(0, this.state.numPatients);
-    const remaining = this.state.patients.length - this.state.numPatients;
+    const patients = getPatients(tasks);
 
     return (
       <LabelWrapper key={searchTermGlobal} className="mainview_details">
@@ -492,34 +533,19 @@ export class AuditorDetails extends React.Component<
               .reduce((a, b) => a + b, 0)})`}</span>
           )}
         </div>
-        {patients.map((patient, index) => {
-          return this._renderPatientDetails(patient, index);
-        })}
-        {remaining > 0 && (
-          <div className="mainview_button_row">
-            <Button
-              className="mainview_show_more_button"
-              label={
-                showAllEntries
-                  ? `- Hide ${remaining} Additional Claims`
-                  : `+ Show ${remaining} Additional Claims`
-              }
-              onClick={this._onShowAll}
-            />
-          </div>
-        )}
-        {remaining > 0 &&
-          showAllEntries &&
-          this.state.patients
-            .slice(this.state.numPatients)
-
-            .map((patient, index) => {
-              return this._renderPatientDetails(
-                patient,
-                patients.length + index
-              );
-            })}
-
+        {this._renderPageButtons()}
+        {patients
+          .slice(
+            this.state.pageNumber * SAMPLES_PER_PAGE,
+            (this.state.pageNumber + 1) * SAMPLES_PER_PAGE
+          )
+          .map((patient, index) => {
+            return this._renderPatientDetails(
+              patient,
+              this.state.pageNumber * SAMPLES_PER_PAGE + index
+            );
+          })}
+        {this._renderPageButtons()}
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>

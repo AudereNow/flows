@@ -137,7 +137,7 @@ export class RestDataStore extends DataStore {
         notes
       );
     }
-    await this.refreshTasks(tasks[0].state);
+    await this.refreshTasks(tasks[0].state, tasks[0].site.id);
   }
 
   async markClaimsPaid(
@@ -185,8 +185,11 @@ export class RestDataStore extends DataStore {
       );
       return;
     }
-    /*
-    const tasks: Task[] = await this.loadTasks();
+    const tasks: Task[] = Object.values(this.taskCache).flatMap(stateCache =>
+      stateCache
+        ? Object.values(stateCache).flatMap(pharmacy => pharmacy.tasks)
+        : []
+    );
     const claimIds = tasks.reduce(
       (ids: string[], task: Task) =>
         ids.concat(
@@ -201,7 +204,6 @@ export class RestDataStore extends DataStore {
       MaishaApprovalStatus.RECEIVED,
       ""
     );
-    */
   }
 
   getUserEmail(): string {
@@ -224,15 +226,13 @@ export class RestDataStore extends DataStore {
   } = {};
   subscribeToTasks(
     state: TaskState,
-    callback: (tasks: Task[], stats: PharmacyStats) => void,
-    selectedPharmacyId: string
+    callback: (tasks: Task[], stats: PharmacyStats) => void
   ): () => void {
     if (this.taskCallbacks[state]) {
       this.taskCallbacks[state]!.push(callback);
     } else {
       this.taskCallbacks[state] = [callback];
     }
-    this.refreshTasks(state, selectedPharmacyId);
     return () => {
       this.taskCallbacks[state]!.splice(
         this.taskCallbacks[state]!.indexOf(callback),
@@ -295,6 +295,7 @@ export class RestDataStore extends DataStore {
     } = await this.maishaApi.getLoyaltyFacilityStats();
     facilities.forEach(facility => {
       const site: Site = {
+        id: facility.id,
         location: facility.address,
         name: facility.name,
         phone: facility.phone_number || "",
@@ -306,7 +307,8 @@ export class RestDataStore extends DataStore {
         ? facilityStats.stats.find(
             stats =>
               stats.approval_status === claimFilters.approvalStatus &&
-              stats.payment_status === claimFilters.paidStatus
+              stats.payment_status ===
+                (claimFilters.paidStatus || MaishaPaidStatus.UNPAID)
           )
         : undefined;
       if (!this.taskCache[taskState]) {
@@ -336,6 +338,7 @@ export class RestDataStore extends DataStore {
         stats[pharmacyId] = {
           ...cache.stats,
           loadingState: cache.loadingState,
+          site: cache.site,
         };
       }
     });
@@ -356,7 +359,12 @@ export class RestDataStore extends DataStore {
       return;
     }
     const pharamcyCache = this.taskCache[taskState]![selectedPharmacyId];
+    if (pharamcyCache.loadingState === PharmacyLoadingState.LOADING) {
+      // No need to re-refresh
+      return;
+    }
     pharamcyCache.loadingState = PharmacyLoadingState.LOADING;
+    pharamcyCache.tasks = [];
     let cursor = "";
     let result: GetCarePathwayInstancesResult;
     do {
@@ -397,6 +405,11 @@ export class RestDataStore extends DataStore {
     result.compliance_flags.forEach(
       task => (flagsById[task.care_pathway_instance_id] = task.flags)
     );
+    tasks.forEach(task => {
+      if (!flagsById[task.id]) {
+        flagsById[task.id] = [];
+      }
+    });
     return flagsById;
   }
 

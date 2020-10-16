@@ -300,5 +300,5 @@ function _getReimbursementTotal(tasks: Task[]): number {
       })
     )
     .flat();
-  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
+  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost, 0);
 }

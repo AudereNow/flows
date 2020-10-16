@@ -1,16 +1,27 @@
 import "./TaskList.css";
 
-import { ActiveTask } from "../transport/baseDatastore";
+import { ActiveTask, PharmacyLoadingState } from "../transport/baseDatastore";
+import { Site, Task } from "../sharedtypes";
+
 import React from "react";
 import ReactTooltip from "react-tooltip";
-import { Task } from "../sharedtypes";
 import { dataStore } from "../transport/datastore";
 
 const MAX_ACTIVE_MSEC = 5 * 60 * 1000; // 5 mins is considered "active"
 
+export type TaskGroup = {
+  site: Site;
+  tasks: Task[];
+  stats?: {
+    claimCount: number;
+    totalReimbursement: number;
+    loadingState: PharmacyLoadingState;
+  };
+};
+
 type Props = {
-  tasks: Task[][];
-  renderItem: (tasks: Task[], isSelected: boolean) => JSX.Element;
+  taskGroups: TaskGroup[];
+  renderItem: (tasks: TaskGroup, isSelected: boolean) => JSX.Element;
   className?: string;
   onSelect?: (index: number) => boolean;
   selectedItem?: number;
@@ -69,7 +80,7 @@ class TaskList extends React.Component<Props, State> {
 
     if (okToSelect) {
       // Let this drift by without await because nothing after it depends on it
-      dataStore.logActiveTaskView(this.props.tasks[index][0].id);
+      dataStore.logActiveTaskView(this.props.taskGroups[index].site.id);
 
       this.setState({ selectedIndex: index });
     }
@@ -90,12 +101,12 @@ class TaskList extends React.Component<Props, State> {
   }
 
   render() {
-    const { renderItem, tasks } = this.props;
+    const { renderItem, taskGroups: tasks } = this.props;
     return (
       <div className={this.props.className}>
-        {tasks.map((task, index) => {
+        {tasks.map((taskGroup, index) => {
           let activeClass, activeDataTip;
-          const activeViewers = this._getActiveViewers(task);
+          const activeViewers = this._getActiveViewers(taskGroup.tasks);
           if (activeViewers.length > 0) {
             activeClass = "tasklist_active";
             activeDataTip = `${activeViewers.join(", ")} ${
@@ -105,12 +116,12 @@ class TaskList extends React.Component<Props, State> {
           return (
             <div
               className={activeClass}
-              key={task[0].id}
+              key={taskGroup.site.name}
               data-tip={activeDataTip}
               data-name={index}
               onClick={this._onItemPressed}
             >
-              {renderItem(task, index === this.state.selectedIndex)}
+              {renderItem(taskGroup, index === this.state.selectedIndex)}
               <ReactTooltip key={activeDataTip} />
             </div>
           );
