@@ -6,3 +6,14 @@
 .claim_option {
   margin-right: 20px;
 }
+
+.auditor_pageButtons {
+  margin: 0px 5px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.auditor_pageNumber {
+  margin: auto;
+}

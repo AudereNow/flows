@@ -3,6 +3,7 @@ import {
   PaymentRecipient,
   PaymentRecord,
   Pharmacy,
+  Site,
   Task,
   TaskChangeRecord,
   TaskState,
@@ -33,6 +34,20 @@ export interface PatientHistory {
   }[];
 }
 
+export enum PharmacyLoadingState {
+  NOT_LOADED,
+  LOADING,
+  LOADED,
+}
+export type PharmacyStats = {
+  [pharmacyId: string]: {
+    site: Site;
+    claimCount: number;
+    totalReimbursement: number;
+    loadingState: PharmacyLoadingState;
+  };
+};
+
 export abstract class DataStore {
   // Required abstract methods
   abstract onAuthStateChanged(callback: (authenticated: boolean) => void): void;
@@ -56,10 +71,8 @@ export abstract class DataStore {
 
   abstract subscribeToTasks(
     state: TaskState,
-    callback: (tasks: Task[]) => void
+    callback: (tasks: Task[], stats?: PharmacyStats) => void
   ): () => void;
-
-  abstract loadTasks(taskState: TaskState): Promise<Task[]>;
 
   abstract loadFlags(tasks: Task[]): Promise<{ [taskId: string]: Flag[] }>;
 
@@ -70,6 +83,8 @@ export abstract class DataStore {
   ): Promise<void>;
 
   // Optional Methods with no-op default implementations
+  refreshTasks(taskState: TaskState, pharmacyId?: string): void {}
+
   async getChanges(taskID: string): Promise<TaskChangeRecord[]> {
     return [];
   }
