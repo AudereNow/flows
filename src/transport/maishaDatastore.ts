@@ -379,13 +379,16 @@ export class RestDataStore extends DataStore {
     let cursor = "";
     let result: GetCarePathwayInstancesResult;
     do {
-      this.callTaskCallbacks(taskState);
-      result = await this.maishaApi.getCarePathwayInstances(
-        selectedPharmacyId,
-        cursor,
-        claimFilters.approvalStatus,
-        claimFilters.paidStatus
-      );
+      [result] = await Promise.all([
+        // Kick off the next network request before triggering the UI update
+        this.maishaApi.getCarePathwayInstances(
+          selectedPharmacyId,
+          cursor,
+          claimFilters.approvalStatus,
+          claimFilters.paidStatus
+        ),
+        this.callTaskCallbacks(taskState),
+      ]);
       cursor = result.next_cursor;
       const tasks: Task[] = result.care_pathway_instances.map(instance => {
         return {

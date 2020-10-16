@@ -557,6 +557,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { selectedPharmacyIndex } = this._getSelectedTask();
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
+      this.state.changes[selectedPharmacyIndex] &&
       selectedPharmacyIndex >= 0 ? (
         <Notes
           changes={this.state.changes[selectedPharmacyIndex]}
