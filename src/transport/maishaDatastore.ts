@@ -352,6 +352,7 @@ export class RestDataStore extends DataStore {
   ) {
     const claimFilters = this.getClaimQuery(taskState);
     if (
+      force ||
       !selectedPharmacyId ||
       !this.taskCache[taskState] ||
       (selectedPharmacyId && !this.taskCache[taskState]![selectedPharmacyId])
