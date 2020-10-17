@@ -72,7 +72,7 @@ class ConfigurableOperatorDetails extends React.Component<
           <ClaimNotes
             claimIndex={(entry as any).originalIndex}
             task={this.props.tasks[index]}
-            notes={entry.notes || ""}
+            notes={entry.notes || []}
             cannedNotes={this.props.taskConfig.cannedResponses || []}
           />
         </div>

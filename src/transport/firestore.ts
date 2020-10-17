@@ -473,7 +473,7 @@ export class FirebaseDataStore extends DataStore {
   }
 
   async setClaimNotes(task: Task, claimIndex: number, notes: string) {
-    task.entries[claimIndex].notes = notes;
+    task.entries[claimIndex].notes?.push(notes);
     return await this.saveTask(task, task.id);
   }
 
