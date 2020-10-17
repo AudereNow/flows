@@ -484,7 +484,7 @@ export class AuditorDetails extends React.Component<
             className="mainview_search_input"
             type="text"
             onChange={this._handleSearchTermDetailsChange}
-            placeholder="Filter Claims"
+            placeholder="Filter Claims by Patient"
           />
           {tasks.some(task => !!(task as any).foundCount) && (
             <span className="mainview_header_text">{`Search Results: (${tasks
