@@ -232,6 +232,8 @@ export class AuditorDetails extends React.Component<
       .map(group => group.claims.map(claim => this.props.flags[claim.claimID!]))
       .flat(2)
       .filter(flag => flag);
+    const manualFlags = flags.filter(flag => flag.manually_flagged);
+    const automaticFlags = flags.filter(flag => !flag.manually_flagged);
     const disabledCheckbox =
       tasks[0].state === TaskState.REJECTED ||
       tasks[0].state === TaskState.COMPLETED
@@ -261,9 +263,18 @@ export class AuditorDetails extends React.Component<
         disableScroll={true}
       >
         <div className="mainview_padded">
-          {flags.length > 0 && (
+          {manualFlags.length > 0 && (
+            <div className="mainview_row mainview_flag_box mainview_manual_flag">
+              <strong>
+                {manualFlags.map(flag => flag.description).join(", ")}
+              </strong>
+            </div>
+          )}
+          {automaticFlags.length > 0 && (
             <div className="mainview_row mainview_flag_box">
-              <strong>{flags.map(flag => flag.description).join(", ")}</strong>
+              <strong>
+                {automaticFlags.map(flag => flag.description).join(", ")}
+              </strong>
             </div>
           )}
           <div className="mainview_row">

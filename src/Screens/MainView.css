@@ -87,6 +87,11 @@ button:active {
   padding: 10px;
 }
 
+.mainview_manual_flag {
+  border: 1px solid darkblue;
+  background-color: lightblue;
+}
+
 .mainview_button_row {
   display: flex;
   flex-direction: row;
