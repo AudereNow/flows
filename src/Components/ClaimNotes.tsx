@@ -66,11 +66,15 @@ class ClaimNotes extends React.Component<Props, State> {
         {this.props.notes.length > 0 && (
           <>
             <div>Notes:</div>
-            <>
-              {this.props.notes.map((note: string) =>
-                note.split("\n").map(line => <div>{line}</div>)
-              )}
-            </>
+            <div>
+              {this.props.notes.map((note: string) => (
+                <div className="claimnotes_note">
+                  {note.split("\n").map(line => (
+                    <div>{line}</div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </>
         )}
         {editing ? (

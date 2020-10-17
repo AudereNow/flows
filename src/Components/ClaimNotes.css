@@ -13,3 +13,12 @@
   border: 1px solid var(--primary-color-dark);
   background-color: white;
 }
+
+.claimnotes_note {
+  margin: 5px;
+  border-top: 1px solid lightgray;
+}
+
+.claimnotes_note:first-child {
+  border-top: none;
+}
