@@ -563,6 +563,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { selectedPharmacyIndex } = this._getSelectedTask();
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
+      this.props.taskConfig.showBatchNotes &&
       this.state.changes[selectedPharmacyIndex] &&
       selectedPharmacyIndex >= 0 ? (
         <Notes
