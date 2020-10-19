@@ -76,7 +76,7 @@ type LabeledPhoto = {
 };
 
 function getInitialState(props: DetailsComponentProps): State {
-  const patients = getPatients(props.tasks);
+  const patients = getPatients(props.tasks, props.flags);
   const collapsed: { [claimId: string]: boolean } = {};
   props.tasks.forEach(task => {
     const action = props.selectedActions[task.id];
@@ -220,6 +220,8 @@ export class AuditorDetails extends React.Component<
       .map(group => group.claims.map(claim => this.props.flags[claim.claimID!]))
       .flat(2)
       .filter(flag => flag);
+    const manualFlags = flags.filter(flag => flag.manually_flagged);
+    const automaticFlags = flags.filter(flag => !flag.manually_flagged);
     const disabledCheckbox =
       tasks[0].state === TaskState.REJECTED ||
       tasks[0].state === TaskState.COMPLETED
@@ -263,9 +265,18 @@ export class AuditorDetails extends React.Component<
         collapsedDisplay={patientString}
       >
         <div className="mainview_padded">
-          {flags.length > 0 && (
+          {manualFlags.length > 0 && (
+            <div className="mainview_row mainview_flag_box mainview_manual_flag">
+              <strong>
+                {manualFlags.map(flag => flag.description).join(", ")}
+              </strong>
+            </div>
+          )}
+          {automaticFlags.length > 0 && (
             <div className="mainview_row mainview_flag_box">
-              <strong>{flags.map(flag => flag.description).join(", ")}</strong>
+              <strong>
+                {automaticFlags.map(flag => flag.description).join(", ")}
+              </strong>
             </div>
           )}
           <div className="mainview_row">
@@ -387,6 +398,7 @@ export class AuditorDetails extends React.Component<
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
                   notes={claim.notes || ""}
+                  cannedNotes={this.props.taskConfig.cannedResponses || []}
                 />
               </React.Fragment>
             ))
@@ -504,9 +516,9 @@ export class AuditorDetails extends React.Component<
 
   render() {
     const { searchTermGlobal } = this.context;
-    const { tasks } = this.props;
+    const { tasks, flags } = this.props;
     const { showImages } = this.state;
-    const patients = getPatients(tasks);
+    const patients = getPatients(tasks, flags);
     const showPharmacyHistory =
       defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
@@ -563,16 +575,30 @@ export class AuditorDetails extends React.Component<
   }
 }
 
-function getPatients(tasks: Task[]): PatientInfo[] {
-  return tasks.map((task, index) => ({
-    patientId: task.entries[0].patientID || "",
-    currentClaims: [
-      {
-        taskIndex: index,
-        claims: task.entries,
-      },
-    ],
-  }));
+function getPatients(
+  tasks: Task[],
+  flags: { [taskId: string]: Flag[] }
+): PatientInfo[] {
+  return tasks
+    .sort((t1, t2) => {
+      const flags1 = flags[t1.id] || [];
+      const flags2 = flags[t2.id] || [];
+      const manualFlags1 = flags1.filter(f => f.manually_flagged).length;
+      const manualFlags2 = flags2.filter(f => f.manually_flagged).length;
+      if (manualFlags1 === manualFlags2) {
+        return (flags[t2.id]?.length || 0) - (flags[t1.id]?.length || 0);
+      }
+      return manualFlags2 - manualFlags1;
+    })
+    .map((task, index) => ({
+      patientId: task.entries[0].patientID || "",
+      currentClaims: [
+        {
+          taskIndex: index,
+          claims: task.entries,
+        },
+      ],
+    }));
 }
 
 function getDateString(claim: ClaimEntry): string {

@@ -10,6 +10,7 @@ interface Props {
   claimIndex: number;
   task: Task;
   notes: string;
+  cannedNotes: string[];
 }
 
 interface State {
@@ -28,7 +29,12 @@ class ClaimNotes extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
-    this.setState({ cannedClaimNotes: await dataStore.getNotes("claim") });
+    this.setState({
+      cannedClaimNotes: [
+        ...(await dataStore.getNotes("claim")),
+        ...this.props.cannedNotes,
+      ],
+    });
   }
 
   _onSave = async () => {
@@ -67,7 +73,7 @@ class ClaimNotes extends React.Component<Props, State> {
               label="Save Notes"
               onClick={this._onSave}
             />
-            {cannedClaimNotes && (
+            {cannedClaimNotes && cannedClaimNotes.length > 0 && (
               <div>
                 <select onChange={this._onCannedNoteSelected}>
                   <option value="">--Canned Responses--</option>
