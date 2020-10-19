@@ -16,7 +16,7 @@ interface Props {
 }
 
 class LabelWrapper extends Component<Props> {
-  _onCollapse = () => {
+  _toggleCollapse = () => {
     this.props.onCollapse && this.props.onCollapse(!this.props.collapsed);
   };
 
@@ -35,7 +35,10 @@ class LabelWrapper extends Component<Props> {
     return (
       <div className={`labelwrapper_container ${className}`}>
         {collapsible && (
-          <div className="labelwrapper_collapser" onClick={this._onCollapse}>
+          <div
+            className="labelwrapper_collapser"
+            onClick={this._toggleCollapse}
+          >
             <span className="labelwrapper_collapser_arrow">
               {collapsed ? "▸" : "▾"}
             </span>
