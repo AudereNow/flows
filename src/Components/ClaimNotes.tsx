@@ -70,7 +70,7 @@ class ClaimNotes extends React.Component<Props, State> {
               {this.props.notes.map((note: string) => (
                 <div className="claimnotes_note">
                   {note.split("\n").map(line => (
-                    <div>{line}</div>
+                    <p>{line}</p>
                   ))}
                 </div>
               ))}
