@@ -7,7 +7,13 @@ export interface DateRange {
   endDate: Moment | null;
 }
 
-const DEFAULT_FILTERS_ENTRY: (keyof ClaimEntry)[] = [
+const CLAIM_SEARCH_KEYS_MAP: { [key: string]: (keyof ClaimEntry)[] } = {
+  patient: ["patientFirstName", "patientLastName"],
+  item: ["items"],
+  phone: ["phone"],
+};
+
+const ALL_CLAIM_SEARCH_KEYS: (keyof ClaimEntry)[] = [
   "patientFirstName",
   "patientLastName",
   "items",
@@ -22,52 +28,25 @@ export const containsSearchTerm = (
     return true;
   }
 
-  let foundCount = 0;
   const phrases = searchPhrase.split(" ");
 
-  phrases.forEach(term => {
+  return phrases.every(term => {
+    let keys = ALL_CLAIM_SEARCH_KEYS;
+    let value = term;
     if (term.indexOf(":") > 0) {
       const keyValue = term.split(":");
-      const key = keyValue[0].toLowerCase().trim() as keyof ClaimEntry;
-      const value = keyValue[1].toLowerCase().trim();
-      if (key === "items" || (key as string) === "item") {
-        const found = entry.items.some(item =>
+      keys = CLAIM_SEARCH_KEYS_MAP[keyValue[0].toLowerCase().trim()];
+      value = keyValue[1].toLowerCase().trim();
+    }
+    return keys.some(key => {
+      if (key === "items") {
+        return entry.items.some(item =>
           item.name.toLowerCase().includes(value)
         );
-        if (found) {
-          foundCount += 1;
-        }
-      } else if (
-        entry[key] &&
-        entry[key]?.toString().toLowerCase().includes(value)
-      ) {
-        foundCount += 1;
       }
-    } else {
-      if (
-        DEFAULT_FILTERS_ENTRY.some(filter => {
-          if (filter === "items") {
-            debugger;
-            const found = entry.items.some(item =>
-              item.name.toLowerCase().includes(term.toLowerCase())
-            );
-            if (found) {
-              foundCount += 1;
-            }
-          } else if (entry[filter]) {
-            return entry[filter]
-              ?.toString()
-              .toLowerCase()
-              .includes(term.toLowerCase());
-          }
-          return false;
-        })
-      ) {
-        foundCount += 1;
-      }
-    }
+      return entry[key] && entry[key]?.toString().toLowerCase().includes(value);
+    });
   });
-  return foundCount === phrases.length;
 };
 
 export const withinDateRange = (dateRange: DateRange, entry: any) => {
