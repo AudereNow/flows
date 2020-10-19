@@ -480,7 +480,7 @@ function carePathwayInstanceToClaimEntry(
     claimedCost: instance.facility_reimbursement_cents / 100,
     startTime: Date.parse(instance.started_at),
     endTime: Date.parse(instance.completed_at),
-    notes: instance.notes || "",
+    notes: instance.review_notes.map(note => note.message),
     claimID: instance.id,
   };
 }

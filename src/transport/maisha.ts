@@ -1,5 +1,4 @@
 import { Flag } from "./baseDatastore";
-import { getLineAndCharacterOfPosition } from "typescript";
 
 const AUTH_STATE_KEY = "authState";
 export type AuthState = {
@@ -108,7 +107,10 @@ export type CarePathwayInstance = {
   longitude: string;
   mpesa_till_number: string;
   name: string;
-  notes: string | null;
+  review_notes: {
+    care_pathway_instance_id: string;
+    message: string;
+  }[];
   phone_number: string;
   loyalty_sold_products?: LoyaltySoldProduct[];
   patient?: MaishaPatient;
