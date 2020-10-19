@@ -26,9 +26,9 @@ class App extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    const datastore = initializeStore(defaultConfig.dataStore);
-
-    datastore.onAuthStateChanged(this._onAuthChanged);
+    initializeStore(defaultConfig.dataStore).then(datastore => {
+      datastore.onAuthStateChanged(this._onAuthChanged);
+    });
   }
 
   _onAuthChanged = (authenticated: boolean) => {
