@@ -30,7 +30,7 @@ export const containsSearchTerm = (
       const keyValue = term.split(":");
       const key = keyValue[0].toLowerCase().trim() as keyof ClaimEntry;
       const value = keyValue[1].toLowerCase().trim();
-      if (key === "items") {
+      if (key === "items" || (key as string) === "item") {
         const found = entry.items.some(item =>
           item.name.toLowerCase().includes(value)
         );
@@ -46,7 +46,15 @@ export const containsSearchTerm = (
     } else {
       if (
         DEFAULT_FILTERS_ENTRY.some(filter => {
-          if (entry[filter]) {
+          if (filter === "items") {
+            debugger;
+            const found = entry.items.some(item =>
+              item.name.toLowerCase().includes(term.toLowerCase())
+            );
+            if (found) {
+              foundCount += 1;
+            }
+          } else if (entry[filter]) {
             return entry[filter]
               ?.toString()
               .toLowerCase()
