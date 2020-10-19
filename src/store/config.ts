@@ -264,6 +264,8 @@ export const defaultConfig: AppConfig = {
   },
   dataStore: {
     type: DataStoreType.REST,
-    endpointRoot: "https://staging-service.maishameds.org",
+    endpointRoot:
+      process.env.REACT_APP_MAISHA_API_HOST ||
+      "https://staging-service.maishameds.org",
   },
 };

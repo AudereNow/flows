@@ -37,6 +37,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build; git rev-list -n 1 HEAD > build/about.txt; date >> build/about.txt",
     "deploy": "yarn build && firebase deploy --only hosting",
+    "deploy:staging": "firebase use staging && yarn deploy",
+    "deploy:prod": "firebase use prod && REACT_APP_MAISHA_API_HOST=https://service.maishameds.org yarn deploy",
     "test": "react-scripts test",
     "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject"
