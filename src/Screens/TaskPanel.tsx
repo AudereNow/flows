@@ -490,7 +490,7 @@ class TaskPanel extends React.Component<Props, State> {
               label={"ⓘ"}
               iconClassName="tooltipicon_information"
               tooltip={
-                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: item:e, patient:ru"
+                "Available search keys: 'patient', 'pharmacy', 'item'. Example query: \"item:RDT patient:Jess\""
               }
             />
           </div>
@@ -695,6 +695,16 @@ class DetailsWrapper extends React.Component<
   };
 
   _countActions = () => {
+    const numTasks =
+      this.props.taskGroup.stats?.claimCount ||
+      this.props.taskGroup.tasks.length;
+    const reviewsRequired = Math.min(
+      numTasks,
+      Math.max(
+        this.props.taskConfig.manualReviewMinimumNumber,
+        Math.ceil(numTasks * this.props.taskConfig.manualReviewMinimumRatio)
+      )
+    );
     return this.props.taskGroup.tasks.reduce(
       (stats, task) => {
         const action =
@@ -709,6 +719,7 @@ class DetailsWrapper extends React.Component<
         [ClaimAction.REJECT]: 0,
         [ClaimAction.HOLD]: 0,
         unreviewed: 0,
+        reviewsRequired,
       }
     );
   };
@@ -718,8 +729,7 @@ class DetailsWrapper extends React.Component<
     const action = this.props.actions[key];
     const stats = this._countActions();
     const additionalReviewsNeeded =
-      Math.ceil(tasks.length * this.props.taskConfig.manualReviewMinimumRatio) -
-      stats[ClaimAction.APPROVE];
+      stats.reviewsRequired - stats[ClaimAction.APPROVE];
     if (
       action.claimAction === ClaimAction.APPROVE &&
       additionalReviewsNeeded > 0
@@ -856,6 +866,11 @@ class DetailsWrapper extends React.Component<
         return true;
       }
     );
+    const actionsStats = this._countActions();
+    const numToReview = actionsStats.reviewsRequired;
+    const showActionsStats =
+      this.props.taskConfig.detailsComponent === "AuditTask" &&
+      Object.values(this.props.taskConfig.actions).length > 0;
     return (
       <this.props.detailsComponent
         hideImagesDefault={this.props.hideImagesDefault}
@@ -865,10 +880,30 @@ class DetailsWrapper extends React.Component<
         notesux={this.props.notesux}
         key={this.props.taskGroup.site.id}
         registerActionCallback={this._registerActionCallback}
-        taskConfig={this.props.taskConfig}
         updateSelectedAction={this._updateSelectedAction}
         selectedActions={this.state.selectedActions}
+        taskConfig={this.props.taskConfig}
       >
+        {showActionsStats && (
+          <div className="mainview_claim_action_stats">
+            {numToReview > 0 && (
+              <span
+                className={
+                  actionsStats[ClaimAction.APPROVE] < numToReview
+                    ? "warn"
+                    : "good"
+                }
+              >
+                {actionsStats[ClaimAction.APPROVE]} of {numToReview} Review
+                Required
+              </span>
+            )}
+            <span>{actionsStats[ClaimAction.APPROVE]} Approved</span>
+            <span>{actionsStats[ClaimAction.REJECT]} Rejected</span>
+            <span>{actionsStats[ClaimAction.HOLD]} Held</span>
+            <span>{actionsStats.unreviewed} Non-Selected</span>
+          </div>
+        )}
         <div className="mainview_button_row">
           {buttons.map(([key, actionConfig]) => (
             <Button

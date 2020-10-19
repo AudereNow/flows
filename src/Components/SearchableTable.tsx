@@ -1,18 +1,21 @@
-import { json2csv } from "json-2-csv";
-import moment from "moment";
-import React from "react";
-import { RouteComponentProps, withRouter } from "react-router";
-import ReactTable, { Column } from "react-table";
 import "react-table/react-table.css";
+import "./SearchableTable.css";
+
+import ReactTable, { Column } from "react-table";
+import { RouteComponentProps, withRouter } from "react-router";
+
+import Button from "./Button";
+import { ClaimEntry } from "../sharedtypes";
 import ClearSearchImg from "../assets/close.png";
 import DownloadCSVImg from "../assets/downloadcsv.png";
 import { HistoryRow } from "../Screens/AdminPanel";
-import { defaultConfig } from "../store/config";
-import debounce from "../util/debounce";
-import { containsSearchTerm } from "../util/search";
-import Button from "./Button";
-import "./SearchableTable.css";
+import React from "react";
 import { ToolTipIcon } from "./ToolTipIcon";
+import { containsSearchTerm } from "../util/search";
+import debounce from "../util/debounce";
+import { defaultConfig } from "../store/config";
+import { json2csv } from "json-2-csv";
+import moment from "moment";
 
 type Props = RouteComponentProps & {
   tableColumns: Column<any>[];
@@ -46,7 +49,7 @@ class SearchableTable extends React.Component<Props, State> {
 
   _computeFilteredChanges = (searchTerm: string) => {
     return this.state.allData.filter(row => {
-      return containsSearchTerm(searchTerm, row);
+      return containsSearchTerm(searchTerm, row as ClaimEntry);
     });
   };
 
