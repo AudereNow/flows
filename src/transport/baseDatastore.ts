@@ -22,7 +22,7 @@ export type ActiveTask = {
 export type Flag = {
   severity: "ALERT" | "WARN";
   description: string;
-  manual?: boolean;
+  manually_flagged: boolean;
 };
 
 export interface PatientHistory {
