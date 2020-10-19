@@ -1,24 +1,22 @@
 import moment, { Moment } from "moment";
 
+import { ClaimEntry } from "../sharedtypes";
+
 export interface DateRange {
   startDate: Moment | null;
   endDate: Moment | null;
 }
 
-const DEFAULT_FILTERS_ENTRY = [
+const DEFAULT_FILTERS_ENTRY: (keyof ClaimEntry)[] = [
   "patientFirstName",
   "patientLastName",
-  "item",
-  "pharmacy",
-  "id",
-  "time",
-  "description",
-  "notes",
+  "items",
+  "phone",
 ];
 
 export const containsSearchTerm = (
   searchPhrase: string,
-  entry: any
+  entry: ClaimEntry
 ): boolean => {
   if (searchPhrase === "") {
     return true;
@@ -30,11 +28,18 @@ export const containsSearchTerm = (
   phrases.forEach(term => {
     if (term.indexOf(":") > 0) {
       const keyValue = term.split(":");
-      const key = keyValue[0].toLowerCase().trim();
+      const key = keyValue[0].toLowerCase().trim() as keyof ClaimEntry;
       const value = keyValue[1].toLowerCase().trim();
-      if (
+      if (key === "items") {
+        const found = entry.items.some(item =>
+          item.name.toLowerCase().includes(value)
+        );
+        if (found) {
+          foundCount += 1;
+        }
+      } else if (
         entry[key] &&
-        entry[key].toString().toLowerCase().includes(value.toLowerCase())
+        entry[key]?.toString().toLowerCase().includes(value)
       ) {
         foundCount += 1;
       }
@@ -42,11 +47,12 @@ export const containsSearchTerm = (
       if (
         DEFAULT_FILTERS_ENTRY.some(filter => {
           if (entry[filter]) {
+            return entry[filter]
+              ?.toString()
+              .toLowerCase()
+              .includes(term.toLowerCase());
           }
-          return (
-            entry[filter] &&
-            entry[filter].toString().toLowerCase().includes(term.toLowerCase())
-          );
+          return false;
         })
       ) {
         foundCount += 1;
