@@ -54,6 +54,7 @@ type State = {
   patients: PatientInfo[];
   previousClaims: TaskTotal[];
   pageNumber: number;
+  collapsed: { [claimId: string]: boolean };
 };
 
 interface PatientInfo {
@@ -76,6 +77,13 @@ type LabeledPhoto = {
 
 function getInitialState(props: DetailsComponentProps): State {
   const patients = getPatients(props.tasks, props.flags);
+  const collapsed: { [claimId: string]: boolean } = {};
+  props.tasks.forEach(task => {
+    const action = props.selectedActions[task.id];
+    if (action && action.action) {
+      collapsed[task.id] = true;
+    }
+  });
   return {
     searchTermDetails: "",
     showAllEntries: false,
@@ -84,6 +92,7 @@ function getInitialState(props: DetailsComponentProps): State {
     numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
     pageNumber: 0,
+    collapsed: collapsed,
   };
 }
 
@@ -185,6 +194,14 @@ export class AuditorDetails extends React.Component<
     this.props.updateSelectedAction(claimId, {
       action: checked ? claimAction : undefined,
     });
+    if (checked) {
+      this.setState(state => ({
+        collapsed: {
+          ...state.collapsed,
+          [claimId]: true,
+        },
+      }));
+    }
   };
 
   _updateFlag = (value: string, checked: boolean) => {
@@ -228,6 +245,13 @@ export class AuditorDetails extends React.Component<
       return null;
     }
 
+    const onCollapse = (collapsed: boolean) =>
+      this.setState(state => ({
+        collapsed: {
+          ...state.collapsed,
+          [entry.claimID]: collapsed,
+        },
+      }));
     const showClaimActions =
       Object.keys(this.props.taskConfig.actions).length > 0;
 
@@ -235,6 +259,10 @@ export class AuditorDetails extends React.Component<
       <LabelWrapper
         key={JSON.stringify("entry_" + patient.patientId)}
         disableScroll={true}
+        collapsible={true}
+        collapsed={this.state.collapsed[entry.claimID]}
+        onCollapse={onCollapse}
+        collapsedDisplay={patientString}
       >
         <div className="mainview_padded">
           {manualFlags.length > 0 && (
