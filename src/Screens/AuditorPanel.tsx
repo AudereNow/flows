@@ -27,8 +27,6 @@ import { json2csv } from "json-2-csv";
 import moment from "moment";
 
 const SAMPLES_PER_PAGE = 25;
-const MIN_SAMPLE_FRACTION = 0.2;
-const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
@@ -91,10 +89,7 @@ function getInitialState(props: DetailsComponentProps): State {
     showAllEntries: false,
     showImages: !!props.hideImagesDefault ? false : true,
     previousClaims: [],
-    numPatients: Math.max(
-      Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
-      MIN_SAMPLES
-    ),
+    numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
     pageNumber: 0,
     collapsed: collapsed,
@@ -110,8 +105,6 @@ export class AuditorDetails extends React.Component<
   static contextType = SearchContext;
 
   async componentDidMount() {
-    this.props.registerActionCallback("approve", this._onApprove);
-    this.props.registerActionCallback("save", this._onApprove);
     this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
@@ -149,28 +142,6 @@ export class AuditorDetails extends React.Component<
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
-  };
-
-  _onApprove = async () => {
-    const tasks = this.props.tasks.map(task => ({
-      ...task,
-      entries: task.entries.map((entry, index) => {
-        const patientIndex = this.state.patients.findIndex(
-          patient => patient.patientId === entry.patientID
-        );
-        if (
-          (patientIndex !== -1 && patientIndex < this.state.numPatients) ||
-          this.state.showAllEntries
-        ) {
-          return {
-            ...entry,
-            reviewed: true,
-          };
-        }
-        return entry;
-      }),
-    }));
-    return { success: true, tasks };
   };
 
   _loadPatientHistories = async () => {
@@ -279,6 +250,8 @@ export class AuditorDetails extends React.Component<
           [entry.claimID]: collapsed,
         },
       }));
+    const showClaimActions =
+      Object.keys(this.props.taskConfig.actions).length > 0;
 
     return (
       <LabelWrapper
@@ -344,68 +317,72 @@ export class AuditorDetails extends React.Component<
                     )}
                   </React.Fragment>
                 ))}
-                {this.props.taskConfig.showFlagForReview && (
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].flag
-                    }
-                    label={this.props.taskConfig.showFlagForReview}
-                    value={JSON.stringify({ claimId: claim.claimID })}
-                    onCheckBoxSelect={this._updateFlag}
-                    disabled={disabledCheckbox}
-                  />
+                {showClaimActions && (
+                  <>
+                    {this.props.taskConfig.showFlagForReview && (
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].flag
+                        }
+                        label={this.props.taskConfig.showFlagForReview}
+                        value={JSON.stringify({ claimId: claim.claimID })}
+                        onCheckBoxSelect={this._updateFlag}
+                        disabled={disabledCheckbox}
+                      />
+                    )}
+                    <div className="claim_options_container">
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.APPROVE
+                        }
+                        label={"Approve"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.APPROVE,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.HOLD
+                        }
+                        label={"Hold"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.HOLD,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.REJECT
+                        }
+                        label={"Reject"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.REJECT,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                    </div>
+                  </>
                 )}
-                <div className="claim_options_container">
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.APPROVE
-                    }
-                    label={"Approve"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.APPROVE,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.HOLD
-                    }
-                    label={"Hold"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.HOLD,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.REJECT
-                    }
-                    label={"Reject"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.REJECT,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                </div>
                 <ClaimNotes
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
@@ -558,7 +535,7 @@ export class AuditorDetails extends React.Component<
             className="mainview_search_input"
             type="text"
             onChange={this._handleSearchTermDetailsChange}
-            placeholder="Filter Claims"
+            placeholder="Filter Claims by Patient"
           />
           {tasks.some(task => !!(task as any).foundCount) && (
             <span className="mainview_header_text">{`Search Results: (${tasks
