@@ -26,8 +26,7 @@ import { formatCurrency } from "../util/currency";
 import { json2csv } from "json-2-csv";
 import moment from "moment";
 
-const MIN_SAMPLE_FRACTION = 0.2;
-const MIN_SAMPLES = 1;
+const SAMPLES_PER_PAGE = 25;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
@@ -54,6 +53,7 @@ type State = {
   numPatients: number;
   patients: PatientInfo[];
   previousClaims: TaskTotal[];
+  pageNumber: number;
 };
 
 interface PatientInfo {
@@ -81,11 +81,9 @@ function getInitialState(props: DetailsComponentProps): State {
     showAllEntries: false,
     showImages: !!props.hideImagesDefault ? false : true,
     previousClaims: [],
-    numPatients: Math.max(
-      Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
-      MIN_SAMPLES
-    ),
+    numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
+    pageNumber: 0,
   };
 }
 
@@ -98,8 +96,6 @@ export class AuditorDetails extends React.Component<
   static contextType = SearchContext;
 
   async componentDidMount() {
-    this.props.registerActionCallback("approve", this._onApprove);
-    this.props.registerActionCallback("save", this._onApprove);
     this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
@@ -137,28 +133,6 @@ export class AuditorDetails extends React.Component<
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
-  };
-
-  _onApprove = async () => {
-    const tasks = this.props.tasks.map(task => ({
-      ...task,
-      entries: task.entries.map((entry, index) => {
-        const patientIndex = this.state.patients.findIndex(
-          patient => patient.patientId === entry.patientID
-        );
-        if (
-          (patientIndex !== -1 && patientIndex < this.state.numPatients) ||
-          this.state.showAllEntries
-        ) {
-          return {
-            ...entry,
-            reviewed: true,
-          };
-        }
-        return entry;
-      }),
-    }));
-    return { success: true, tasks };
   };
 
   _loadPatientHistories = async () => {
@@ -252,6 +226,9 @@ export class AuditorDetails extends React.Component<
       return null;
     }
 
+    const showClaimActions =
+      Object.keys(this.props.taskConfig.actions).length > 0;
+
     return (
       <LabelWrapper
         key={JSON.stringify("entry_" + patient.patientId)}
@@ -312,68 +289,72 @@ export class AuditorDetails extends React.Component<
                     )}
                   </React.Fragment>
                 ))}
-                {this.props.taskConfig.showFlagForReview && (
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].flag
-                    }
-                    label={this.props.taskConfig.showFlagForReview}
-                    value={JSON.stringify({ claimId: claim.claimID })}
-                    onCheckBoxSelect={this._updateFlag}
-                    disabled={disabledCheckbox}
-                  />
+                {showClaimActions && (
+                  <>
+                    {this.props.taskConfig.showFlagForReview && (
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].flag
+                        }
+                        label={this.props.taskConfig.showFlagForReview}
+                        value={JSON.stringify({ claimId: claim.claimID })}
+                        onCheckBoxSelect={this._updateFlag}
+                        disabled={disabledCheckbox}
+                      />
+                    )}
+                    <div className="claim_options_container">
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.APPROVE
+                        }
+                        label={"Approve"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.APPROVE,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.HOLD
+                        }
+                        label={"Hold"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.HOLD,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.REJECT
+                        }
+                        label={"Reject"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.REJECT,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                    </div>
+                  </>
                 )}
-                <div className="claim_options_container">
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.APPROVE
-                    }
-                    label={"Approve"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.APPROVE,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.HOLD
-                    }
-                    label={"Hold"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.HOLD,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.REJECT
-                    }
-                    label={"Reject"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.REJECT,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                </div>
                 <ClaimNotes
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
@@ -453,13 +434,53 @@ export class AuditorDetails extends React.Component<
     });
   };
 
+  _previousPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber - 1,
+    });
+  };
+
+  _nextPage = () => {
+    this.setState({
+      pageNumber: this.state.pageNumber + 1,
+    });
+  };
+
+  _renderPageButtons() {
+    const pages = Math.ceil(this.props.tasks.length / SAMPLES_PER_PAGE);
+    if (pages === 1) {
+      return null;
+    }
+    return (
+      <div className="auditor_pageButtons">
+        <button
+          disabled={this.state.pageNumber === 0}
+          onClick={this._previousPage}
+          className="mainview_button"
+        >
+          ‹ Previous
+        </button>
+        <div className="auditor_pageNumber">
+          Page {this.state.pageNumber + 1} of {pages}
+        </div>
+        <button
+          disabled={this.state.pageNumber === pages - 1}
+          onClick={this._nextPage}
+          className="mainview_button"
+        >
+          Next ›
+        </button>
+      </div>
+    );
+  }
+
   render() {
     const { searchTermGlobal } = this.context;
-    const showAllEntries = !!searchTermGlobal || this.state.showAllEntries;
     const { tasks } = this.props;
     const { showImages } = this.state;
-    const patients = getPatients(tasks).slice(0, this.state.numPatients);
-    const remaining = this.state.patients.length - this.state.numPatients;
+    const patients = getPatients(tasks);
+    const showPharmacyHistory =
+      defaultConfig.dataStore.type === DataStoreType.FIREBASE;
 
     return (
       <LabelWrapper key={searchTermGlobal} className="mainview_details">
@@ -473,18 +494,20 @@ export class AuditorDetails extends React.Component<
             .reduce((a, b) => a + b, 0)}
           showPreviousClaims={this.props.showPreviousClaims}
         />
-        <Button
-          className="mainview_button"
-          label="Download Pharmacy Report"
-          labelImg={DownloadCSVImg}
-          onClick={this._downloadPharmacyReport}
-        />
+        {showPharmacyHistory && (
+          <Button
+            className="mainview_button"
+            label="Download Pharmacy Report"
+            labelImg={DownloadCSVImg}
+            onClick={this._downloadPharmacyReport}
+          />
+        )}
         <div className="mainview_row">
           <input
             className="mainview_search_input"
             type="text"
             onChange={this._handleSearchTermDetailsChange}
-            placeholder="Filter Claims"
+            placeholder="Filter Claims by Patient"
           />
           {tasks.some(task => !!(task as any).foundCount) && (
             <span className="mainview_header_text">{`Search Results: (${tasks
@@ -492,34 +515,19 @@ export class AuditorDetails extends React.Component<
               .reduce((a, b) => a + b, 0)})`}</span>
           )}
         </div>
-        {patients.map((patient, index) => {
-          return this._renderPatientDetails(patient, index);
-        })}
-        {remaining > 0 && (
-          <div className="mainview_button_row">
-            <Button
-              className="mainview_show_more_button"
-              label={
-                showAllEntries
-                  ? `- Hide ${remaining} Additional Claims`
-                  : `+ Show ${remaining} Additional Claims`
-              }
-              onClick={this._onShowAll}
-            />
-          </div>
-        )}
-        {remaining > 0 &&
-          showAllEntries &&
-          this.state.patients
-            .slice(this.state.numPatients)
-
-            .map((patient, index) => {
-              return this._renderPatientDetails(
-                patient,
-                patients.length + index
-              );
-            })}
-
+        {this._renderPageButtons()}
+        {patients
+          .slice(
+            this.state.pageNumber * SAMPLES_PER_PAGE,
+            (this.state.pageNumber + 1) * SAMPLES_PER_PAGE
+          )
+          .map((patient, index) => {
+            return this._renderPatientDetails(
+              patient,
+              this.state.pageNumber * SAMPLES_PER_PAGE + index
+            );
+          })}
+        {this._renderPageButtons()}
         {this.props.notesux}
         {this.props.children}
       </LabelWrapper>

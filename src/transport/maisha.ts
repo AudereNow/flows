@@ -1,4 +1,5 @@
 import { Flag } from "./baseDatastore";
+import { getLineAndCharacterOfPosition } from "typescript";
 
 const AUTH_STATE_KEY = "authState";
 export type AuthState = {
@@ -41,6 +42,7 @@ export type LoyaltySoldProduct = {
   description: string | null;
   id: string;
   loyalty_price_cents: number;
+  loyalty_product_id: string;
   product_id: string;
   retail_price_cents: number;
   stock_code: string | null;
@@ -115,10 +117,30 @@ export type CarePathwayInstance = {
   completed_at: string;
 };
 
+export type GetCarePathwayInstancesResult = {
+  care_pathway_instances: CarePathwayInstance[];
+  count: number;
+  cursor: string;
+  has_next: boolean;
+  next_cursor: string;
+};
+
 export type MaishaFlagsResponse = {
   compliance_flags: {
     care_pathway_instance_id: string;
     flags: Flag[];
+  }[];
+};
+
+export type LoyaltyFacilityStatsResult = {
+  facility_stats: {
+    facility_id: string;
+    stats: {
+      approval_status: MaishaApprovalStatus;
+      payment_status: MaishaPaidStatus;
+      count: 0;
+      total_reimbursement_amount_cents: 0;
+    }[];
   }[];
 };
 
@@ -129,13 +151,10 @@ export class MaishaApi {
   ) {}
 
   async isLoggedIn(): Promise<boolean> {
-    try {
-      // TODO(ram): Use a status endpoint
-      await this.fetchWithToken("/facilities?loyalty_enabled=true");
-      return true;
-    } catch {
-      return false;
-    }
+    // Assume we're logged in if we have an auth state.
+    // A failed request due to expired credentials will trigger the onAuthFailed
+    // callback later, and this is faster than doing a test request
+    return this.getLocalAuthState() !== null;
   }
 
   async postLoyaltyPayment(body: {
@@ -178,7 +197,7 @@ export class MaishaApi {
     cursor: string,
     approvalStatus?: MaishaApprovalStatus,
     paymentStatus?: MaishaPaidStatus
-  ): Promise<{ care_pathway_instances: CarePathwayInstance[] }> {
+  ): Promise<GetCarePathwayInstancesResult> {
     const params = new URLSearchParams({ cursor });
     if (approvalStatus) {
       params.append("approval_status", approvalStatus);
@@ -202,6 +221,19 @@ export class MaishaApi {
       `/compliance_flags/?${params.toString()}`,
       "GET"
     );
+  }
+
+  async getLoyaltyFacilityStats(): Promise<LoyaltyFacilityStatsResult> {
+    return await this.fetchWithToken("/loyalty_facility_stats");
+  }
+
+  async postReviewNote(body: {
+    review_notes: {
+      care_pathway_instance_id: string;
+      message: string;
+    };
+  }): Promise<void> {
+    await this.fetchWithToken("/review_note", "POST", body);
   }
 
   async fetchWithToken(

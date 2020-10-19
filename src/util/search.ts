@@ -1,64 +1,52 @@
 import moment, { Moment } from "moment";
 
+import { ClaimEntry } from "../sharedtypes";
+
 export interface DateRange {
   startDate: Moment | null;
   endDate: Moment | null;
 }
 
-const DEFAULT_FILTERS_ENTRY = ["patient", "item", "pharmacy"];
-const DEFAULT_FILTERS_HISTORY = ["id", "time", "description", "notes"];
+const CLAIM_SEARCH_KEYS_MAP: { [key: string]: (keyof ClaimEntry)[] } = {
+  patient: ["patientFirstName", "patientLastName"],
+  item: ["items"],
+  phone: ["phone"],
+};
+
+const ALL_CLAIM_SEARCH_KEYS: (keyof ClaimEntry)[] = [
+  "patientFirstName",
+  "patientLastName",
+  "items",
+  "phone",
+];
 
 export const containsSearchTerm = (
   searchPhrase: string,
-  entry: any
+  entry: ClaimEntry
 ): boolean => {
   if (searchPhrase === "") {
     return true;
   }
 
-  if (entry.hasOwnProperty("patientFirstName")) {
-    (entry as any).patient = `${entry.patientFirstName ||
-      ""} ${entry.patientLastName || ""} ${entry.patientAge ||
-      ""} ${entry.patientSex || ""} ${entry.phone || ""}`;
-  }
+  const phrases = searchPhrase.split(" ");
 
-  let foundCount = 0;
-  const phrases = searchPhrase.split(",");
-
-  phrases.forEach(term => {
+  return phrases.every(term => {
+    let keys = ALL_CLAIM_SEARCH_KEYS;
+    let value = term;
     if (term.indexOf(":") > 0) {
       const keyValue = term.split(":");
-      const key = keyValue[0].toLowerCase().trim();
-      const value = keyValue[1].toLowerCase().trim();
-      if (
-        entry[key] &&
-        entry[key]
-          .toString()
-          .toLowerCase()
-          .includes(value)
-      ) {
-        foundCount += 1;
-      }
-    } else {
-      const defaultFilters = entry.hasOwnProperty("claimedCost")
-        ? DEFAULT_FILTERS_ENTRY
-        : DEFAULT_FILTERS_HISTORY;
-      if (
-        defaultFilters.some(filter => {
-          return (
-            entry[filter] &&
-            entry[filter]
-              .toString()
-              .toLowerCase()
-              .includes(term)
-          );
-        })
-      ) {
-        foundCount += 1;
-      }
+      keys = CLAIM_SEARCH_KEYS_MAP[keyValue[0].toLowerCase().trim()];
+      value = keyValue[1].toLowerCase().trim();
     }
+    return keys.some(key => {
+      if (key === "items") {
+        return entry.items.some(item =>
+          item.name.toLowerCase().includes(value)
+        );
+      }
+      return entry[key] && entry[key]?.toString().toLowerCase().includes(value);
+    });
   });
-  return foundCount === phrases.length;
 };
 
 export const withinDateRange = (dateRange: DateRange, entry: any) => {

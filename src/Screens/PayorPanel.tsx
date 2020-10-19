@@ -293,15 +293,17 @@ class ConfigurablePayorDetails extends React.Component<
             ]}
           />
         </div>
-        <Button
-          className="mainview_show_more_button"
-          label={
-            this.state.showPreviousClaims
-              ? "- Hide Previous Claims"
-              : "+ Show Previous Claims"
-          }
-          onClick={this._toggleShowPreviousClaims}
-        />
+        {defaultConfig.dataStore.type === DataStoreType.FIREBASE && (
+          <Button
+            className="mainview_show_more_button"
+            label={
+              this.state.showPreviousClaims
+                ? "- Hide Previous Claims"
+                : "+ Show Previous Claims"
+            }
+            onClick={this._toggleShowPreviousClaims}
+          />
+        )}
         {this.state.showPreviousClaims &&
           (relatedTasks ? (
             relatedTasks.length > 0 ? (
@@ -359,5 +361,5 @@ function _getReimbursementTotal(tasks: Task[]): number {
       })
     )
     .flat();
-  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost);
+  return claimAmounts.reduce((sum, claimedCost) => sum + claimedCost, 0);
 }
