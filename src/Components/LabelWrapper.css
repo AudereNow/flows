@@ -25,3 +25,17 @@
   cursor: pointer;
   padding: 10px;
 }
+
+.labelwrapper_collapser {
+  background-color: var(--primary-color-light);
+  font-size: var(--body-size);
+  font-weight: bold;
+  cursor: pointer;
+  padding-bottom: 2px;
+}
+
+.labelwrapper_collapser_arrow {
+  font-size: larger;
+  padding-left: 10px;
+  padding-right: 5px;
+}

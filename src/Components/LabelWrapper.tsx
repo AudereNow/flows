@@ -9,9 +9,17 @@ interface Props {
   renderLabelItems?: () => JSX.Element;
   searchPanel?: JSX.Element;
   disableScroll?: boolean;
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onCollapse?: (collapsed: boolean) => void;
+  collapsedDisplay?: React.ReactNode;
 }
 
 class LabelWrapper extends Component<Props> {
+  _onCollapse = () => {
+    this.props.onCollapse && this.props.onCollapse(!this.props.collapsed);
+  };
+
   render() {
     const {
       children,
@@ -21,11 +29,21 @@ class LabelWrapper extends Component<Props> {
       renderLabelItems,
       searchPanel,
       disableScroll,
+      collapsible,
+      collapsed,
     } = this.props;
     return (
       <div className={`labelwrapper_container ${className}`}>
-        {
-          <Fragment>
+        {collapsible && (
+          <div className="labelwrapper_collapser" onClick={this._onCollapse}>
+            <span className="labelwrapper_collapser_arrow">
+              {collapsed ? "▸" : "▾"}
+            </span>
+            {collapsed && this.props.collapsedDisplay}
+          </div>
+        )}
+        {!collapsed && (
+          <>
             <div className="labelwrapper_header">
               {!!label && (
                 <span className="labelwrapper_label">
@@ -40,8 +58,8 @@ class LabelWrapper extends Component<Props> {
             <div className={disableScroll ? "" : "labelwrapper_inner"}>
               {children}
             </div>
-          </Fragment>
-        }
+          </>
+        )}
       </div>
     );
   }
