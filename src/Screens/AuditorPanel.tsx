@@ -226,6 +226,9 @@ export class AuditorDetails extends React.Component<
       return null;
     }
 
+    const showClaimActions =
+      Object.keys(this.props.taskConfig.actions).length > 0;
+
     return (
       <LabelWrapper
         key={JSON.stringify("entry_" + patient.patientId)}
@@ -286,68 +289,72 @@ export class AuditorDetails extends React.Component<
                     )}
                   </React.Fragment>
                 ))}
-                {this.props.taskConfig.showFlagForReview && (
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].flag
-                    }
-                    label={this.props.taskConfig.showFlagForReview}
-                    value={JSON.stringify({ claimId: claim.claimID })}
-                    onCheckBoxSelect={this._updateFlag}
-                    disabled={disabledCheckbox}
-                  />
+                {showClaimActions && (
+                  <>
+                    {this.props.taskConfig.showFlagForReview && (
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].flag
+                        }
+                        label={this.props.taskConfig.showFlagForReview}
+                        value={JSON.stringify({ claimId: claim.claimID })}
+                        onCheckBoxSelect={this._updateFlag}
+                        disabled={disabledCheckbox}
+                      />
+                    )}
+                    <div className="claim_options_container">
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.APPROVE
+                        }
+                        label={"Approve"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.APPROVE,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.HOLD
+                        }
+                        label={"Hold"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.HOLD,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                      <CheckBox
+                        checked={
+                          this.props.selectedActions[claim.claimID] &&
+                          this.props.selectedActions[claim.claimID].action ===
+                            ClaimAction.REJECT
+                        }
+                        label={"Reject"}
+                        value={JSON.stringify({
+                          claimAction: ClaimAction.REJECT,
+                          claimId: claim.claimID,
+                        })}
+                        onCheckBoxSelect={this._updateClaimAction}
+                        disabled={disabledCheckbox}
+                        radio={true}
+                        className="claim_option"
+                      />
+                    </div>
+                  </>
                 )}
-                <div className="claim_options_container">
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.APPROVE
-                    }
-                    label={"Approve"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.APPROVE,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.HOLD
-                    }
-                    label={"Hold"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.HOLD,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                  <CheckBox
-                    checked={
-                      this.props.selectedActions[claim.claimID] &&
-                      this.props.selectedActions[claim.claimID].action ===
-                        ClaimAction.REJECT
-                    }
-                    label={"Reject"}
-                    value={JSON.stringify({
-                      claimAction: ClaimAction.REJECT,
-                      claimId: claim.claimID,
-                    })}
-                    onCheckBoxSelect={this._updateClaimAction}
-                    disabled={disabledCheckbox}
-                    radio={true}
-                    className="claim_option"
-                  />
-                </div>
                 <ClaimNotes
                   claimIndex={(claim as any).originalIndex}
                   task={this.props.tasks[task.taskIndex]}
