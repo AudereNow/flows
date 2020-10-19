@@ -27,8 +27,6 @@ import { json2csv } from "json-2-csv";
 import moment from "moment";
 
 const SAMPLES_PER_PAGE = 25;
-const MIN_SAMPLE_FRACTION = 0.2;
-const MIN_SAMPLES = 1;
 const PATIENT_HISTORY_TABLE_COLUMNS = [
   { Header: "ID", accessor: "taskId", minWidth: 90 },
   { Header: "DATE", accessor: "date", minWidth: 70 },
@@ -83,10 +81,7 @@ function getInitialState(props: DetailsComponentProps): State {
     showAllEntries: false,
     showImages: !!props.hideImagesDefault ? false : true,
     previousClaims: [],
-    numPatients: Math.max(
-      Math.ceil(patients.length * MIN_SAMPLE_FRACTION),
-      MIN_SAMPLES
-    ),
+    numPatients: Math.min(patients.length, SAMPLES_PER_PAGE),
     patients,
     pageNumber: 0,
   };
@@ -101,8 +96,6 @@ export class AuditorDetails extends React.Component<
   static contextType = SearchContext;
 
   async componentDidMount() {
-    this.props.registerActionCallback("approve", this._onApprove);
-    this.props.registerActionCallback("save", this._onApprove);
     this._loadPatientHistories();
 
     const previousClaims = await this._loadPreviousClaims(
@@ -140,28 +133,6 @@ export class AuditorDetails extends React.Component<
 
   _onShowAll = () => {
     this.setState({ showAllEntries: !this.state.showAllEntries });
-  };
-
-  _onApprove = async () => {
-    const tasks = this.props.tasks.map(task => ({
-      ...task,
-      entries: task.entries.map((entry, index) => {
-        const patientIndex = this.state.patients.findIndex(
-          patient => patient.patientId === entry.patientID
-        );
-        if (
-          (patientIndex !== -1 && patientIndex < this.state.numPatients) ||
-          this.state.showAllEntries
-        ) {
-          return {
-            ...entry,
-            reviewed: true,
-          };
-        }
-        return entry;
-      }),
-    }));
-    return { success: true, tasks };
   };
 
   _loadPatientHistories = async () => {
