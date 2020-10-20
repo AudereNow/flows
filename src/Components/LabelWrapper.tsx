@@ -1,6 +1,6 @@
 import "./LabelWrapper.css";
 
-import React, { Component, Fragment } from "react";
+import React, { Component } from "react";
 
 interface Props {
   label?: string;
