@@ -9,7 +9,9 @@ import { lastUpdatedTime } from "../util/tasks";
 
 export class ListItem extends React.Component<ItemComponentProps> {
   render() {
-    const { tasks, isSelected, showLastModified } = this.props;
+    const { tasks, isSelected, config } = this.props;
+    const showLastModified = config.groupTasksByLastAction || false;
+    const lastModifiedLabel = config.lastModifiedLabel;
     const previewName = "listitem" + (isSelected ? " selected" : "");
     const claimCount = tasks.stats
       ? tasks.stats.claimCount
@@ -36,7 +38,8 @@ export class ListItem extends React.Component<ItemComponentProps> {
           )}
           {showLastModified && lastModified !== 0 && (
             <div>
-              Last Modified: {new Date(lastModified).toLocaleDateString()}
+              {lastModifiedLabel || "Last Modified"}:{" "}
+              {new Date(lastModified).toLocaleDateString()}
             </div>
           )}
         </div>

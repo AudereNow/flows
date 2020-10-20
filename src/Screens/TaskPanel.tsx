@@ -84,7 +84,7 @@ export interface DetailsComponentProps {
 export interface ItemComponentProps {
   tasks: TaskGroup;
   isSelected: boolean;
-  showLastModified: boolean;
+  config: TaskConfig;
 }
 
 type Props = RouteComponentProps & {
@@ -284,7 +284,7 @@ class TaskPanel extends React.Component<Props, State> {
       <ItemComponent
         tasks={tasks}
         isSelected={isSelected}
-        showLastModified={this.props.config.groupTasksByLastAction || false}
+        config={this.props.config}
       />
     );
   };
