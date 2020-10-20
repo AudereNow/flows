@@ -1,6 +1,6 @@
 import "./ClaimNotes.css";
 
-import React, { ChangeEvent, Fragment } from "react";
+import React, { ChangeEvent } from "react";
 
 import Button from "./Button";
 import { Task } from "../sharedtypes";
@@ -65,7 +65,7 @@ class ClaimNotes extends React.Component<Props, State> {
       <div className="claimnotes_wrapper">
         <div className="claimnotes_row">
           {editing ? (
-            <Fragment>
+            <>
               <textarea
                 className="claimnotes_textarea"
                 onChange={this._onNotesChange}
@@ -88,7 +88,7 @@ class ClaimNotes extends React.Component<Props, State> {
                   </select>
                 </div>
               )}
-            </Fragment>
+            </>
           ) : (
             <>
               <span>{`Notes: ${notes}`}</span>
