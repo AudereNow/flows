@@ -632,6 +632,7 @@ class TaskPanel extends React.Component<Props, State> {
             }
             renderLabelItems={this._renderLabelItems}
             searchPanel={this._renderSearchPanel()}
+            className="tasklist_wrapper"
           >
             <TaskList
               onSelect={this._onTaskSelect}
