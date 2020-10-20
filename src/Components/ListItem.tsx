@@ -1,23 +1,23 @@
 import "./ListItem.css";
 
 import BarLoader from "react-spinners/BarLoader";
+import { ItemComponentProps } from "../Screens/TaskPanel";
 import { PharmacyLoadingState } from "../transport/baseDatastore";
 import React from "react";
-import { TaskGroup } from "./TaskList";
 import { formatCurrency } from "../util/currency";
 
-export class ListItem extends React.Component<{
-  tasks: TaskGroup;
-  isSelected: boolean;
-}> {
+export class ListItem extends React.Component<ItemComponentProps> {
   render() {
-    const { tasks, isSelected } = this.props;
+    const { tasks, isSelected, showLastModified } = this.props;
     const previewName = "listitem" + (isSelected ? " selected" : "");
     const claimCount = tasks.stats
       ? tasks.stats.claimCount
       : tasks.tasks.map(task => task.entries.length).reduce((a, b) => a + b, 0);
     const totalReimbursement = tasks.stats?.totalReimbursement;
     const loading = tasks.stats?.loadingState === PharmacyLoadingState.LOADING;
+    const lastModified = tasks.tasks
+      .flatMap(task => task.entries)
+      .reduce((date, entry) => Math.max(date, entry.lastActedTime), 0);
     return (
       <div>
         <div className={previewName}>
@@ -33,6 +33,11 @@ export class ListItem extends React.Component<{
               <span style={{ whiteSpace: "nowrap" }}>
                 {formatCurrency(totalReimbursement)}
               </span>
+            </div>
+          )}
+          {showLastModified && lastModified !== 0 && (
+            <div>
+              Last Modified: {new Date(lastModified).toLocaleDateString()}
             </div>
           )}
         </div>

@@ -77,6 +77,7 @@ export type ClaimEntry = {
 
   startTime: number;
   endTime: number;
+  lastActedTime: number;
   reviewed?: boolean;
   notes?: string;
   rejected?: boolean;

@@ -233,6 +233,7 @@ export class RestDataStore extends DataStore {
     } else {
       this.taskCallbacks[state] = [callback];
     }
+    this.callTaskCallbacks(state);
     return () => {
       this.taskCallbacks[state]!.splice(
         this.taskCallbacks[state]!.indexOf(callback),
@@ -330,7 +331,7 @@ export class RestDataStore extends DataStore {
   }
 
   callTaskCallbacks(taskState: TaskState) {
-    const stateCache = this.taskCache[taskState]!;
+    const stateCache = this.taskCache[taskState] || {};
     const tasks = Object.values(stateCache).flatMap(cache => cache.tasks);
     const stats: PharmacyStats = {};
     Object.entries(stateCache).forEach(([pharmacyId, cache]) => {
@@ -343,6 +344,12 @@ export class RestDataStore extends DataStore {
       }
     });
     this.taskCallbacks[taskState]?.forEach(cb => cb(tasks, stats));
+  }
+
+  async refreshAllTasks(taskState: TaskState) {
+    Object.keys(this.taskCache[taskState] || {}).forEach(pharmacyId =>
+      this.refreshTasks(taskState, pharmacyId)
+    );
   }
 
   async refreshTasks(
@@ -404,8 +411,10 @@ export class RestDataStore extends DataStore {
         };
       });
       pharmacyCache.tasks.push(...tasks);
-    } while (result.has_next);
-    pharmacyCache.loadingState = PharmacyLoadingState.LOADED;
+    } while (result.has_next && this.taskCallbacks[taskState]?.length !== 0);
+    pharmacyCache.loadingState = result.has_next
+      ? PharmacyLoadingState.NOT_LOADED
+      : PharmacyLoadingState.LOADED;
     this.callTaskCallbacks(taskState);
   }
 
@@ -482,6 +491,9 @@ function carePathwayInstanceToClaimEntry(
     claimedCost: instance.facility_reimbursement_cents / 100,
     startTime: Date.parse(instance.started_at),
     endTime: Date.parse(instance.completed_at),
+    lastActedTime: Date.parse(
+      instance.last_approval_status_change_at || instance.updated_at
+    ),
     notes: instance.notes || "",
     claimID: instance.id,
   };

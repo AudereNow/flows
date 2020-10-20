@@ -35,6 +35,7 @@ export interface TaskConfig extends TabConfig {
   hideImagesDefault?: boolean;
   showPreviousClaims?: boolean;
   groupTasksByPharmacy?: boolean;
+  groupTasksByLastAction?: boolean;
   showFlagForReview?: string;
   manualReviewMinimumRatio: number;
   manualReviewMinimumNumber: number;
@@ -264,6 +265,8 @@ export const defaultConfig: AppConfig = {
       hideImagesDefault: true,
       manualReviewMinimumRatio: 0,
       manualReviewMinimumNumber: 0,
+      groupTasksByPharmacy: true,
+      groupTasksByLastAction: true,
     },
     Completed: {
       taskState: TaskState.COMPLETED,
@@ -275,6 +278,7 @@ export const defaultConfig: AppConfig = {
       baseUrl: "completed",
       hideImagesDefault: true,
       groupTasksByPharmacy: true,
+      groupTasksByLastAction: true,
       manualReviewMinimumRatio: 0,
       manualReviewMinimumNumber: 0,
     },
