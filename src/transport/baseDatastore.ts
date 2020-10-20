@@ -180,4 +180,8 @@ export abstract class DataStore {
     claimIndex: number,
     rejected: boolean
   ): Promise<void> {}
+
+  getHistoryLink(task: Task): string {
+    return "";
+  }
 }
