@@ -115,6 +115,8 @@ export type CarePathwayInstance = {
   patient?: MaishaPatient;
   started_at: string;
   completed_at: string;
+  last_approval_status_change_at: string | null;
+  updated_at: string;
 };
 
 export type GetCarePathwayInstancesResult = {

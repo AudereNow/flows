@@ -85,6 +85,8 @@ export abstract class DataStore {
   // Optional Methods with no-op default implementations
   refreshTasks(taskState: TaskState, pharmacyId?: string): void {}
 
+  refreshAllTasks(taskState: TaskState): void {}
+
   async getChanges(taskID: string): Promise<TaskChangeRecord[]> {
     return [];
   }

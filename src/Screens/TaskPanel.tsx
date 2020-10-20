@@ -26,6 +26,7 @@ import {
 import React, { ChangeEvent, Fragment, ReactNode } from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import TaskList, { TaskGroup } from "../Components/TaskList";
+import { lastUpdatedDate, lastUpdatedTime } from "../util/tasks";
 import moment, { Moment } from "moment";
 
 import Button from "../Components/Button";
@@ -34,7 +35,6 @@ import ClearSearchImg from "../assets/close.png";
 import DownloadImg from "../assets/downloadcsv.png";
 import LabelWrapper from "../Components/LabelWrapper";
 import Notes from "../Components/Notes";
-import PharmacyInfo from "../Components/PharmacyInfo";
 import { SearchContext } from "../Components/TextItem";
 import SearchIcon from "../assets/search.png";
 import { ToolTipIcon } from "../Components/ToolTipIcon";
@@ -81,13 +81,19 @@ export interface DetailsComponentProps {
   taskConfig: TaskConfig;
 }
 
+export interface ItemComponentProps {
+  tasks: TaskGroup;
+  isSelected: boolean;
+  showLastModified: boolean;
+}
+
 type Props = RouteComponentProps & {
   config: TaskConfig;
   initialSelectedPharmacyID?: string;
   taskState: TaskState;
   listLabel: string;
   baseUrl: string;
-  itemComponent: React.ComponentType<{ tasks: TaskGroup; isSelected: boolean }>;
+  itemComponent: React.ComponentType<ItemComponentProps>;
   detailsComponent: React.ComponentType<DetailsComponentProps>;
   actions: { [key: string]: ActionConfig };
   registerForTabSelectCallback: (onTabSelect: () => boolean) => void;
@@ -169,7 +175,10 @@ class TaskPanel extends React.Component<Props, State> {
       selectedPharmacyId &&
       this.props.initialSelectedPharmacyID !== selectedPharmacyId
     ) {
-      this._pushHistory(selectedPharmacyId);
+      const date = lastUpdatedDate(
+        this._groupTasks()[selectedPharmacyIndex].tasks
+      );
+      this._pushHistory(selectedPharmacyId, date);
       dataStore.refreshTasks(this.props.taskState, selectedPharmacyId);
     }
     if (this.state.selectedPharmacyIndex !== selectedPharmacyIndex) {
@@ -178,7 +187,21 @@ class TaskPanel extends React.Component<Props, State> {
     return { selectedPharmacyIndex, selectedPharmacyId };
   }
 
+  _tasksChangedPromise: Promise<void> | null = null;
   _onTasksChanged = async (tasks: Task[], stats?: PharmacyStats) => {
+    while (this._tasksChangedPromise) {
+      await this._tasksChangedPromise;
+    }
+    this._tasksChangedPromise = this._onTasksChangedImpl(tasks, stats);
+    await this._tasksChangedPromise;
+    this._tasksChangedPromise = null;
+  };
+
+  _onTasksChangedImpl = async (tasks: Task[], stats?: PharmacyStats) => {
+    if (tasks.length === 0 && this.props.config.groupTasksByLastAction) {
+      dataStore.refreshAllTasks(this.props.taskState);
+    }
+
     const changes = await Promise.all(
       tasks.map(t => dataStore.getChanges(t.id))
     );
@@ -209,12 +232,18 @@ class TaskPanel extends React.Component<Props, State> {
     );
   };
 
-  _pushHistory(selectedPharmacyId?: string) {
-    this.props.history.push(
-      `/${this.props.baseUrl}${
-        selectedPharmacyId ? "/" + selectedPharmacyId : ""
-      }`
-    );
+  _pushHistory(selectedPharmacyId?: string, date?: string) {
+    let name = "";
+    if (selectedPharmacyId) {
+      name = `/${selectedPharmacyId}`;
+      if (this.props.config.groupTasksByLastAction && date) {
+        name += `_${date}`;
+      }
+    }
+    const newPath = `/${this.props.baseUrl}${name}`;
+    if (newPath !== this.props.history.location.pathname) {
+      this.props.history.push(newPath);
+    }
   }
 
   _onTabSelect = (): boolean => {
@@ -235,12 +264,13 @@ class TaskPanel extends React.Component<Props, State> {
     const result = this._okToSwitchAway();
     if (result) {
       const selectedPharmacyId =
-        index === -1 ? undefined : this._groupTasks()[index].site.id;
+        index === -1 ? undefined : this._groupTasks()[index]?.site.id;
       this.setState({
         selectedPharmacyIndex: index,
         notes: "",
       });
-      this._pushHistory(selectedPharmacyId);
+      const date = lastUpdatedDate(this._groupTasks()[index].tasks);
+      this._pushHistory(selectedPharmacyId, date);
       if (selectedPharmacyId) {
         dataStore.refreshTasks(this.props.taskState, selectedPharmacyId);
       }
@@ -250,7 +280,13 @@ class TaskPanel extends React.Component<Props, State> {
 
   _renderTaskListItem = (tasks: TaskGroup, isSelected: boolean) => {
     const ItemComponent = this.props.itemComponent;
-    return <ItemComponent tasks={tasks} isSelected={isSelected} />;
+    return (
+      <ItemComponent
+        tasks={tasks}
+        isSelected={isSelected}
+        showLastModified={this.props.config.groupTasksByLastAction || false}
+      />
+    );
   };
 
   _onSearchClick = () => {
@@ -541,7 +577,11 @@ class TaskPanel extends React.Component<Props, State> {
 
   _groupTasks = (tasks: Task[] = this.state.tasks): TaskGroup[] => {
     if (this.props.config.groupTasksByPharmacy) {
-      return groupTasksByPharmacy(tasks, this.state.pharmacyStats);
+      if (this.props.config.groupTasksByLastAction) {
+        return groupTasksByPharmacyAndDate(tasks);
+      } else {
+        return groupTasksByPharmacy(tasks, this.state.pharmacyStats);
+      }
     } else {
       return tasks.map(task => ({
         tasks: [task],
@@ -563,6 +603,7 @@ class TaskPanel extends React.Component<Props, State> {
     const { selectedPharmacyIndex } = this._getSelectedTask();
     const actionable = Object.keys(this.props.actions).length > 0;
     const notesux =
+      this.props.taskConfig.showBatchNotes &&
       this.state.changes[selectedPharmacyIndex] &&
       selectedPharmacyIndex >= 0 ? (
         <Notes
@@ -591,6 +632,7 @@ class TaskPanel extends React.Component<Props, State> {
             }
             renderLabelItems={this._renderLabelItems}
             searchPanel={this._renderSearchPanel()}
+            className="tasklist_wrapper"
           >
             <TaskList
               onSelect={this._onTaskSelect}
@@ -1011,20 +1053,58 @@ const groupTasksByPharmacy = memoize(
   }
 );
 
+const groupTasksByPharmacyAndDate = memoize((tasks: Task[]): TaskGroup[] => {
+  const taskGroups: {
+    [pharmacyId: string]: {
+      [date: string]: TaskGroup;
+    };
+  } = {};
+  tasks.forEach(task => {
+    if (task.entries.length === 0) {
+      return;
+    }
+    const date = lastUpdatedDate([task]);
+    if (!taskGroups[task.site.id]) {
+      taskGroups[task.site.id] = {};
+    }
+    if (!taskGroups[task.site.id][date]) {
+      taskGroups[task.site.id][date] = {
+        site: task.site,
+        tasks: [],
+      };
+    }
+    taskGroups[task.site.id][date].tasks.push(task);
+  });
+  return Object.values(taskGroups).flatMap(group => Object.values(group));
+});
+
 const computeSelectedPharmacyId = memoize(
   (
     groupedTasks: TaskGroup[],
     selectedPharmacyIndex: number,
     selectedPharmacyId?: string
-  ) => {
-    let newSelectedPharmacyIndex;
+  ): { selectedPharmacyIndex: number; selectedPharmacyId?: string } => {
+    let date = "";
+    if (selectedPharmacyId?.includes("_")) {
+      [selectedPharmacyId, date] = selectedPharmacyId.split("_");
+    }
+    let newSelectedPharmacyIndex = -1;
     if (groupedTasks.length === 0) {
       newSelectedPharmacyIndex = -1;
       selectedPharmacyId = undefined;
     } else {
-      newSelectedPharmacyIndex = groupedTasks.findIndex(
-        group => group.site.id === selectedPharmacyId
-      );
+      if (date) {
+        newSelectedPharmacyIndex = groupedTasks.findIndex(
+          group =>
+            group.site.id === selectedPharmacyId &&
+            lastUpdatedDate(group.tasks) === date
+        );
+      }
+      if (newSelectedPharmacyIndex === -1) {
+        newSelectedPharmacyIndex = groupedTasks.findIndex(
+          group => group.site.id === selectedPharmacyId
+        );
+      }
       if (newSelectedPharmacyIndex === -1) {
         newSelectedPharmacyIndex = Math.min(
           Math.max(0, selectedPharmacyIndex),

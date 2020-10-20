@@ -33,7 +33,7 @@ class LabelWrapper extends Component<Props> {
       collapsed,
     } = this.props;
     return (
-      <div className={`labelwrapper_container ${className}`}>
+      <div className={`labelwrapper_container ${className || ""}`}>
         {collapsible && (
           <div
             className="labelwrapper_collapser"

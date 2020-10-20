@@ -257,7 +257,10 @@ export class AuditorDetails extends React.Component<
 
     return (
       <LabelWrapper
-        key={JSON.stringify("entry_" + patient.patientId)}
+        key={JSON.stringify(
+          "entry_" +
+            (patient.currentClaims[0]?.claims[0]?.claimID || patient.patientId)
+        )}
         disableScroll={true}
         collapsible={true}
         collapsed={this.state.collapsed[entry.claimID]}
