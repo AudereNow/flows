@@ -449,6 +449,10 @@ export class RestDataStore extends DataStore {
       },
     });
   }
+
+  getHistoryLink(task: Task) {
+    return `${this.endpointRoot}/admin/care_pathway_instances/${task.id}`;
+  }
 }
 
 function getTaskState(
