@@ -5,6 +5,7 @@ import { ItemComponentProps } from "../Screens/TaskPanel";
 import { PharmacyLoadingState } from "../transport/baseDatastore";
 import React from "react";
 import { formatCurrency } from "../util/currency";
+import { lastUpdatedTime } from "../util/tasks";
 
 export class ListItem extends React.Component<ItemComponentProps> {
   render() {
@@ -15,9 +16,7 @@ export class ListItem extends React.Component<ItemComponentProps> {
       : tasks.tasks.map(task => task.entries.length).reduce((a, b) => a + b, 0);
     const totalReimbursement = tasks.stats?.totalReimbursement;
     const loading = tasks.stats?.loadingState === PharmacyLoadingState.LOADING;
-    const lastModified = tasks.tasks
-      .flatMap(task => task.entries)
-      .reduce((date, entry) => Math.max(date, entry.lastActedTime), 0);
+    const lastModified = lastUpdatedTime(tasks.tasks);
     return (
       <div>
         <div className={previewName}>
