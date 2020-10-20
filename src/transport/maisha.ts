@@ -1,5 +1,4 @@
 import { Flag } from "./baseDatastore";
-import { getLineAndCharacterOfPosition } from "typescript";
 
 const AUTH_STATE_KEY = "authState";
 export type AuthState = {

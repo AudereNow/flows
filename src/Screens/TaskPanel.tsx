@@ -26,7 +26,6 @@ import {
 import React, { ChangeEvent, Fragment, ReactNode } from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import TaskList, { TaskGroup } from "../Components/TaskList";
-import { lastUpdatedDate, lastUpdatedTime } from "../util/tasks";
 import moment, { Moment } from "moment";
 
 import Button from "../Components/Button";
@@ -43,6 +42,7 @@ import { confirmAlert } from "react-confirm-alert";
 import { dataStore } from "../transport/datastore";
 import debounce from "../util/debounce";
 import { json2csv } from "json-2-csv";
+import { lastUpdatedDate } from "../util/tasks";
 import memoize from "memoize-one";
 
 const SELECTED_ACTIONS_STORAGE_KEY = "selectedActions";
