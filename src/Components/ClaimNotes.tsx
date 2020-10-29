@@ -1,6 +1,6 @@
 import "./ClaimNotes.css";
 
-import React, { ChangeEvent, Fragment } from "react";
+import React, { ChangeEvent } from "react";
 
 import Button from "./Button";
 import { Task } from "../sharedtypes";
@@ -61,53 +61,62 @@ class ClaimNotes extends React.Component<Props, State> {
 
   render() {
     const { newNote, editing, cannedClaimNotes } = this.state;
+    const { task } = this.props;
+    const historyLink = dataStore.getHistoryLink(task);
     return (
-      <div>
-        {this.props.notes.length > 0 && (
-          <>
-            <div>Notes:</div>
-            <div>
-              {this.props.notes.map((note: string) => (
-                <div className="claimnotes_note">
-                  {note.split("\n").map(line => (
-                    <p>{line}</p>
-                  ))}
+      <div className="claimnotes_wrapper">
+        <div>
+          {this.props.notes.length > 0 && (
+            <>
+              <div>Notes:</div>
+              <div>
+                {this.props.notes.map((note: string) => (
+                  <div className="claimnotes_note">
+                    {note.split("\n").map(line => (
+                      <p>{line}</p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {editing ? (
+            <div className="claimnotes_row">
+              <textarea
+                className="claimnotes_textarea"
+                onChange={this._onNotesChange}
+                value={newNote}
+              />
+              <Button
+                className="claimnotes_button"
+                label="Save Notes"
+                onClick={this._onSave}
+              />
+              {cannedClaimNotes && cannedClaimNotes.length > 0 && (
+                <div>
+                  <select onChange={this._onCannedNoteSelected}>
+                    <option value="">--Canned Responses--</option>
+                    {cannedClaimNotes.map(cannedNote => (
+                      <option key={cannedNote} value={cannedNote}>
+                        {cannedNote}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ))}
+              )}
             </div>
-          </>
-        )}
-        {editing ? (
-          <div className="claimnotes_row">
-            <textarea
-              className="claimnotes_textarea"
-              onChange={this._onNotesChange}
-              value={newNote}
-            />
+          ) : (
             <Button
               className="claimnotes_button"
-              label="Save Notes"
-              onClick={this._onSave}
+              label="Add Note"
+              onClick={this._onEdit}
             />
-            {cannedClaimNotes && cannedClaimNotes.length > 0 && (
-              <div>
-                <select onChange={this._onCannedNoteSelected}>
-                  <option value="">--Canned Responses--</option>
-                  {cannedClaimNotes.map(cannedNote => (
-                    <option key={cannedNote} value={cannedNote}>
-                      {cannedNote}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Button
-            className="claimnotes_button"
-            label="Add Note"
-            onClick={this._onEdit}
-          />
+          )}
+        </div>
+        {historyLink && (
+          <a href={historyLink} className="claimnotes_link">
+            History
+          </a>
         )}
       </div>
     );

@@ -35,8 +35,11 @@ export interface TaskConfig extends TabConfig {
   hideImagesDefault?: boolean;
   showPreviousClaims?: boolean;
   groupTasksByPharmacy?: boolean;
+  groupTasksByLastAction?: boolean;
+  lastModifiedLabel?: string;
   showFlagForReview?: string;
   manualReviewMinimumRatio: number;
+  manualReviewMinimumNumber: number;
   showBatchNotes?: boolean;
   cannedResponses?: string[];
 }
@@ -79,6 +82,7 @@ export const defaultConfig: AppConfig = {
       groupTasksByPharmacy: true,
       showFlagForReview: "Flag for patient review",
       manualReviewMinimumRatio: 0.2,
+      manualReviewMinimumNumber: 10,
       actions: {
         approve: {
           label: "APPROVE REMAINING",
@@ -118,6 +122,7 @@ export const defaultConfig: AppConfig = {
       baseUrl: "patient",
       groupTasksByPharmacy: true,
       manualReviewMinimumRatio: 0.2,
+      manualReviewMinimumNumber: 10,
       actions: {
         approve: {
           label: "APPROVE REMAINING",
@@ -156,6 +161,7 @@ export const defaultConfig: AppConfig = {
       baseUrl: "finalapproval",
       groupTasksByPharmacy: true,
       manualReviewMinimumRatio: 0,
+      manualReviewMinimumNumber: 0,
       actions: {
         approve: {
           label: "APPROVE REMAINING",
@@ -188,6 +194,7 @@ export const defaultConfig: AppConfig = {
       baseUrl: "rejectionreview",
       filterByOwners: true,
       manualReviewMinimumRatio: 0,
+      manualReviewMinimumNumber: 0,
       groupTasksByPharmacy: true,
       actions: {
         decline: {
@@ -221,6 +228,7 @@ export const defaultConfig: AppConfig = {
       baseUrl: "payor",
       groupTasksByPharmacy: true,
       manualReviewMinimumRatio: 0,
+      manualReviewMinimumNumber: 0,
       actions: {
         approve: {
           label: "ISSUE",
@@ -257,6 +265,10 @@ export const defaultConfig: AppConfig = {
       baseUrl: "rejected",
       hideImagesDefault: true,
       manualReviewMinimumRatio: 0,
+      manualReviewMinimumNumber: 0,
+      groupTasksByPharmacy: true,
+      groupTasksByLastAction: true,
+      lastModifiedLabel: "Rejected On",
     },
     Completed: {
       taskState: TaskState.COMPLETED,
@@ -268,7 +280,10 @@ export const defaultConfig: AppConfig = {
       baseUrl: "completed",
       hideImagesDefault: true,
       groupTasksByPharmacy: true,
+      groupTasksByLastAction: true,
+      lastModifiedLabel: "Billed On",
       manualReviewMinimumRatio: 0,
+      manualReviewMinimumNumber: 0,
     },
     Admin: {
       panelComponent: "Admin",
@@ -278,6 +293,8 @@ export const defaultConfig: AppConfig = {
   },
   dataStore: {
     type: DataStoreType.REST,
-    endpointRoot: "https://staging-service.maishameds.org",
+    endpointRoot:
+      process.env.REACT_APP_MAISHA_API_HOST ||
+      "https://staging-service.maishameds.org",
   },
 };

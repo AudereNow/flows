@@ -22,7 +22,7 @@ export type ActiveTask = {
 export type Flag = {
   severity: "ALERT" | "WARN";
   description: string;
-  manual?: boolean;
+  manually_flagged: boolean;
 };
 
 export interface PatientHistory {
@@ -84,6 +84,8 @@ export abstract class DataStore {
 
   // Optional Methods with no-op default implementations
   refreshTasks(taskState: TaskState, pharmacyId?: string): void {}
+
+  refreshAllTasks(taskState: TaskState): void {}
 
   async getChanges(taskID: string): Promise<TaskChangeRecord[]> {
     return [];
@@ -178,4 +180,8 @@ export abstract class DataStore {
     claimIndex: number,
     rejected: boolean
   ): Promise<void> {}
+
+  getHistoryLink(task: Task): string {
+    return "";
+  }
 }

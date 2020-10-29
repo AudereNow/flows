@@ -4,8 +4,10 @@ import "./MainView.css";
 import { AppConfig, defaultConfig, isCustomPanel } from "../store/config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
-import { Task, UserRole } from "../sharedtypes";
-import TaskPanel, { DetailsComponentProps } from "./TaskPanel";
+import TaskPanel, {
+  DetailsComponentProps,
+  ItemComponentProps,
+} from "./TaskPanel";
 
 import AdminPanel from "./AdminPanel";
 import { AuditorDetails } from "./AuditorPanel";
@@ -14,7 +16,7 @@ import MainChrome from "./MainChrome";
 import { OperatorDetails } from "./OperatorPanel";
 import { PayorDetails } from "./PayorPanel";
 import React from "react";
-import { TaskGroup } from "../Components/TaskList";
+import { UserRole } from "../sharedtypes";
 import { dataStore } from "../transport/datastore";
 
 type Props = RouteComponentProps & {
@@ -36,7 +38,7 @@ const PanelComponents: {
 };
 
 const ItemComponents: {
-  [key: string]: React.ComponentType<{ tasks: TaskGroup; isSelected: boolean }>;
+  [key: string]: React.ComponentType<ItemComponentProps>;
 } = {
   default: ListItem,
 };

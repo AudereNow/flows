@@ -22,3 +22,15 @@
 .claimnotes_note:first-child {
   border-top: none;
 }
+
+.claimnotes_wrapper {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.claimnotes_link {
+  align-self: flex-end;
+  padding: 10px;
+}

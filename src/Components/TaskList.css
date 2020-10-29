@@ -3,3 +3,8 @@
   outline-style: solid;
   outline-width: 4px;
 }
+
+.tasklist_wrapper {
+  display: flex;
+  flex-direction: column;
+}

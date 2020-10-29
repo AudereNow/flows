@@ -18,10 +18,15 @@ const Notes = (props: Props) => {
   const { actionable, changes, notes, onNotesChanged, cannedNotes } = props;
   return (
     <div className="notes_container">
-      <div className="mainview_actions_so_far_header">Actions so far:</div>
-      {changes.map((change: TaskChangeRecord, index: number) => {
-        return <NotesAudit key={change.by + index} change={change} />;
-      })}
+      {changes.length > 0 && (
+        <React.Fragment>
+          {" "}
+          <div className="mainview_actions_so_far_header">Actions so far:</div>
+          {changes.map((change: TaskChangeRecord, index: number) => {
+            return <NotesAudit key={change.by + index} change={change} />;
+          })}
+        </React.Fragment>
+      )}
       {!!actionable && (
         <Fragment>
           {cannedNotes && cannedNotes.length > 0 && (

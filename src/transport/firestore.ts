@@ -26,14 +26,11 @@ import {
 } from "../sharedtypes";
 import { ActiveTask, DataStore, PatientHistory } from "./baseDatastore";
 
-import firebaseConfig from "./firebaseconfig.json";
 import { formatCurrency } from "../util/currency";
 
-const FIREBASE_CONFIG = firebaseConfig;
-
 export class FirebaseDataStore extends DataStore {
-  initializeStore() {
-    firebase.initializeApp(FIREBASE_CONFIG);
+  async initializeStore() {
+    firebase.initializeApp((await fetch("/__/firebase/init.json")).json());
   }
 
   onAuthStateChanged(callback: (authenticated: boolean) => void) {

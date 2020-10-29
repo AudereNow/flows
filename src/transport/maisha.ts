@@ -41,6 +41,7 @@ export type LoyaltySoldProduct = {
   description: string | null;
   id: string;
   loyalty_price_cents: number;
+  loyalty_product_id: string;
   product_id: string;
   retail_price_cents: number;
   stock_code: string | null;
@@ -116,6 +117,8 @@ export type CarePathwayInstance = {
   patient?: MaishaPatient;
   started_at: string;
   completed_at: string;
+  last_approval_status_change_at: string | null;
+  updated_at: string;
 };
 
 export type GetCarePathwayInstancesResult = {
