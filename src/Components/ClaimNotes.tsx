@@ -9,12 +9,12 @@ import { dataStore } from "../transport/datastore";
 interface Props {
   claimIndex: number;
   task: Task;
-  notes: string;
+  notes: string[];
   cannedNotes: string[];
 }
 
 interface State {
-  notes: string;
+  newNote: string;
   editing: boolean;
   cannedClaimNotes?: string[];
 }
@@ -23,7 +23,7 @@ class ClaimNotes extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      notes: props.notes,
+      newNote: "",
       editing: false,
     };
   }
@@ -38,9 +38,9 @@ class ClaimNotes extends React.Component<Props, State> {
   }
 
   _onSave = async () => {
-    const { notes } = this.state;
+    const { newNote } = this.state;
     const { claimIndex, task } = this.props;
-    await dataStore.setClaimNotes(task, claimIndex, notes);
+    await dataStore.setClaimNotes(task, claimIndex, newNote);
     this.setState({ editing: false });
   };
 
@@ -49,27 +49,43 @@ class ClaimNotes extends React.Component<Props, State> {
   };
 
   _onNotesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    this.setState({ notes: event.currentTarget.value });
+    this.setState({ newNote: event.currentTarget.value });
   };
 
   _onCannedNoteSelected = (event: ChangeEvent<HTMLSelectElement>) => {
-    const { notes } = this.state;
-    this.setState({ notes: notes + (notes ? "\n" : "") + event.target.value });
+    const { newNote } = this.state;
+    this.setState({
+      newNote: newNote + (newNote ? "\n" : "") + event.target.value,
+    });
   };
 
   render() {
-    const { notes, editing, cannedClaimNotes } = this.state;
+    const { newNote, editing, cannedClaimNotes } = this.state;
     const { task } = this.props;
     const historyLink = dataStore.getHistoryLink(task);
     return (
       <div className="claimnotes_wrapper">
-        <div className="claimnotes_row">
-          {editing ? (
+        <div>
+          {this.props.notes.length > 0 && (
             <>
+              <div>Notes:</div>
+              <div>
+                {this.props.notes.map((note: string) => (
+                  <div className="claimnotes_note">
+                    {note.split("\n").map(line => (
+                      <p>{line}</p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {editing ? (
+            <div className="claimnotes_row">
               <textarea
                 className="claimnotes_textarea"
                 onChange={this._onNotesChange}
-                value={notes}
+                value={newNote}
               />
               <Button
                 className="claimnotes_button"
@@ -88,16 +104,13 @@ class ClaimNotes extends React.Component<Props, State> {
                   </select>
                 </div>
               )}
-            </>
+            </div>
           ) : (
-            <>
-              <span>{`Notes: ${notes}`}</span>
-              <Button
-                className="claimnotes_button"
-                label="Edit"
-                onClick={this._onEdit}
-              />
-            </>
+            <Button
+              className="claimnotes_button"
+              label="Add Note"
+              onClick={this._onEdit}
+            />
           )}
         </div>
         {historyLink && (
