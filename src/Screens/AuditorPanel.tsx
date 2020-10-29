@@ -194,14 +194,6 @@ export class AuditorDetails extends React.Component<
     this.props.updateSelectedAction(claimId, {
       action: checked ? claimAction : undefined,
     });
-    if (checked) {
-      this.setState(state => ({
-        collapsed: {
-          ...state.collapsed,
-          [claimId]: true,
-        },
-      }));
-    }
   };
 
   _updateFlag = (value: string, checked: boolean) => {
