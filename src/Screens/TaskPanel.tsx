@@ -872,7 +872,7 @@ class DetailsWrapper extends React.Component<
       rejectAction,
       rejectedTasks,
       unreviewedTasks,
-      flaggedTasks
+      []
     );
   };
 
@@ -891,7 +891,7 @@ class DetailsWrapper extends React.Component<
     await dataStore.changeTaskState(
       tasks,
       reviewedTasks,
-      selectedClaimAction === ClaimAction.APPROVE ? flaggedTasks : [],
+      flaggedTasks,
       action.nextTaskState,
       this.props.notes,
       payment
